@@ -14,15 +14,15 @@
 - Her dakika çalışan cron etkin; `cron.job_run_details` başarılı çalışmaları doğruluyor. Henüz canlı oylama olmadığı için bu, canlı ekonomik sonuçlandırmanın uçtan uca testi değildir.
 - Auth API erişilebilir; e-posta kaydı açık, e-posta doğrulama açık, anonim hesaplar kapalı. Site URL/redirect ve minimum şifre ayarları bu bağlantıdaki araçlarla değiştirilemedi; kontrol/tamamlama gerekiyor.
 
-## GitHub ve Pages: yazma yetkisi engeli
+## GitHub ve Pages: yayımlandı
 
-- Repository: https://github.com/oklukk/apartman-online — mevcut, public ve boş.
-- Hesap repository permission yanıtı push/admin gösterse de Git push, bağlı GitHub aracıyla Contents yazma ve Actions Variables yazma ayrı ayrı 403 `Resource not accessible by integration` döndürdü. Hesabın yetkisi, entegrasyon tokenının kapsamını garanti etmiyor.
-- Kaynak GitHub'a yüklenemedi; başka repository'ye yazılmadı, görünürlük değiştirilmedi.
-- Pages API yapılandırması zaten `build_type=workflow` olarak doğrulandı.
-- Hedef yayın: https://oklukk.github.io/apartman-online/ — şu anda **404**, çalışan oyun bağlantısı olarak sunulmamalı.
-- `.github/workflows/pages.yml` için yalnızca public Supabase URL/publishable anahtarı varsayılanları eklendi. Bu değişiklik, Actions Variables yazma yetkisi olmadan da bağlantılı build yapılmasını sağlar. Repository Variables mevcutsa önceliklidir. Hiçbir service-role/gizli anahtar kaynakta yok.
-- Başlangıç commit'i `62e96ae` korunuyor; kurulum belgeleri, workflow ve migration ad eşleştirmesi ek commit olarak hazırlanıyor.
+- Repository: https://github.com/oklukk/apartman-online — public.
+- Bu aşamada yetkili Git doğrudan push başarılı oldu. `62e96ae` ve `3d8b92e` dahil mevcut Git geçmişi korunarak `main` yüklendi. Önceki 403 engeli doğrudan Git aktarımında artık yok.
+- Pages `build_type=workflow` olarak doğrulandı. Başarılı ilk workflow: https://github.com/oklukk/apartman-online/actions/runs/43724394615
+- Yayın: https://oklukk.github.io/apartman-online/ — HTML, JavaScript ve CSS **HTTP 200**. Türkçe belge, uygulama root'u, doğru `/apartman-online/` asset yolları ve yayımlanan JS içindeki doğru Supabase URL/publishable yapılandırması doğrulandı.
+- GitHub Actions üzerinde build, database ve deploy işleri başarılı. 3 yapılandırma testi ve 11 PostgreSQL entegrasyon grubu geçti.
+- `.github/workflows/pages.yml` yalnızca public Supabase URL/publishable anahtarı varsayılanlarını kullanır. `VITE_SUPABASE_URL` ve `VITE_SUPABASE_PUBLISHABLE_KEY` adlı Repository Variables isteğe bağlıdır; varsa varsayılanları geçersiz kılar. Gizli/service-role anahtarı eklenmedi.
+- Bu yayın aşamasında Supabase projesine, migrationlara veya oyun verisine değişiklik uygulanmadı. Auth settings API okuması HTTP 200 döndürdü: e-posta kaydı/doğrulaması açık.
 
 ## Bu aşamada başarılı testler
 
@@ -38,15 +38,14 @@
 
 - İki ayrı örnek adresle canlı signUp denendi; Supabase `email_address_invalid` döndürdü. Hesap oluşmadı, oturum/giriş/çift yönlü Realtime testi yapılamadı. Örnek adres doğrulaması veya e-posta güvenliği aşılmadı.
 - Canlı daire ataması ve oylama, iki gerçek doğrulanmış hesap olmadığı için test edilmedi; bunların PostgreSQL kuralları yukarıdaki disposable testlerde geçti.
-- GitHub Actions gerçek koşusu ve Pages açılışı, kod yazma yetkisi engeli nedeniyle doğrulanamadı.
+- GitHub Actions ve Pages HTTP/asset kontrolleri tamamlandı; gerçek tarayıcıda oturum ve kullanıcı etkileşimleri henüz test edilmedi.
 - Mobil/tarayıcı görsel testi henüz yapılmadı.
 - CLI `supabase link` erişim tokenı olmadığı için çalışmadı. Migration işlemleri bağlı Supabase MCP aracıyla başarılı tamamlandı; token eksikliği migrationları engellemedi. CLI bağlantısı gelecekteki CLI işleri için gereklidir.
 
 ## Kullanıcının kalan adımları
 
-1. GitHub entegrasyonunu `oklukk/apartman-online` deposu için **Contents ve Workflows yazma** erişimiyle yeniden yetkilendirin. Yalnızca repository oluşturmak veya insan hesabına admin vermek entegrasyon kapsamını değiştirmiyor. GitHub kurulumu: https://github.com/settings/installations . Sonrasında kaynak ve workflow aktarımı tekrar yapılabilir. Actions Variables zorunlu değil; workflow güvenli public varsayılanları içeriyor.
-2. Yeni projenin Auth URL Configuration ekranında Site URL ve redirect allowlist'e `https://oklukk.github.io/apartman-online/` ekleyin. Minimum şifreyi 8 karakter yapın. E-posta kaydını/doğrulamayı açık, anonim hesapları kapalı tutun. Bu ayarlar uzaktan tamamlandı diye raporlanmıyor.
-3. Pages yayını açıldıktan sonra iki gerçek e-posta ile uygulamadaki kayıt formundan kullanıcı adı seçerek kaydolun ve e-postaları doğrulayın. Şifrelerinizi paylaşmayın. Dahili Auth kullanıcı tablosuna elle satır eklemeyin; Auth Dashboard'da metadata olmadan kullanıcı oluşturmak bu uygulamanın kullanıcı adı kuralını karşılamaz.
-4. Proje sahibi `supabase/admin/create-invitation.sql` ile iki tek kullanımlık davetiye üretebilir. Çıktı kodlarını GitHub'a koymayın. Sonrasında iki ayrı oturumda taşınma/sohbet/oylama ve mobil kabulü tamamlayın.
+1. Yeni projenin Auth URL Configuration ekranında Site URL ve redirect allowlist'e `https://oklukk.github.io/apartman-online/` ekleyin. Minimum şifreyi 8 karakter yapın. E-posta kaydını/doğrulamayı açık, anonim hesapları kapalı tutun. Bu ayarlar uzaktan tamamlandı diye raporlanmıyor.
+2. Yayımlanan uygulamada iki gerçek e-posta ile uygulamadaki kayıt formundan kullanıcı adı seçerek kaydolun ve e-postaları doğrulayın. Şifrelerinizi paylaşmayın. Dahili Auth kullanıcı tablosuna elle satır eklemeyin; Auth Dashboard'da metadata olmadan kullanıcı oluşturmak bu uygulamanın kullanıcı adı kuralını karşılamaz.
+3. Proje sahibi `supabase/admin/create-invitation.sql` ile iki tek kullanımlık davetiye üretebilir. Çıktı kodlarını GitHub'a koymayın. Sonrasında iki ayrı oturumda taşınma/sohbet/oylama ve mobil kabulü tamamlayın.
 
 Ücretli abonelik, başka projeye müdahale, gerçek kullanıcı/veri silme veya gizli anahtar paylaşımı yapılmadı.

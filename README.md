@@ -2,7 +2,7 @@
 
 Çınar Apartmanı'nda gerçek oyuncuların birlikte yaşadığı, Türkçe metin ve menü tabanlı online oyunun ilk sürümü. React + TypeScript + Vite, Supabase Auth/PostgreSQL/Realtime, GitHub Pages. Ayrı uygulama sunucusu veya ücretli kaynak gerekmez.
 
-**Durum:** Yeni ücretsiz Frankfurt Supabase projesi oluşturuldu; iki migration, RLS, Realtime yayını ve cron uygulandı. Repository https://github.com/oklukk/apartman-online mevcut; entegrasyon yazma izni 403 döndürdüğü için kod aktarımı/yayın bekliyor. Hedef Pages adresi şu anda 404. Canlı iki hesaplı kabul henüz tamamlanmadı. Güncel kurulum, test ve kalan adımlar `docs/STATUS.md` içinde.
+**Durum:** Kaynak ve Git geçmişi [GitHub repository'sine](https://github.com/oklukk/apartman-online) yüklendi. [APARTMAN yayında](https://oklukk.github.io/apartman-online/). GitHub Actions veritabanı testleri, derleme ve Pages dağıtımı başarılı; canlı HTML/JS/CSS dosyaları HTTP 200 ile ve doğru Supabase bağlantısıyla doğrulandı. Gerçek kullanıcılarla kayıt/giriş ve çift yönlü sohbet kabulü henüz tamamlanmadı. Güncel ayrıntılar `docs/STATUS.md` içinde.
 
 ## İlk sürüm
 
