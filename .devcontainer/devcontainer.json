@@ -1,0 +1,6 @@
+{
+  "name": "APARTMAN Cloud Development",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+  "postCreateCommand": "npm ci",
+  "forwardPorts": [5173]
+}
