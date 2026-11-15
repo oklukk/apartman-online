@@ -1,3 +1,16 @@
+# v0.2 geliştirme ve canlı migration durumu
+
+- PR: https://github.com/oklukk/apartman-online/pull/1 . İlk GitHub CI derleme/veritabanı işleri başarılı.
+- Mevcut `rmoytuncahutqurttknt` projesine yalnızca yeni `20261115185834_v02_economy_governance.sql` uygulandı. İlk iki migration ve geçmiş sürümleri değiştirilmedi. Yeni yerel dosyanın adı Supabase aracının oluşturduğu yeni sürüm numarasına eşleştirildi; SQL içeriği değişmedi.
+- Önce/sonra: 2 hesap, 2 üyelik, 2 mesaj, 2 oy, 2 davetiye ve 5.000 OP kasa. Eski kayıt özeti `11ab7ca750368207b51ff9c8a2056cb3`, daire özeti `18699c489d1a7986af34c14ff5f139d2` iki tarafta aynı. Eski verilerde silme/sıfırlama yapılmadı.
+- Mevcut iki sakinde 300'er OP, toplam iki başlangıç grant'i (600 OP) doğrulandı. Başlangıç parası ortak kasadan alınmadı. Henüz meslek seçilmedi; eski oyuncular adına seçim/iş/ödeme yapılmadı.
+- İlk aidat/işletme haftası 16 Kasım 2026 Pazartesi. Geçmiş borç veya işletme gideri üretilmedi. Yeni `apartman-v02-tick` ve eski `apartman-resolve-polls` etkin.
+- 3 yapılandırma, 11 eski PostgreSQL, 24 yeni PostgreSQL test grubu; statik React render testi ve bağlı üretim derlemesi geçti. Tam yerel Supabase Auth/Realtime süiti `work/local-status.json` olmadığından ENOENT ile engellendi. Mobil tarayıcı/gerçek iki oturum testi yapıldı diye raporlanmıyor.
+- Yeni tabloların tümünde RLS, iç para/cron/yetki işlevlerinde anon/authenticated execute yasağı doğrulandı. Mevcut Auth `leaked password protection disabled` uyarısı sürüyor. Supabase belgelerine göre bu koruma Pro ve üstü planlarda; ücretsiz kapsam korunarak ücretli özellik açılmadı: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection . Özel davetiye tablosunun RLS/policy INFO kaydı erişimin bilinçli kapalı olduğunu gösterir.
+- Ekonomi/seçim kuralları ve geri çekme yaklaşımı `V02.md` içindedir. PR birleşimi sonrası Pages sürümü ayrıca kontrol edilecek.
+
+Aşağıdaki bölüm v0.1 kurulumunun tarihsel raporudur; yeni özelliklerin kabul sonucu olarak kullanılmamalıdır.
+
 # APARTMAN kurulum durumu
 
 ## Canlı Supabase: oluşturuldu

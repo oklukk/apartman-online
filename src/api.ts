@@ -42,6 +42,7 @@ export interface Poll {
   status: "open" | "accepted" | "rejected";
   yes_count: number;
   no_count: number;
+  minimum_votes: number;
 }
 export interface GameEvent {
   id: string;
@@ -101,6 +102,7 @@ export function errorText(error: unknown): string {
 export const money = (n: number) => new Intl.NumberFormat("tr-TR").format(n);
 export const time = (s: string) =>
   new Intl.DateTimeFormat("tr-TR", {
+    timeZone: "Europe/Istanbul",
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(s));
