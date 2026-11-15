@@ -1,8 +1,10 @@
-# APARTMAN
+# APARTMAN v0.2
 
 Çınar Apartmanı'nda gerçek oyuncuların birlikte yaşadığı, Türkçe metin ve menü tabanlı online oyunun ilk sürümü. React + TypeScript + Vite, Supabase Auth/PostgreSQL/Realtime, GitHub Pages. Ayrı uygulama sunucusu veya ücretli kaynak gerekmez.
 
-**Durum:** Kaynak ve Git geçmişi [GitHub repository'sine](https://github.com/oklukk/apartman-online) yüklendi. [APARTMAN yayında](https://oklukk.github.io/apartman-online/). GitHub Actions veritabanı testleri, derleme ve Pages dağıtımı başarılı; canlı HTML/JS/CSS dosyaları HTTP 200 ile ve doğru Supabase bağlantısıyla doğrulandı. Gerçek kullanıcılarla kayıt/giriş ve çift yönlü sohbet kabulü henüz tamamlanmadı. Güncel ayrıntılar `docs/STATUS.md` içinde.
+**v0.2:** Mevcut dört ekran ve sosyal sistem korunarak kişisel cüzdan/iş hayatı, haftalık aidat/işletme giderleri ve 14 günlük yönetici seçimleri eklendi. Ekonomi, takvim, güvenlik, testler ve veri koruma yaklaşımı [v0.2 belgesinde](docs/V02.md). Başlangıç 300 OP, eşit maaşlı üç meslek 100 OP/gün, ek iş 25 OP/gün, aidat 150 OP/hafta. Bütün para ve yetki işlemleri sunucudadır.
+
+[Oyun](https://oklukk.github.io/apartman-online/) · [Repository](https://github.com/oklukk/apartman-online). Yayın ve canlı migration durumu `docs/STATUS.md` içinde.
 
 ## İlk sürüm
 

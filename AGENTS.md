@@ -1,7 +1,7 @@
 # APARTMAN geliştirme kuralları
 
 - React + TypeScript + Vite ve Supabase kullan. Türkçe, mobil öncelikli, erişilebilir dört bölüm sınırını koru.
-- Bu sürüm yalnızca Çınar Apartmanı (12 daire), davetiye, sohbet, engelleme/şikâyet, kasa ve oylamadır. Kapsamı izinsiz genişletme.
+- v0.2 kapsamı: mevcut tek Çınar Apartmanı, davetiye/sohbet/oylama temeli üzerine kişisel cüzdan, üç eşit maaşlı meslek, ek iş, aidat, işletme giderleri, yönetici seçimleri ve oylamalı teklifler. Ticaret, para transferi veya çoklu apartman ekleme.
 - Kritik işlemler PostgreSQL RPC ile doğrulanır. İstemci rolüne, maliyete, kullanıcı kimliğine veya oylama sonucuna güvenme.
 - Her tabloda RLS, en az yetki ve açık GRANT kullan. SECURITY DEFINER yalnızca private şemasında, boş search_path ve açık yetki kontrolüyle kullanılabilir. Internal çözümleme işlevlerini authenticated/anon rollerine açma.
 - Üyelik ve kasa işlemlerinde önce apartman, sonra davetiye/oylama satırını kilitle. Kilit sırasını koru. Aynı oylamadan yalnızca bir kasa hareketi üret.
@@ -13,3 +13,13 @@
 - Her aşamanın sonunda `npm test` ve `npm run build`; veritabanı değiştiğinde disposable yerel stack'te `npm run test:db` çalıştır.
 - Test edilmemiş davranışı doğrulanmış gibi, kurulum bekleyen uygulamayı tamamlanmış gibi raporlama.
 - Davetiye üretimi ve şikâyet incelemesi README'deki yönetici SQL akışıyla yapılır; kullanıcı arayüzünden yönetici yetkisi atanmaz.
+
+## v0.2 ekonomi ve yönetim
+
+- İlk iki migration değişmez. Yeni dosyalar yalnızca ek migration olarak gelir; canlı kullanıcı, daire, mesaj, oy, davetiye ve eski kasa defterine geriye dönük düzeltme uygulama.
+- Bütün ekonomik işlemler önce building, sonra wallet/dues/poll/election kilidi alır. `wallet_post` ve `treasury_post` yalnızca iç işlevdir; authenticated/anon rollerine grant etme.
+- Türkiye günü/haftası `Europe/Istanbul` ile SQL'de hesaplanır. Sadece cari gün maaşı ve cari hafta aidatı; 7 günden eski aktiviteye yeni maaş/borç yok. Yeni meslek ilk sonraki günde, yeni sakin aidatı sonraki pazarteside başlar.
+- Cüzdan bakiyesi ledger ile aynı transaction içinde güncellenir. Günlük gelirde `(user_id,kind,period_key)`, borçta `(user_id,week_start)` ve kasada source_key tekildir. Eski negatif poll hareketlerini treasury_history görünümünde bir kez göster.
+- Yönetici yetkisi sunucuda aktif `manager_terms` aralığıyla belirlenir. Aday/oy modeli evet-hayır poll modelinden ayrıdır. Seçmen listesi açılışta sabitlenir, en az 2 seçmen ve 2 oy gerekir. Görev 14 gündür; süresi dolan yöneticinin yetkisini uzatma.
+- `apartman-v02-tick` kendi transaction advisory lock'unu kullanır; mevcut `apartman-resolve-polls` görevini kaldırma veya yeniden oluşturma. Test için canlıda tarih değiştirme ya da worker'ı keyfi çağırma.
+- Gerekli kontroller: `npm test`, `npm run test:sql`, `npm run test:v02`, `npm run test:ui`, `npm run build`. `test:sql` ve `test:v02` sabit localhost 55432 üzerinde kendi disposable veritabanlarını oluşturur/siler; canlıya yönlendirilemez. `test:db` gerçek yerel Supabase ister; altyapı yoksa engeli açıkça raporla.

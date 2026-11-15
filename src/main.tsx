@@ -1,3 +1,10 @@
+import { EconomyPanel } from "./components/EconomyPanel";
+import {
+  GovernancePanel,
+  ManagementSummary,
+} from "./components/GovernancePanel";
+import { economyTables } from "./economy";
+import type { EconomyData, Perform } from "./economy";
 import { PollCard } from "./components/PollCard";
 import { ActivityFeed } from "./components/ActivityFeed";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -21,7 +28,7 @@ import type {
 import "./style.css";
 const tabs = ["Apartman", "Dairem", "Komşular", "Yönetim"] as const;
 type Tab = (typeof tabs)[number];
-type Data = {
+type Data = EconomyData & {
   profiles: Profile[];
   memberships: Member[];
   apartments: Apartment[];
@@ -58,6 +65,7 @@ function App() {
     const request = ++requestNumber.current;
     try {
       const names: (keyof Data)[] = [
+        ...economyTables,
         "profiles",
         "memberships",
         "apartments",
@@ -73,6 +81,11 @@ function App() {
       ];
       const rows = await Promise.all(
         names.map(async (name) => {
+          if (name === "dues_overview") {
+            const result = await client!.rpc("dues_overview");
+            if (result.error) throw result.error;
+            return [name, result.data];
+          }
           let query = client!.from(name).select("*");
           if (name === "messages" || name === "activity")
             query = query
@@ -80,6 +93,10 @@ function App() {
               .limit(name === "messages" ? 50 : 30);
           if (name === "messages")
             query = query.order("id", { ascending: false });
+          if (name === "wallet_transactions" || name === "treasury_history")
+            query = query.order("created_at", { ascending: false });
+          if (name === "elections")
+            query = query.order("starts_at", { ascending: false });
           if (name === "polls")
             query = query.order("ends_at", { ascending: false });
           const result = await query;
@@ -128,8 +145,24 @@ function App() {
   const building = data?.buildings[0];
   useEffect(() => {
     if (!client || !me) return;
+    let reloadTimer: ReturnType<typeof setTimeout>;
+    const queueLoad = () => {
+      clearTimeout(reloadTimer);
+      reloadTimer = setTimeout(() => {
+        void load();
+      }, 150);
+    };
     const channel = client!.channel(`building-${me.building_id}`);
     for (const table of [
+      "wallets",
+      "dues",
+      "operating_expenses",
+      "treasury_entries",
+      "elections",
+      "election_candidates",
+      "election_votes",
+      "manager_terms",
+      "dues_rates",
       "messages",
       "memberships",
       "polls",
@@ -144,9 +177,7 @@ function App() {
           table,
           filter: `${table === "buildings" ? "id" : "building_id"}=eq.${me.building_id}`,
         },
-        () => {
-          void load();
-        },
+        queueLoad,
       );
     }
     channel.subscribe((status) => {
@@ -160,6 +191,10 @@ function App() {
       if (status === "SUBSCRIBED") void load();
     });
     const tick = async () => {
+      const activityResult = await client!.rpc("player_action", {
+        action: "heartbeat",
+      });
+      if (activityResult.error) setNotice(errorText(activityResult.error));
       const r = await client!.rpc("settle_polls");
       if (r.error) setNotice(errorText(r.error));
       void load();
@@ -175,6 +210,7 @@ function App() {
     return () => {
       void client!.removeChannel(channel);
       clearInterval(interval);
+      clearTimeout(reloadTimer);
       window.removeEventListener("focus", focus);
     };
   }, [me?.building_id, load]);
@@ -195,6 +231,9 @@ function App() {
     } finally {
       setBusy(false);
     }
+  };
+  const perform: Perform = (rpc, args, success) => {
+    void act(() => client!.rpc(rpc, args), success);
   };
   const username = (id: string) =>
     data?.profiles.find((p) => p.id === id)?.username || "Komşu";
@@ -469,6 +508,7 @@ function App() {
             </section>
             {tab === "Apartman" && (
               <>
+                <ManagementSummary data={data} username={username} />
                 <div className="stats">
                   <article className="card">
                     <span className="eyebrow">APARTMAN</span>
@@ -536,22 +576,25 @@ function App() {
               </>
             )}
             {tab === "Dairem" && (
-              <article className="card profile-card">
-                <div className="door">
-                  {String(myApartment?.number).padStart(2, "0")}
-                </div>
-                <div>
-                  <div className="eyebrow">SENİN DAİREN</div>
-                  <h2>{myProfile?.username}</h2>
-                  <p>
-                    {building?.name} · Daire {myApartment?.number}
-                  </p>
-                  <p className="subtle">
-                    Her hesap bir daireye sahiptir. Komşuların seni bu kullanıcı
-                    adıyla görür.
-                  </p>
-                </div>
-              </article>
+              <>
+                <article className="card profile-card">
+                  <div className="door">
+                    {String(myApartment?.number).padStart(2, "0")}
+                  </div>
+                  <div>
+                    <div className="eyebrow">SENİN DAİREN</div>
+                    <h2>{myProfile?.username}</h2>
+                    <p>
+                      {building?.name} · Daire {myApartment?.number}
+                    </p>
+                    <p className="subtle">
+                      Her hesap bir daireye sahiptir. Komşuların seni bu
+                      kullanıcı adıyla görür.
+                    </p>
+                  </div>
+                </article>
+                <EconomyPanel data={data} busy={busy} perform={perform} />
+              </>
             )}
             {tab === "Komşular" && (
               <div className="neighbors-layout">
@@ -765,39 +808,39 @@ function App() {
               </div>
             )}
             {tab === "Yönetim" && (
-              <div className="columns">
-                <div>
-                  {data.polls.map(pollCard)}
-                  {!data.polls.length && <p>Henüz oylama yok.</p>}
-                </div>
-                <div>
-                  <article className="card">
-                    <div className="eyebrow">ŞEFFAF KASA</div>
-                    <div className="big-number">
-                      {money(building?.treasury || 0)} <small>OP</small>
-                    </div>
-                    <h3>Kasa hareketleri</h3>
-                    {data.treasury_transactions.length ? (
-                      data.treasury_transactions.map((t) => (
-                        <p key={t.id} className="spread">
-                          <span>{time(t.created_at)}</span>
-                          <strong>{money(t.amount)} OP</strong>
-                        </p>
-                      ))
-                    ) : (
+              <>
+                <GovernancePanel
+                  data={data}
+                  userId={session.user.id}
+                  username={username}
+                  busy={busy}
+                  perform={perform}
+                />
+                <div className="columns">
+                  <div>
+                    {data.polls.map(pollCard)}
+                    {!data.polls.length && <p>Henüz oylama yok.</p>}
+                  </div>
+                  <div>
+                    <article className="card">
+                      <div className="eyebrow">ŞEFFAF KASA</div>
+                      <div className="big-number">
+                        {money(building?.treasury || 0)} <small>OP</small>
+                      </div>
                       <p className="subtle">
-                        Henüz harcama yapılmadı. Başlangıç kasası: 5.000 OP.
+                        Bütün gelir ve giderler yukarıdaki ortak muhasebe
+                        defterinde görünür.
                       </p>
-                    )}
-                  </article>
-                  {activity}
+                    </article>
+                    {activity}
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </>
         )}
         <footer>
-          APARTMAN <span>İlk sürüm · Gerçek komşular, ortak bir hikâye.</span>
+          APARTMAN <span>v0.2 · Gerçek komşular, ortak bir hikâye.</span>
         </footer>
       </main>
     </div>

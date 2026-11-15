@@ -1,8 +1,14 @@
 import pg from "pg";
 import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
-const connectionString =
+const baseUrl =
   "postgresql://postgres:local-test-only@127.0.0.1:55432/postgres";
+const admin = new pg.Client({ connectionString: baseUrl });
+await admin.connect();
+await admin.query("create database apartman_legacy");
+const testUrl = new URL(baseUrl);
+testUrl.pathname = "/apartman_legacy";
+const connectionString = testUrl.href;
 const db = new pg.Client({ connectionString });
 await db.connect();
 let count = 0;
@@ -36,7 +42,10 @@ try {
     0,
     "Create a fresh test container",
   );
-  await db.query(`create role anon nologin;create role authenticated nologin;create schema auth;
+  await db.query(`do $$ begin
+if not exists(select 1 from pg_roles where rolname='anon') then create role anon nologin;end if;
+if not exists(select 1 from pg_roles where rolname='authenticated') then create role authenticated nologin;end if;
+end $$;create schema auth;
  create table auth.users(id uuid primary key, raw_user_meta_data jsonb);
  create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
  grant usage on schema auth to authenticated,anon;grant execute on function auth.uid() to authenticated,anon;
@@ -384,4 +393,6 @@ try {
   );
 } finally {
   await db.end();
+  await admin.query("drop database apartman_legacy with (force)");
+  await admin.end();
 }

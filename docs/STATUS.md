@@ -1,3 +1,9 @@
+# v0.2 geliştirme durumu
+
+v0.2 feat/v02-economy-governance branch'inde hazırlandı. 3 yapılandırma, 11 eski PostgreSQL ve 24 yeni PostgreSQL test grubu, statik React render testi ve bağlı üretim derlemesi geçti. Tam yerel Supabase Auth/Realtime süiti altyapı dosyası bulunmadığından çalıştırılamadı. Güncel ekonomi/seçim kuralları `V02.md` içindedir. Canlı migration ve yayın doğrulaması uygulama sonrasında bu bölüme eklenecek.
+
+Aşağıdaki bölüm v0.1 kurulumunun tarihsel raporudur; yeni özelliklerin kabul sonucu olarak kullanılmamalıdır.
+
 # APARTMAN kurulum durumu
 
 ## Canlı Supabase: oluşturuldu

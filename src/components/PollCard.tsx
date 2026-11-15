@@ -61,7 +61,8 @@ export function PollCard({ poll, event, vote, busy, onVote }: Props) {
         </p>
       )}
       <p className="footnote">
-        Bitiş: {time(poll.ends_at)} · En az 3 oy, salt çoğunluk. Eşitlikte ret.
+        Bitiş: {time(poll.ends_at)} · En az {poll.minimum_votes} oy, salt
+        çoğunluk. Eşitlikte ret.
       </p>
     </article>
   );
