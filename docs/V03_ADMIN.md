@@ -29,6 +29,10 @@ Süper Yönetici diğer onaylı Auth kullanıcılarına Yönetici, Moderatör, E
 
 Katalogda kayıtlı fakat henüz RPC'si yazılmamış ekonomi düzeltme, banlama, seçim müdahalesi, acil müdahale ve toplu işlem hakları **şimdilik planlı yetkilerdir**. Bu kod dilimi bunları çalıştırabiliyormuş gibi sunulmamalıdır.
 
+## İlk sahip hesabının MFA kurulumu
+
+İlk Süper Yönetici ataması için doğrulanmış TOTP/MFA faktörü gerekiyor. İlk atama yapılmadan önce sistem yönetimi ekranı görünmediğinden tüm giriş yapmış hesaplarda ayrı `Hesap güvenliği` sekmesi bulunur; burada MFA kurulup doğrulanabilir. Bu ekrana erişim herhangi bir yönetici yetkisi kazandırmaz. Kullanıcı oyuna giriş yapar, Hesap güvenliği sekmesinden MFA'yı etkinleştirir; operatör daha sonra sahipliği doğrulanmış Auth UUID üzerinde ayrı bootstrap işlemi yapar. Sistem yönetimi sekmesi yalnızca server rolü bulunan hesaplara açılır.
+
 ## Güvenlik ilkeleri
 
 Rol bilgileri kullanıcıların değiştirebildiği auth.user_metadata içinden okunmaz. Private tablolara anon/authenticated için doğrudan erişim kapalıdır. Her yönetim işlemi sunucudaki kontrollü fonksiyondan geçer. Servis anahtarı JavaScript içine konulmaz. Yönetici işlemlerinde 5–500 karakter gerekçe şartı vardır.
