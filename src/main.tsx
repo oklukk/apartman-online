@@ -1,3 +1,5 @@
+import { StaffPanel, getStaffIdentity } from "./components/StaffPanel";
+import type { StaffIdentity } from "./components/StaffPanel";
 import { EconomyPanel } from "./components/EconomyPanel";
 import {
   GovernancePanel,
@@ -27,7 +29,7 @@ import type {
 } from "./api";
 import "./style.css";
 const tabs = ["Apartman", "Dairem", "Komşular", "Yönetim"] as const;
-type Tab = (typeof tabs)[number];
+type Tab = (typeof tabs)[number] | "Sistem";
 type Data = EconomyData & {
   profiles: Profile[];
   memberships: Member[];
@@ -45,6 +47,7 @@ type Data = EconomyData & {
 function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [starting, setStarting] = useState(true);
+  const [staff, setStaff] = useState<StaffIdentity>({ roles: [], permissions: [] });
   const [data, setData] = useState<Data | null>(null);
   const [tab, setTab] = useState<Tab>("Apartman");
   const [notice, setNotice] = useState("");
@@ -139,6 +142,19 @@ function App() {
     setHasOlder(true);
     void load();
   }, [load]);
+  useEffect(() => {
+    if (!session) {
+      setStaff({ roles: [], permissions: [] });
+      return;
+    }
+    let cancelled = false;
+    void getStaffIdentity().then((value) => {
+      if (!cancelled) setStaff(value);
+    }).catch((err: unknown) => {
+      if (!cancelled) setNotice(errorText(err));
+    });
+    return () => { cancelled = true; };
+  }, [session?.user.id]);
   const me = data?.memberships.find((m) => m.user_id === session?.user.id);
   const myProfile = data?.profiles.find((p) => p.id === session?.user.id);
   const myApartment = data?.apartments.find((a) => a.id === me?.apartment_id);
@@ -290,12 +306,12 @@ function App() {
             APARTMAN<small>Birlikte yaşanan bir dünya.</small>
           </div>
         </a>
-        {session && me && (
+        {session && (me || staff.roles.length > 0) && (
           <>
-            <div className="building-label">
+            {me && <div className="building-label">
               ÇINAR APARTMANI <span>12 daire · Tek bir topluluk</span>
-            </div>
-            <nav aria-label="Ana bölümler">
+            </div>}
+            {me && <nav aria-label="Ana bölümler">
               {tabs.map((t, i) => (
                 <button
                   key={t}
@@ -307,12 +323,15 @@ function App() {
                   <span className="nav-arrow">›</span>
                 </button>
               ))}
-            </nav>
-            <div className="sidebar-bottom">
+            </nav>}
+            {staff.roles.length > 0 && <nav aria-label="Sistem yönetimi"><button
+              className={tab === "Sistem" ? "selected" : ""}
+              onClick={() => setTab("Sistem")}>Sistem yönetimi</button></nav>}
+            {me && <div className="sidebar-bottom">
               <span className="live-dot" />
               {live}
               <small>Gelişmeler 30 saniyede de yenilenir.</small>
-            </div>
+            </div>}
           </>
         )}
         <label className="theme">
@@ -333,7 +352,7 @@ function App() {
           <span>
             Çınar Apartmanı{" "}
             <span className="subtle">
-              / {session && me ? tab : "Hoş geldiniz"}
+              / {session && (me || tab === "Sistem") ? tab : "Hoş geldiniz"}
             </span>
           </span>
           {session && (
@@ -447,6 +466,8 @@ function App() {
               </p>
             </div>
           </section>
+        ) : tab === "Sistem" && staff.roles.length > 0 ? (
+          <StaffPanel identity={staff} />
         ) : !data ? (
           <p role="status">Apartman bilgileri yükleniyor…</p>
         ) : !me ? (
