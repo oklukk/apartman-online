@@ -148,6 +148,7 @@ begin
   ) x),'[]'::jsonb),
   'permissions',coalesce((select jsonb_agg(to_jsonb(p) order by p.category,p.code)
     from private.staff_permissions p),'[]'::jsonb),
+  'buildings',coalesce((select jsonb_agg(to_jsonb(b) order by b.name) from (select id,name,slug,treasury from public.buildings) b),'[]'::jsonb),
   'users',coalesce((select jsonb_agg(to_jsonb(u) order by u.username) from (
     select a.id as user_id,coalesce(p.username,'(oyuncu değil)') as username
     from auth.users a left join public.profiles p on p.id=a.id
