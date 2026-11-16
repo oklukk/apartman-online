@@ -248,7 +248,7 @@ begin
  if not private.staff_is_super() then raise exception 'Süper Yönetici yetkisi gerekli.'; end if;
  if char_length(btrim(coalesce(reason,''))) not between 5 and 500 then raise exception 'Gerekçe 5–500 karakter olmalı.'; end if;
  select * into strict r from private.staff_roles where code=role_code for update;
- if r.system_role then raise exception 'Yerleşik rollerin izinleri bu ekranda düzenlenemez.'; end if;
+ if r.code='super_admin' then raise exception 'Süper Yönetici rolünün sınırsız yetki kuralı değiştirilemez.'; end if;
  if exists(select 1 from unnest(permission_codes) x where not exists(select 1 from private.staff_permissions p where p.code=x))
   then raise exception 'Kayıtlı olmayan izin kodu.'; end if;
  select coalesce(array_agg(permission_code),array[]::text[]) into previous from private.staff_role_permissions where role_id=r.id;
