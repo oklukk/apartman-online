@@ -82,9 +82,14 @@ try {
       "insert into public.memberships(user_id,building_id,apartment_id) select $1,$2,id from public.apartments where building_id=$2 and number=$3",
       [u, b, i + 1],
     );
+  await db.query('select private.run_v02()');
+  await as(player,"select public.send_message('Korunan oyuncu sohbeti')");
+  await db.query('insert into public.polls(building_id,event_id) select $1,id from public.events where building_id=$1 limit 1',[b]);
+  await db.query('insert into public.votes(poll_id,user_id,choice) select id,$1,true from public.polls limit 1',[player]);
+  await db.query("insert into public.dues(building_id,user_id,week_start,amount) values($1,$2,date_trunc('week',now() at time zone 'Europe/Istanbul')::date,150)",[b,player]);
   const snapshot = () =>
     scalar(
-      "select md5(string_agg(t||d,E'\n' order by t,d)) from (select 'wallet' t,row_to_json(w)::text d from public.wallets w union all select 'membership',row_to_json(m)::text from public.memberships m union all select 'building',row_to_json(x)::text from public.buildings x union all select 'election',row_to_json(e)::text from public.elections e) s",
+      "select md5(string_agg(t||d,E'\n' order by t,d)) from (select 'wallet' t,row_to_json(w)::text d from public.wallets w union all select 'membership',row_to_json(m)::text from public.memberships m union all select 'building',row_to_json(x)::text from public.buildings x union all select 'election',row_to_json(e)::text from public.elections e union all select 'messages',row_to_json(m)::text from public.messages m union all select 'dues',row_to_json(d)::text from public.dues d union all select 'votes',row_to_json(v)::text from public.votes v union all select 'poll',row_to_json(p)::text from public.polls p union all select 'ledger',row_to_json(t)::text from public.wallet_transactions t) s",
     );
   const before = await snapshot();
   await db.query(await readFile("supabase/migrations/" + files[3], "utf8"));
