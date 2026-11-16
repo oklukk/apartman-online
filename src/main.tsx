@@ -1,3 +1,6 @@
+import { StaffPanel, getStaffIdentity } from "./components/StaffPanel";
+import { StaffMfa } from "./components/StaffMfa";
+import type { StaffIdentity } from "./components/StaffPanel";
 import { EconomyPanel } from "./components/EconomyPanel";
 import {
   GovernancePanel,
@@ -27,7 +30,7 @@ import type {
 } from "./api";
 import "./style.css";
 const tabs = ["Apartman", "Dairem", "Komşular", "Yönetim"] as const;
-type Tab = (typeof tabs)[number];
+type Tab = (typeof tabs)[number] | "Sistem" | "Güvenlik";
 type Data = EconomyData & {
   profiles: Profile[];
   memberships: Member[];
@@ -45,6 +48,10 @@ type Data = EconomyData & {
 function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [starting, setStarting] = useState(true);
+  const [staff, setStaff] = useState<StaffIdentity>({
+    roles: [],
+    permissions: [],
+  });
   const [data, setData] = useState<Data | null>(null);
   const [tab, setTab] = useState<Tab>("Apartman");
   const [notice, setNotice] = useState("");
@@ -139,6 +146,39 @@ function App() {
     setHasOlder(true);
     void load();
   }, [load]);
+  useEffect(() => {
+    if (!session) {
+      setStaff({ roles: [], permissions: [] });
+      return;
+    }
+    let cancelled = false;
+    setStaff({ roles: [], permissions: [] });
+    const refresh = () => {
+      void getStaffIdentity()
+        .then((value) => {
+          if (!cancelled) {
+            setStaff(value);
+            if (!value.roles.length)
+              setTab((t) => (t === "Sistem" ? "Apartman" : t));
+          }
+        })
+        .catch((err: unknown) => {
+          if (!cancelled) {
+            setStaff({ roles: [], permissions: [] });
+            setTab((t) => (t === "Sistem" ? "Apartman" : t));
+            setNotice(errorText(err));
+          }
+        });
+    };
+    refresh();
+    const timer = setInterval(refresh, 30000);
+    window.addEventListener("focus", refresh);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+    };
+  }, [session?.user.id]);
   const me = data?.memberships.find((m) => m.user_id === session?.user.id);
   const myProfile = data?.profiles.find((p) => p.id === session?.user.id);
   const myApartment = data?.apartments.find((a) => a.id === me?.apartment_id);
@@ -290,29 +330,54 @@ function App() {
             APARTMAN<small>Birlikte yaşanan bir dünya.</small>
           </div>
         </a>
-        {session && me && (
+        {session && (
           <>
-            <div className="building-label">
-              ÇINAR APARTMANI <span>12 daire · Tek bir topluluk</span>
-            </div>
-            <nav aria-label="Ana bölümler">
-              {tabs.map((t, i) => (
-                <button
-                  key={t}
-                  className={tab === t ? "selected" : ""}
-                  onClick={() => setTab(t)}
-                >
-                  <span className="nav-icon">{["▦", "⌂", "☷", "≡"][i]}</span>
-                  {t}
-                  <span className="nav-arrow">›</span>
-                </button>
-              ))}
+            {me && (
+              <div className="building-label">
+                {building?.name.toLocaleUpperCase("tr-TR") || "ÇINAR APARTMANI"}{" "}
+                <span>12 daire · Tek bir topluluk</span>
+              </div>
+            )}
+            {me && (
+              <nav aria-label="Ana bölümler">
+                {tabs.map((t, i) => (
+                  <button
+                    key={t}
+                    className={tab === t ? "selected" : ""}
+                    onClick={() => setTab(t)}
+                  >
+                    <span className="nav-icon">{["▦", "⌂", "☷", "≡"][i]}</span>
+                    {t}
+                    <span className="nav-arrow">›</span>
+                  </button>
+                ))}
+              </nav>
+            )}
+            <nav aria-label="Hesap güvenliği">
+              <button
+                className={tab === "Güvenlik" ? "selected" : ""}
+                onClick={() => setTab("Güvenlik")}
+              >
+                Hesap güvenliği
+              </button>
             </nav>
-            <div className="sidebar-bottom">
-              <span className="live-dot" />
-              {live}
-              <small>Gelişmeler 30 saniyede de yenilenir.</small>
-            </div>
+            {staff.roles.length > 0 && (
+              <nav aria-label="Sistem yönetimi">
+                <button
+                  className={tab === "Sistem" ? "selected" : ""}
+                  onClick={() => setTab("Sistem")}
+                >
+                  Sistem yönetimi
+                </button>
+              </nav>
+            )}
+            {me && (
+              <div className="sidebar-bottom">
+                <span className="live-dot" />
+                {live}
+                <small>Gelişmeler 30 saniyede de yenilenir.</small>
+              </div>
+            )}
           </>
         )}
         <label className="theme">
@@ -331,9 +396,9 @@ function App() {
       <main>
         <header className="topbar">
           <span>
-            Çınar Apartmanı{" "}
+            {building?.name || "Çınar Apartmanı"}{" "}
             <span className="subtle">
-              / {session && me ? tab : "Hoş geldiniz"}
+              / {session && (me || tab === "Sistem" || tab === "Güvenlik") ? tab : "Hoş geldiniz"}
             </span>
           </span>
           {session && (
@@ -447,6 +512,18 @@ function App() {
               </p>
             </div>
           </section>
+        ) : tab === "Güvenlik" ? (
+          <section className="staff-panel">
+            <div className="eyebrow">HESAP GÜVENLİĞİ</div>
+            <h1>Hesap güvenliği</h1>
+            <p className="subtle">
+              İki aşamalı doğrulama her kullanıcı tarafından kurulabilir.
+              Doğrulamayı etkinleştirmek yönetim yetkisi vermez.
+            </p>
+            <StaffMfa />
+          </section>
+        ) : tab === "Sistem" && staff.roles.length > 0 ? (
+          <StaffPanel identity={staff} />
         ) : !data ? (
           <p role="status">Apartman bilgileri yükleniyor…</p>
         ) : !me ? (

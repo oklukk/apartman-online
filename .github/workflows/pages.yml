@@ -35,6 +35,7 @@ jobs:
       - run: npm ci
       - run: npm run test:sql
       - run: npm run test:v02
+      - run: npm run test:rbac
   build:
     runs-on: ubuntu-latest
     steps:
