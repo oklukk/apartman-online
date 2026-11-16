@@ -309,7 +309,7 @@ function App() {
         {session && (me || staff.roles.length > 0) && (
           <>
             {me && <div className="building-label">
-              ÇINAR APARTMANI <span>12 daire · Tek bir topluluk</span>
+              {building?.name.toLocaleUpperCase("tr-TR") || "ÇINAR APARTMANI"} <span>12 daire · Tek bir topluluk</span>
             </div>}
             {me && <nav aria-label="Ana bölümler">
               {tabs.map((t, i) => (
@@ -350,7 +350,7 @@ function App() {
       <main>
         <header className="topbar">
           <span>
-            Çınar Apartmanı{" "}
+            {building?.name || "Çınar Apartmanı"}{" "}
             <span className="subtle">
               / {session && (me || tab === "Sistem") ? tab : "Hoş geldiniz"}
             </span>
