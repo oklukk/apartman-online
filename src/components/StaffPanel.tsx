@@ -179,14 +179,14 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
         </form>
       </article>}
       {isSuper && <article className="card">
-        <h2>Özel rol izinlerini düzenle</h2>
+        <h2>Rol izinlerini düzenle</h2>
         <label>Rol
           <select value={editRole} onChange={(e) => {
             setEditRole(e.target.value);
             setEditPerms(directory.roles.find((r) => r.code === e.target.value)?.permissions || []);
           }}>
             <option value="">Seçiniz</option>
-            {directory.roles.filter((r) => !r.system_role).map((r) =>
+            {directory.roles.filter((r) => r.code !== "super_admin").map((r) =>
               <option key={r.id} value={r.code}>{r.title}</option>)}
           </select>
         </label>
