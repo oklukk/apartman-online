@@ -1,4 +1,5 @@
 import { StaffPanel, getStaffIdentity } from "./components/StaffPanel";
+import { StaffMfa } from "./components/StaffMfa";
 import type { StaffIdentity } from "./components/StaffPanel";
 import { EconomyPanel } from "./components/EconomyPanel";
 import {
@@ -29,7 +30,7 @@ import type {
 } from "./api";
 import "./style.css";
 const tabs = ["Apartman", "Dairem", "Komşular", "Yönetim"] as const;
-type Tab = (typeof tabs)[number] | "Sistem";
+type Tab = (typeof tabs)[number] | "Sistem" | "Güvenlik";
 type Data = EconomyData & {
   profiles: Profile[];
   memberships: Member[];
@@ -329,7 +330,7 @@ function App() {
             APARTMAN<small>Birlikte yaşanan bir dünya.</small>
           </div>
         </a>
-        {session && (me || staff.roles.length > 0) && (
+        {session && (
           <>
             {me && (
               <div className="building-label">
@@ -352,6 +353,14 @@ function App() {
                 ))}
               </nav>
             )}
+            <nav aria-label="Hesap güvenliği">
+              <button
+                className={tab === "Güvenlik" ? "selected" : ""}
+                onClick={() => setTab("Güvenlik")}
+              >
+                Hesap güvenliği
+              </button>
+            </nav>
             {staff.roles.length > 0 && (
               <nav aria-label="Sistem yönetimi">
                 <button
@@ -389,7 +398,7 @@ function App() {
           <span>
             {building?.name || "Çınar Apartmanı"}{" "}
             <span className="subtle">
-              / {session && (me || tab === "Sistem") ? tab : "Hoş geldiniz"}
+              / {session && (me || tab === "Sistem" || tab === "Güvenlik") ? tab : "Hoş geldiniz"}
             </span>
           </span>
           {session && (
@@ -502,6 +511,16 @@ function App() {
                 gerekir.
               </p>
             </div>
+          </section>
+        ) : tab === "Güvenlik" ? (
+          <section className="staff-panel">
+            <div className="eyebrow">HESAP GÜVENLİĞİ</div>
+            <h1>Hesap güvenliği</h1>
+            <p className="subtle">
+              İki aşamalı doğrulama her kullanıcı tarafından kurulabilir.
+              Doğrulamayı etkinleştirmek yönetim yetkisi vermez.
+            </p>
+            <StaffMfa />
           </section>
         ) : tab === "Sistem" && staff.roles.length > 0 ? (
           <StaffPanel identity={staff} />
