@@ -206,6 +206,7 @@ begin
  select * into strict a from private.staff_assignments where id=assignment_id for update;
  select * into strict r from private.staff_roles where id=a.role_id;
  if r.code='super_admin' and a.scope_kind='global' then
+  perform 1 from private.staff_roles where code='super_admin' for update;
   if (select count(*) from private.staff_assignments sa join private.staff_roles sr on sr.id=sa.role_id
       where sr.code='super_admin' and sa.scope_kind='global' and (sa.expires_at is null or sa.expires_at>clock_timestamp()))<=1
   then raise exception 'Son Süper Yönetici yetkisi kaldırılamaz.'; end if;
