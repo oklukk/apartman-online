@@ -52,3 +52,11 @@ test("staging matches canonical migration and bootstrap is never invoked", () =>
   assert.equal(readFileSync("supabase/migrations/" + file, "utf8"), sql);
   assert.doesNotMatch(sql, /select private\.staff_bootstrap\(/i);
 });
+
+test("account security permits MFA onboarding before staff bootstrap", () => {
+  assert.ok(app.includes('tab === "Güvenlik"'));
+  assert.ok(app.includes('<StaffMfa />'));
+  assert.ok(app.includes('Hesap güvenliği'));
+  assert.ok(app.includes('Doğrulamayı etkinleştirmek yönetim yetkisi vermez.'));
+  assert.ok(app.includes('tab === "Sistem" && staff.roles.length > 0'));
+});
