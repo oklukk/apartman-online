@@ -47,7 +47,10 @@ type Data = EconomyData & {
 function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [starting, setStarting] = useState(true);
-  const [staff, setStaff] = useState<StaffIdentity>({ roles: [], permissions: [] });
+  const [staff, setStaff] = useState<StaffIdentity>({
+    roles: [],
+    permissions: [],
+  });
   const [data, setData] = useState<Data | null>(null);
   const [tab, setTab] = useState<Tab>("Apartman");
   const [notice, setNotice] = useState("");
@@ -148,12 +151,32 @@ function App() {
       return;
     }
     let cancelled = false;
-    void getStaffIdentity().then((value) => {
-      if (!cancelled) setStaff(value);
-    }).catch((err: unknown) => {
-      if (!cancelled) setNotice(errorText(err));
-    });
-    return () => { cancelled = true; };
+    setStaff({ roles: [], permissions: [] });
+    const refresh = () => {
+      void getStaffIdentity()
+        .then((value) => {
+          if (!cancelled) {
+            setStaff(value);
+            if (!value.roles.length)
+              setTab((t) => (t === "Sistem" ? "Apartman" : t));
+          }
+        })
+        .catch((err: unknown) => {
+          if (!cancelled) {
+            setStaff({ roles: [], permissions: [] });
+            setTab((t) => (t === "Sistem" ? "Apartman" : t));
+            setNotice(errorText(err));
+          }
+        });
+    };
+    refresh();
+    const timer = setInterval(refresh, 30000);
+    window.addEventListener("focus", refresh);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+    };
   }, [session?.user.id]);
   const me = data?.memberships.find((m) => m.user_id === session?.user.id);
   const myProfile = data?.profiles.find((p) => p.id === session?.user.id);
@@ -308,30 +331,44 @@ function App() {
         </a>
         {session && (me || staff.roles.length > 0) && (
           <>
-            {me && <div className="building-label">
-              {building?.name.toLocaleUpperCase("tr-TR") || "ÇINAR APARTMANI"} <span>12 daire · Tek bir topluluk</span>
-            </div>}
-            {me && <nav aria-label="Ana bölümler">
-              {tabs.map((t, i) => (
+            {me && (
+              <div className="building-label">
+                {building?.name.toLocaleUpperCase("tr-TR") || "ÇINAR APARTMANI"}{" "}
+                <span>12 daire · Tek bir topluluk</span>
+              </div>
+            )}
+            {me && (
+              <nav aria-label="Ana bölümler">
+                {tabs.map((t, i) => (
+                  <button
+                    key={t}
+                    className={tab === t ? "selected" : ""}
+                    onClick={() => setTab(t)}
+                  >
+                    <span className="nav-icon">{["▦", "⌂", "☷", "≡"][i]}</span>
+                    {t}
+                    <span className="nav-arrow">›</span>
+                  </button>
+                ))}
+              </nav>
+            )}
+            {staff.roles.length > 0 && (
+              <nav aria-label="Sistem yönetimi">
                 <button
-                  key={t}
-                  className={tab === t ? "selected" : ""}
-                  onClick={() => setTab(t)}
+                  className={tab === "Sistem" ? "selected" : ""}
+                  onClick={() => setTab("Sistem")}
                 >
-                  <span className="nav-icon">{["▦", "⌂", "☷", "≡"][i]}</span>
-                  {t}
-                  <span className="nav-arrow">›</span>
+                  Sistem yönetimi
                 </button>
-              ))}
-            </nav>}
-            {staff.roles.length > 0 && <nav aria-label="Sistem yönetimi"><button
-              className={tab === "Sistem" ? "selected" : ""}
-              onClick={() => setTab("Sistem")}>Sistem yönetimi</button></nav>}
-            {me && <div className="sidebar-bottom">
-              <span className="live-dot" />
-              {live}
-              <small>Gelişmeler 30 saniyede de yenilenir.</small>
-            </div>}
+              </nav>
+            )}
+            {me && (
+              <div className="sidebar-bottom">
+                <span className="live-dot" />
+                {live}
+                <small>Gelişmeler 30 saniyede de yenilenir.</small>
+              </div>
+            )}
           </>
         )}
         <label className="theme">

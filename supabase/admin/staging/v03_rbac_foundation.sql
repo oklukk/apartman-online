@@ -1,4 +1,5 @@
--- APARTMAN v0.3 RBAC foundation: staging SQL; convert with Supabase CLI migration new before deployment.
+set local lock_timeout='5s';
+-- Reviewed RBAC source. Canonical deployable SQL is the matching v03 migration; do NOT run both.
 -- No account is auto-promoted. Live game data is not modified by this file until an explicit migration rollout.
 -- All authority is enforced by PostgreSQL, not React or editable user_metadata.
 
@@ -93,7 +94,7 @@ or (r.code='editor' and p.code in ('content.announcements.manage','content.event
 -- Future roles and permissions can be registered without modifying this schema.
 -- Scoped grants are global or building-level in this release. City/neighborhood support extends the resolver later.
 create function private.staff_is_super() returns boolean
-language sql stable security definer set search_path='' as $$
+language sql volatile security definer set search_path='' as $$
  select exists (
   select 1 from private.staff_assignments a
   join private.staff_roles r on r.id=a.role_id
@@ -103,26 +104,27 @@ language sql stable security definer set search_path='' as $$
  )
 $$;
 create function private.staff_can(p text,b uuid default null) returns boolean
-language sql stable security definer set search_path='' as $$
+language sql volatile security definer set search_path='' as $$
  select exists (
   select 1 from private.staff_assignments a
   join private.staff_roles r on r.id=a.role_id
   where a.user_id=(select auth.uid()) and (a.expires_at is null or a.expires_at>clock_timestamp())
   and (a.scope_kind='global' or (b is not null and a.scope_kind='building' and a.scope_id=b))
-  and (r.code='super_admin' or exists (
+  and ((r.code='super_admin' and a.scope_kind='global') or exists (
     select 1 from private.staff_role_permissions rp where rp.role_id=r.id and rp.permission_code=p
   ))
  )
 $$;
 
 -- Safe account capability discovery: never exposes another user's grants.
-create function private.staff_me() returns jsonb language sql stable security definer set search_path='' as $$
+create function private.staff_me() returns jsonb language sql volatile security definer set search_path='' as $$
  select jsonb_build_object(
   'roles',coalesce((
    select jsonb_agg(jsonb_build_object('code',r.code,'title',r.title,'scope_kind',a.scope_kind,'scope_id',a.scope_id))
    from private.staff_assignments a join private.staff_roles r on r.id=a.role_id
    where a.user_id=(select auth.uid()) and (a.expires_at is null or a.expires_at>clock_timestamp())
   ),'[]'::jsonb),
+  'scoped_permissions',coalesce((select jsonb_agg(jsonb_build_object('building_id',b.id,'permissions',(select jsonb_agg(p.code) from private.staff_permissions p where private.staff_can(p.code,b.id)))) from public.buildings b where exists(select 1 from private.staff_assignments a where a.user_id=(select auth.uid()) and a.scope_kind='building' and a.scope_id=b.id and (a.expires_at is null or a.expires_at>clock_timestamp()))),'[]'::jsonb),
   'permissions',coalesce((
    select jsonb_agg(distinct p.code)
    from private.staff_permissions p
@@ -137,28 +139,28 @@ $$;
 -- Global staff administrator directory: never expose passwords, tokens or auth metadata.
 create function private.staff_directory() returns jsonb language plpgsql security definer set search_path='' as $$
 begin
- if not private.staff_can('staff.roles.read',null) then raise exception 'Bu işlem için yetkiniz yok.'; end if;
+ if not private.staff_can('staff.roles.read',null) and not exists(select 1 from public.buildings b where private.staff_can('world.buildings.read',b.id) or private.staff_can('world.buildings.rename',b.id)) then raise exception 'Bu işlem için yetkiniz yok.'; end if;
  return jsonb_build_object(
   'roles',coalesce((select jsonb_agg(to_jsonb(x)) from (
     select r.id,r.code,r.title,r.description,r.system_role,
            coalesce(array_agg(rp.permission_code order by rp.permission_code)
              filter(where rp.permission_code is not null),array[]::text[]) as permissions
     from private.staff_roles r left join private.staff_role_permissions rp on rp.role_id=r.id
-    group by r.id order by r.id
+    group by r.id having private.staff_can('staff.roles.read',null) order by r.id
   ) x),'[]'::jsonb),
   'permissions',coalesce((select jsonb_agg(to_jsonb(p) order by p.category,p.code)
-    from private.staff_permissions p),'[]'::jsonb),
-  'buildings',coalesce((select jsonb_agg(to_jsonb(b) order by b.name) from (select id,name,slug,treasury from public.buildings) b),'[]'::jsonb),
+    from private.staff_permissions p where private.staff_can('staff.roles.read',null)),'[]'::jsonb),
+  'buildings',coalesce((select jsonb_agg(to_jsonb(b) order by b.name) from (select id,name,slug from public.buildings b where private.staff_can('staff.roles.read',null) or private.staff_can('world.buildings.read',b.id) or private.staff_can('world.buildings.rename',b.id)) b),'[]'::jsonb),
   'users',coalesce((select jsonb_agg(to_jsonb(u) order by u.username) from (
     select a.id as user_id,coalesce(p.username,'(oyuncu değil)') as username
-    from auth.users a left join public.profiles p on p.id=a.id
+    from auth.users a left join public.profiles p on p.id=a.id where private.staff_can('staff.roles.read',null)
   ) u),'[]'::jsonb),
   'assignments',coalesce((select jsonb_agg(to_jsonb(a) order by a.granted_at desc)
     from (select sa.id,sa.user_id,r.code as role,sa.scope_kind,sa.scope_id,
-      sa.expires_at,sa.granted_at from private.staff_assignments sa join private.staff_roles r on r.id=sa.role_id) a),'[]'::jsonb),
+      sa.expires_at,sa.granted_at from private.staff_assignments sa join private.staff_roles r on r.id=sa.role_id where private.staff_can('staff.roles.read',null)) a),'[]'::jsonb),
   'audit',coalesce((select jsonb_agg(to_jsonb(l) order by l.created_at desc)
     from (select action,actor_id,target_type,target_id,reason,created_at from private.staff_audit
-      order by created_at desc limit 50) l),'[]'::jsonb)
+      where private.staff_can('staff.audit.read',null) order by created_at desc limit 50) l),'[]'::jsonb)
  );
 end $$;
 create function public.staff_directory() returns jsonb language sql security invoker set search_path='' as $$
@@ -170,6 +172,8 @@ create function private.staff_grant(target_user uuid,role_code text,target_scope
 returns void language plpgsql security definer set search_path='' as $$
 declare r private.staff_roles; s uuid;
 begin
+ perform pg_advisory_xact_lock(741029030);
+ if coalesce(auth.jwt()->>'aal','')<>'aal2' then raise exception 'Çok faktörlü doğrulama gerekli.'; end if;
  if not private.staff_is_super() then raise exception 'Süper Yönetici yetkisi gerekli.'; end if;
  if char_length(btrim(coalesce(reason,''))) not between 5 and 500 then raise exception 'Gerekçe 5–500 karakter olmalı.'; end if;
  select * into strict r from private.staff_roles where code=role_code;
@@ -201,6 +205,8 @@ create function private.staff_revoke(assignment_id uuid,reason text) returns voi
 language plpgsql security definer set search_path='' as $$
 declare a private.staff_assignments; r private.staff_roles;
 begin
+ perform pg_advisory_xact_lock(741029030);
+ if coalesce(auth.jwt()->>'aal','')<>'aal2' then raise exception 'Çok faktörlü doğrulama gerekli.'; end if;
  if not private.staff_is_super() then raise exception 'Süper Yönetici yetkisi gerekli.'; end if;
  if char_length(btrim(coalesce(reason,''))) not between 5 and 500 then raise exception 'Gerekçe 5–500 karakter olmalı.'; end if;
  select * into strict a from private.staff_assignments where id=assignment_id for update;
@@ -225,6 +231,8 @@ create function private.staff_create_role(role_code text,role_title text,role_de
 returns void language plpgsql security definer set search_path='' as $$
 declare rid bigint;
 begin
+ perform pg_advisory_xact_lock(741029030);
+ if coalesce(auth.jwt()->>'aal','')<>'aal2' then raise exception 'Çok faktörlü doğrulama gerekli.'; end if;
  if not private.staff_is_super() then raise exception 'Süper Yönetici yetkisi gerekli.'; end if;
  if role_code !~ '^[a-z][a-z0-9_]{2,49}$' or char_length(btrim(coalesce(role_title,''))) not between 3 and 80
   then raise exception 'Geçersiz rol bilgileri.'; end if;
@@ -245,6 +253,8 @@ create function private.staff_set_role_permissions(role_code text,permission_cod
 returns void language plpgsql security definer set search_path='' as $$
 declare r private.staff_roles; previous text[];
 begin
+ perform pg_advisory_xact_lock(741029030);
+ if coalesce(auth.jwt()->>'aal','')<>'aal2' then raise exception 'Çok faktörlü doğrulama gerekli.'; end if;
  if not private.staff_is_super() then raise exception 'Süper Yönetici yetkisi gerekli.'; end if;
  if char_length(btrim(coalesce(reason,''))) not between 5 and 500 then raise exception 'Gerekçe 5–500 karakter olmalı.'; end if;
  select * into strict r from private.staff_roles where code=role_code for update;
@@ -268,6 +278,8 @@ create function private.staff_rename_building(target_building uuid,new_name text
 returns void language plpgsql security definer set search_path='' as $$
 declare old_name text;
 begin
+ perform pg_advisory_xact_lock(741029030);
+ if coalesce(auth.jwt()->>'aal','')<>'aal2' then raise exception 'Çok faktörlü doğrulama gerekli.'; end if;
  if not private.staff_can('world.buildings.rename',target_building) then raise exception 'Yetkiniz yok.'; end if;
  if char_length(btrim(coalesce(new_name,''))) not between 3 and 80 then raise exception 'Apartman adı 3–80 karakter olmalı.'; end if;
  if char_length(btrim(coalesce(reason,''))) not between 5 and 500 then raise exception 'Gerekçe 5–500 karakter olmalı.'; end if;
@@ -306,9 +318,40 @@ grant execute on function public.staff_me(),public.staff_directory(),public.staf
  public.staff_set_role_permissions(text,text[],text),public.staff_rename_building(uuid,text,text)
  to authenticated;
 
--- BOOTSTRAP IS INTENTIONALLY NOT AUTOMATED:
--- After the owner confirms THEIR Auth UUID, an authorized SQL Editor operator runs:
--- INSERT INTO private.staff_assignments(user_id,role_id,scope_kind,scope_id)
--- SELECT '<VERIFIED_OWNER_AUTH_UUID>'::uuid,r.id,'global','00000000-0000-0000-0000-000000000000'::uuid
--- FROM private.staff_roles r WHERE r.code='super_admin';
--- Never match by username, email substring, "first account", or public client metadata.
+-- No assignment is executed by this migration. SQL Editor owner must verify the UUID out of band.
+create function private.staff_bootstrap(owner_uuid uuid,reason text) returns void
+language plpgsql security definer set search_path='' as $$
+begin
+ perform pg_advisory_xact_lock(741029030);
+ if exists(select 1 from private.staff_assignments a join private.staff_roles r on r.id=a.role_id where r.code='super_admin') then raise exception 'İlk atama zaten yapılmış.'; end if;
+ if char_length(btrim(coalesce(reason,''))) not between 5 and 500 then raise exception 'Gerekçe gerekli.'; end if;
+ if not exists(select 1 from auth.users where id=owner_uuid and email_confirmed_at is not null) then raise exception 'Doğrulanmış Auth hesabı gerekli.'; end if;
+ if not exists(select 1 from auth.mfa_factors where user_id=owner_uuid and status='verified') then raise exception 'Önce doğrulanmış MFA faktörü gerekli.'; end if;
+ insert into private.staff_assignments(user_id,role_id,scope_kind,scope_id)
+ select owner_uuid,id,'global','00000000-0000-0000-0000-000000000000'::uuid from private.staff_roles where code='super_admin';
+ insert into private.staff_audit(action,target_type,target_id,new_value,reason)
+ values('owner.bootstrap','user',owner_uuid::text,jsonb_build_object('operator',session_user),btrim(reason));
+end $$;
+revoke all on function private.staff_bootstrap(uuid,text) from public,anon,authenticated,service_role;
+grant execute on function private.staff_bootstrap(uuid,text) to postgres;
+-- The caller who controls SQL Editor already controls the database. Never expose bootstrap through public RPC.
+
+create function private.staff_assignment_guard() returns trigger language plpgsql security definer set search_path='' as $$
+declare was_super boolean:=false; is_super boolean:=false;
+begin
+ perform pg_advisory_xact_lock(741029030);
+ if TG_OP<>'INSERT' then select code='super_admin' into was_super from private.staff_roles where id=old.role_id; end if;
+ if TG_OP<>'DELETE' then
+ select code='super_admin' into is_super from private.staff_roles where id=new.role_id;
+ if new.scope_kind='building' and not exists(select 1 from public.buildings where id=new.scope_id) then raise exception 'Apartman bulunamadı.'; end if;
+ if is_super and (new.scope_kind<>'global' or new.expires_at is not null) then raise exception 'Süper Yönetici global ve süresiz olmalı.'; end if;
+ end if;
+ if was_super and (TG_OP='DELETE' or not is_super or new.user_id<>old.user_id) then
+ if (select count(*) from private.staff_assignments a join private.staff_roles r on r.id=a.role_id where r.code='super_admin' and a.id<>old.id and a.scope_kind='global' and a.expires_at is null)=0 then raise exception 'Son Süper Yönetici korunmalıdır.'; end if;
+ end if;
+ if TG_OP='DELETE' then return old; end if; return new;
+end $$;
+revoke all on function private.staff_assignment_guard() from public,anon,authenticated;
+create trigger staff_assignment_invariants before insert or update or delete on private.staff_assignments for each row execute function private.staff_assignment_guard();
+
+revoke all on sequence private.staff_roles_id_seq from public,anon,authenticated;

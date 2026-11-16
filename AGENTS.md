@@ -23,3 +23,9 @@
 - Yönetici yetkisi sunucuda aktif `manager_terms` aralığıyla belirlenir. Aday/oy modeli evet-hayır poll modelinden ayrıdır. Seçmen listesi açılışta sabitlenir, en az 2 seçmen ve 2 oy gerekir. Görev 14 gündür; süresi dolan yöneticinin yetkisini uzatma.
 - `apartman-v02-tick` kendi transaction advisory lock'unu kullanır; mevcut `apartman-resolve-polls` görevini kaldırma veya yeniden oluşturma. Test için canlıda tarih değiştirme ya da worker'ı keyfi çağırma.
 - Gerekli kontroller: `npm test`, `npm run test:sql`, `npm run test:v02`, `npm run test:ui`, `npm run build`. `test:sql` ve `test:v02` sabit localhost 55432 üzerinde kendi disposable veritabanlarını oluşturur/siler; canlıya yönlendirilemez. `test:db` gerçek yerel Supabase ister; altyapı yoksa engeli açıkça raporla.
+
+## v0.3 RBAC
+- v03 migration ve bootstrap ayrı onaylı rollout adımlarıdır. Sahip UUID'sini tahmin etme, hiçbir hesabı otomatik yükseltme.
+- Yeni modüllerde katalog izin kodu ve checked sunucu RPC zorunlu. İstemci rolü/metadata yetki kaynağı değildir.
+- RBAC yazmalarında ortak 741029030 transaction advisory lock'u yetki kontrolünden önce al; çözümleyicinin VOLATILE snapshot davranışını koru. Yeni yazma RPC'sine AAL2, kapsam, gerekçe, audit ve iptal yarış testleri ekle.
+- `npm run test:rbac` CI'da zorunlu. Canlıda fixture, tarih veya seçim sonucu değiştirme.

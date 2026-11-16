@@ -115,6 +115,28 @@ try {
       "En az iki sakin",
     ),
   );
+  const { StaffPanel } = await vite.ssrLoadModule(
+    "/src/components/StaffPanel.tsx",
+  );
+  const staff = renderToStaticMarkup(
+    React.createElement(StaffPanel, {
+      identity: {
+        roles: [
+          {
+            code: "editor",
+            title: "Editör",
+            scope_kind: "building",
+            scope_id: "fixture",
+          },
+        ],
+        permissions: [],
+        scoped_permissions: [],
+      },
+    }),
+  );
+  assert.ok(staff.includes("Editör"));
+  assert.ok(staff.includes("MFA hazırla"));
+  assert.ok(!staff.includes("Kullanıcıya yetki ver"));
   console.log(
     "PASS static React: wallet/job/dues, candidacy, manager-only controls and empty states. Browser/mobile/Realtime NOT tested.",
   );
