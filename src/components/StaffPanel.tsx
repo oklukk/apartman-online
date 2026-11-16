@@ -110,7 +110,7 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
           <strong>{r.title}</strong> · {r.code} · {r.code === "super_admin" ? "Tüm izinler" : r.permissions.length + " izin"}
         </p>)}
       </article>
-      {isSuper && <article className="card">
+      {(isSuper || canRename) && <article className="card">
         <h2>İşlem gerekçesi</h2>
         <label>Tüm rol ve ad değiştirme işlemlerinde kullanılır.
           <textarea value={reason} onChange={(e) => setReason(e.target.value)}
