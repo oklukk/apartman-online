@@ -7,7 +7,12 @@ const ui = readFileSync("src/components/StaffOperations.tsx", "utf8");
 const staff = readFileSync("src/components/StaffPanel.tsx", "utf8");
 
 test("advanced economy writes require AAL2 and server permissions", () => {
-  for (const permission of ["economy.wallet.adjust","economy.treasury.adjust","economy.settings.manage","players.profile.edit"]) {
+  for (const permission of [
+    "economy.wallet.adjust",
+    "economy.treasury.adjust",
+    "economy.settings.manage",
+    "players.profile.edit",
+  ]) {
     assert.ok(sql.includes(permission));
   }
   assert.match(sql, /pg_advisory_xact_lock\(741029030\)/);
@@ -25,7 +30,10 @@ test("economic adjustments are ledger backed and have idempotency keys", () => {
 });
 
 test("operational read masks balances outside authorized scope", () => {
-  assert.match(sql, /case when private\.staff_can\('economy\.read',m\.building_id\)/);
+  assert.match(
+    sql,
+    /case when private\.staff_can\('economy\.read',m\.building_id\)/,
+  );
   assert.match(sql, /then w\.balance else null end as balance/);
   assert.match(sql, /security definer set search_path=''/);
   assert.match(sql, /revoke all on function private\.staff_game_overview/);
@@ -33,10 +41,28 @@ test("operational read masks balances outside authorized scope", () => {
 
 test("UI uses RPC with confirmation and reason", () => {
   assert.ok(staff.includes("<StaffOperations identity={identity} />"));
-  for (const rpc of ["staff_adjust_wallet","staff_adjust_treasury","staff_update_economy","staff_rename_player"]) {
+  for (const rpc of [
+    "staff_adjust_wallet",
+    "staff_adjust_treasury",
+    "staff_update_economy",
+    "staff_rename_player",
+  ]) {
     assert.ok(ui.includes(rpc));
   }
   assert.match(ui, /window\.confirm/);
   assert.match(ui, /reason\.trim\(\)/);
   assert.doesNotMatch(ui, /sb_secret_|service_role/);
+});
+
+test("staging is the reviewed stage-1 migration and later stages remain isolated", () => {
+  assert.equal(
+    sql,
+    readFileSync(
+      "supabase/migrations/20261117150426_v031_staff_economy.sql",
+      "utf8",
+    ),
+  );
+  const center = readFileSync("src/components/StaffControlCenter.tsx", "utf8");
+  assert.ok(center.includes("expected_revision"));
+  assert.ok(center.includes("Onayla ve uygula"));
 });

@@ -12,7 +12,8 @@
     "test:sql": "node tests/sql.mjs",
     "test:v02": "node tests/v02.mjs",
     "test:ui": "node tests/ui-render.mjs",
-    "test:rbac": "node tests/rbac.mjs"
+    "test:rbac": "node tests/rbac.mjs",
+    "test:advanced": "node tests/advanced-admin.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.119.0",

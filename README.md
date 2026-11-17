@@ -75,3 +75,7 @@ Daire ataması ve oy/sonuçlandırma önce apartman satırını kilitler. UNIQUE
 Realtime bildirimleri tablo RLS kurallarına tabidir. Engellenen mesajlar hem RLS hem mevcut istemci listesiyle gizlenir. Bağlantı koptuğunda 30 saniyelik okuma tekrarları geçmişi toparlar. Sohbet 50 mesajlık sayfalar, gelişmeler en son 30 kayıttır; kayıtlar veritabanında kalır. Bu sürüm kullanıcı/veri silme, gelişmiş moderasyon veya parola sıfırlama akışı içermez.
 
 Tasarım: `src/api.ts` veri sözleşmeleri/istemci; `src/components` oylama ve gelişme bileşenleri; `src/main.tsx` oturum, ekranlar ve Realtime; `src/style.css` responsive temalar. Yönergeler `AGENTS.md` içindedir.
+
+## Taslak gelişmiş yönetim — PR #4
+
+Ekonomi düzeltmeleri, ban/susturma/uyarı ve seçim/yönetici müdahaleleri mevcut RBAC üzerinde geliştirilmiştir. Canlıya uygulanmamıştır; üç migration ve rollout sırası [gelişmiş yönetim belgesinde](docs/V031_ADMIN_OPERATIONS.md). Test: `npm run test:advanced` (yalnız disposable localhost PostgreSQL).

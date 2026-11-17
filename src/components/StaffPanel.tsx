@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, lazy, Suspense } from "react";
 import { supabase, errorText } from "../api";
 import { StaffMfa } from "./StaffMfa";
-import { StaffOperations } from "./StaffOperations";
+const StaffOperations = lazy(() =>
+  import("./StaffOperations").then((m) => ({ default: m.StaffOperations })),
+);
 
 export type StaffIdentity = {
   roles: {
@@ -32,6 +34,8 @@ type Assignment = {
   scope_id: string;
 };
 type Log = {
+  old_value?: unknown;
+  new_value?: unknown;
   action: string;
   target_type: string;
   target_id: string;
@@ -201,7 +205,9 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
         <p>Yetki dizinini görüntülemek için ayrıca izin gereklidir.</p>
       )}
       <StaffMfa />
-      <StaffOperations identity={identity} />
+      <Suspense fallback={<p>Yönetim işlemleri yükleniyor…</p>}>
+        <StaffOperations identity={identity} />
+      </Suspense>
       {directory && (
         <>
           <article className="card">
@@ -488,6 +494,16 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
               {directory.audit.map((entry, i) => (
                 <div key={i} className="staff-audit">
                   <strong>{entry.action}</strong> · {entry.target_type}
+                  <details>
+                    <summary>Eski / yeni değerler</summary>
+                    <pre className="staff-json">
+                      {JSON.stringify(
+                        { önce: entry.old_value, sonra: entry.new_value },
+                        null,
+                        2,
+                      )}
+                    </pre>
+                  </details>
                   <p className="subtle">
                     {entry.reason} ·{" "}
                     {new Date(entry.created_at).toLocaleString("tr-TR")}
