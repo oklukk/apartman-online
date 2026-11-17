@@ -21,7 +21,10 @@ begin
  if auth.uid() is null then raise exception 'Oturum gerekli.'; end if;
  return jsonb_build_object(
    'players',coalesce((select jsonb_agg(to_jsonb(t) order by t.username) from (
-      select p.id as user_id,p.username,m.building_id,w.balance as balance,
+      select p.id as user_id,p.username,m.building_id,
+        case when private.staff_can('economy.read',m.building_id)
+           or private.staff_can('economy.wallet.adjust',m.building_id)
+           then w.balance else null end as balance,
         (private.staff_can('economy.read',m.building_id)
          or private.staff_can('economy.wallet.adjust',m.building_id)) as can_read_balance
       from public.profiles p
