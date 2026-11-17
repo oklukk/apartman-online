@@ -31,7 +31,36 @@ alter table public.economy_settings drop constraint economy_settings_weekly_dues
 alter table public.economy_settings add constraint economy_settings_weekly_dues_check
   check (weekly_dues between 1 and 100000);
 
-alter table public.economy_settings add column dues_override_from date,add column dues_override_amount integer,add column dues_override_at timestamptz;
+-- Keep the original weekly_dues as the baseline. Staff decisions are dated and append-only,
+-- so scheduling a rate never changes this week's fallback or erases last week's rate.
+create table private.staff_dues_schedules (
+ id uuid primary key default gen_random_uuid(),
+ building_id uuid not null references public.buildings,
+ effective_week date not null check (extract(isodow from effective_week)=1),
+ amount integer not null check(amount between 1 and 100000),
+ decided_at timestamptz not null default clock_timestamp(),
+ operation_id uuid not null unique references private.staff_requests(id)
+);
+create index staff_dues_schedules_rate on private.staff_dues_schedules(building_id,effective_week desc,decided_at desc);
+alter table private.staff_dues_schedules enable row level security;
+revoke all on private.staff_dues_schedules from public,anon,authenticated;
+
+-- One resolver for the v031 and v032 cron workers, game decisions and staff decisions.
+-- A decision is effective only from its nominated Monday; most recent decision wins for same week.
+create function private.staff_dues_rate(b uuid,wk date) returns integer
+language sql volatile security definer set search_path='' as $
+ select coalesce((select amount from (
+   select r.amount,r.effective_week,p.resolved_at as decided_at,r.id as source_id
+   from public.dues_rates r join public.polls p on p.id=r.poll_id
+   where r.building_id=b and r.effective_week<=wk
+   union all
+   select d.amount,d.effective_week,d.decided_at,d.id as source_id
+   from private.staff_dues_schedules d
+   where d.building_id=b and d.effective_week<=wk
+ ) rates order by effective_week desc,decided_at desc nulls last,source_id desc limit 1),
+ (select s.weekly_dues from public.economy_settings s where s.building_id=b))
+$;
+revoke all on function private.staff_dues_rate(uuid,date) from public,anon,authenticated;
 -- Read-only, rights-filtered operational overview.
 create function private.staff_game_overview() returns jsonb
 language plpgsql volatile security definer set search_path='' as $$
@@ -60,7 +89,11 @@ begin
            then b.treasury else null end as treasury,
         case when private.staff_can('economy.read',b.id)
            or private.staff_can('economy.settings.manage',b.id)
-           then to_jsonb(e) else null end as settings
+           then to_jsonb(e) || jsonb_build_object(
+             'weekly_dues',private.staff_dues_rate(b.id,date_trunc('week',clock_timestamp() at time zone 'Europe/Istanbul')::date),
+             'weekly_dues_next_week',private.staff_dues_rate(b.id,(date_trunc('week',clock_timestamp() at time zone 'Europe/Istanbul')+interval '7 days')::date),
+             'weekly_dues_next_week_starts',(date_trunc('week',clock_timestamp() at time zone 'Europe/Istanbul')+interval '7 days')::date
+           ) else null end as settings
       from public.buildings b left join public.economy_settings e on e.building_id=b.id
       where private.staff_can('players.moderate',b.id) or private.staff_can('players.ban',b.id) or private.staff_can('governance.read',b.id) or private.staff_can('governance.elections.manage',b.id) or private.staff_can('governance.elections.override',b.id) or private.staff_can('governance.manager.appoint',b.id) or private.staff_can('economy.read',b.id)
          or private.staff_can('economy.treasury.adjust',b.id)
@@ -148,7 +181,7 @@ $$;
 
 create function private.staff_update_economy(target_building uuid,setting_key text,new_value integer,reason text,operation_id uuid)
 returns void language plpgsql security definer set search_path='' as $$
-declare previous integer;
+declare previous integer; effective_week date; old_state jsonb; new_state jsonb;
 begin
  perform private.staff_game_write_check('economy.settings.manage',target_building,reason);
  if not private.staff_claim_request(operation_id,'setting',jsonb_build_object('building',target_building,'key',setting_key,'value',new_value,'reason',reason)) then return; end if;
@@ -159,17 +192,27 @@ begin
    or (setting_key='weekly_dues' and (new_value<1 or new_value>100000))
    then raise exception 'Geçersiz ekonomi parametresi.'; end if;
  perform 1 from public.buildings where id=target_building for update;
- select (to_jsonb(s)->>setting_key)::integer into strict previous
- from public.economy_settings s where building_id=target_building for update;
- if previous=new_value and setting_key<>'weekly_dues' then return; end if;
- if setting_key='weekly_dues' then update public.economy_settings set dues_override_from=(date_trunc('week',clock_timestamp() at time zone 'Europe/Istanbul')+interval '7 days')::date,dues_override_amount=new_value,dues_override_at=clock_timestamp() where building_id=target_building; end if;
- execute format('update public.economy_settings set %I=$1 where building_id=$2',setting_key)
- using new_value,target_building;
+ if setting_key='weekly_dues' then
+   -- Do not update economy_settings.weekly_dues: that is the historical baseline.
+   -- Use an immutable schedule, including for multiple edits targeting the same Monday.
+   effective_week:=(date_trunc('week',clock_timestamp() at time zone 'Europe/Istanbul')+interval '7 days')::date;
+   previous:=private.staff_dues_rate(target_building,effective_week);
+   insert into private.staff_dues_schedules(building_id,effective_week,amount,operation_id)
+   values(target_building,effective_week,new_value,operation_id);
+   old_state:=jsonb_build_object('key',setting_key,'value',previous,'effective_week',effective_week);
+   new_state:=jsonb_build_object('key',setting_key,'value',new_value,'effective_week',effective_week);
+ else
+   select (to_jsonb(s)->>setting_key)::integer into strict previous
+   from public.economy_settings s where building_id=target_building for update;
+   if previous=new_value then return; end if;
+   execute format('update public.economy_settings set %I=$1 where building_id=$2',setting_key)
+   using new_value,target_building;
+   old_state:=jsonb_build_object('key',setting_key,'value',previous);
+   new_state:=jsonb_build_object('key',setting_key,'value',new_value);
+ end if;
  insert into private.staff_audit(actor_id,action,target_type,target_id,old_value,new_value,reason)
- values(auth.uid(),'economy.setting','building',target_building::text,
-   jsonb_build_object('key',setting_key,'value',previous),
-   jsonb_build_object('key',setting_key,'value',new_value),btrim(reason));
-end $$;
+ values(auth.uid(),'economy.setting','building',target_building::text,old_state,new_state,btrim(reason));
+end $;
 create function public.staff_update_economy(target_building uuid,setting_key text,new_value integer,reason text,operation_id uuid)
 returns void language sql security invoker set search_path='' as $$
  select private.staff_update_economy(target_building,setting_key,new_value,reason,operation_id)
@@ -231,7 +274,7 @@ begin
  perform private.wallet_post(salary_row.user_id,s.daily_salary,'salary',d::text,'Günlük iş maaşı · '||d::text);
  end loop;
  if wk>=s.first_week then
- select coalesce((select amount from (select r.amount,r.effective_week,p.resolved_at as decided_at from public.dues_rates r join public.polls p on p.id=r.poll_id where r.building_id=b and r.effective_week<=wk union all select s.dues_override_amount,s.dues_override_from,s.dues_override_at where s.dues_override_from<=wk) rates order by effective_week desc,decided_at desc limit 1),s.weekly_dues) into rate;
+ select private.staff_dues_rate(b,wk) into rate;
  insert into public.dues(building_id,user_id,week_start,amount)
  select b,w.user_id,wk,rate from public.wallets w join public.memberships m using(user_id)
  where w.building_id=b and w.last_active_at>=clock_timestamp()-interval '7 days'
