@@ -48,7 +48,7 @@ revoke all on private.staff_dues_schedules from public,anon,authenticated;
 -- One resolver for the v031 and v032 cron workers, game decisions and staff decisions.
 -- A decision is effective only from its nominated Monday; most recent decision wins for same week.
 create function private.staff_dues_rate(b uuid,wk date) returns integer
-language sql volatile security definer set search_path='' as $
+language sql volatile security definer set search_path='' as $$
  select coalesce((select amount from (
    select r.amount,r.effective_week,p.resolved_at as decided_at,r.id as source_id
    from public.dues_rates r join public.polls p on p.id=r.poll_id
