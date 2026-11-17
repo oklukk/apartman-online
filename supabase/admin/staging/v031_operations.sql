@@ -59,7 +59,7 @@ language sql volatile security definer set search_path='' as $
    where d.building_id=b and d.effective_week<=wk
  ) rates order by effective_week desc,decided_at desc nulls last,source_id desc limit 1),
  (select s.weekly_dues from public.economy_settings s where s.building_id=b))
-$;
+$$;
 revoke all on function private.staff_dues_rate(uuid,date) from public,anon,authenticated;
 -- Read-only, rights-filtered operational overview.
 create function private.staff_game_overview() returns jsonb
