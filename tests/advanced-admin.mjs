@@ -624,6 +624,11 @@ try {
       );
     },
   );
+  await check('Economy: capped wallet cannot overflow and stall the salary worker',async()=>{
+   await db.query('update public.wallets set balance=2147483647 where user_id=$1',[player]);
+   assert.equal(await scalar("select private.wallet_post($1,100,'salary','cap-fixture','Test üst sınır')",[player]),false);
+   assert.equal(await wallet(),2147483647);await assert.rejects(()=>adjust(owner,1));
+  });
   console.log(
     `${count} advanced administration integration groups passed. Disposable PostgreSQL only.`,
   );

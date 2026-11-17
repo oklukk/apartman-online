@@ -308,3 +308,20 @@ begin
       where private.staff_can('staff.audit.read',null) order by created_at desc limit 50) l),'[]'::jsonb)
  );
 end $$;
+
+-- A high, authorized admin balance must not make the global salary worker overflow.
+create or replace function private.wallet_post(u uuid,amt integer,k text,period text,label text) returns boolean language plpgsql security definer set search_path='' as $$
+declare w public.wallets;
+begin
+ select * into strict w from public.wallets where user_id=u for update;
+ if w.balance::bigint+amt::bigint>2147483647 then
+ if k='salary' then return false;end if;
+ raise exception 'Cüzdan üst sınırı aşılıyor.';end if;
+ if w.balance::bigint+amt::bigint<0 then raise exception 'Yetersiz kişisel bakiye.'; end if;
+ if amt=0 then return false; end if;
+ insert into public.wallet_transactions(user_id,building_id,amount,balance_after,kind,period_key,description)
+ values(u,w.building_id,amt,w.balance+amt,k,period,label) on conflict(user_id,kind,period_key) do nothing;
+ if not found then return false; end if;
+ update public.wallets set balance=balance+amt where user_id=u;
+ return true;
+end $$;

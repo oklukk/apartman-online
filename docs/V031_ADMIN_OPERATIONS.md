@@ -10,7 +10,7 @@ Cüzdan/kasa düzeltmeleri mevcut deftere `admin_adjustment` olarak yazılır; n
 
 `staff_compensate` eski parasal düzeltmeye bir kez ters defter kaydı ekler; eski satır silinmez, yeterli bakiye ve yetki yeniden kontrol edilir. Telafi yapılamazsa transaction tamamen geri alınır. Telafi yeni audit kaydıyla orijinale bağlıdır. Yanlış ayar/ad, eski audit değerinden yeni yetkili işlemle geri alınabilir; otomatik geriye dönük maaş/borç yeniden yazılmaz.
 
-Aidat ayarının gerçek etkisi sonraki Türkiye pazartesisinde başlar. Önceden onaylanmış aidat oranları ile admin override'ı, dönem ve karar zamanı sırasıyla değerlendirilir; aynı dönem için en son karar geçerlidir. Mevcut borç/ödeme tutarları sabittir. Gider ayarları sonraki henüz oluşturulmamış giderlere, maaş/ek iş ayarları henüz ödenmemiş uygun günlük işlemlere etki eder. Eski bordro tekrar ödenmez. Sıfır maaş/ödül yeni ödeme üretmez; geçmiş dönemi yeniden hesaplamaz.
+Aidat ayarının gerçek etkisi sonraki Türkiye pazartesisinde başlar. Önceden onaylanmış aidat oranları ile admin override'ı, dönem ve karar zamanı sırasıyla değerlendirilir; aynı dönem için en son karar geçerlidir. Mevcut borç/ödeme tutarları sabittir. Gider ayarları sonraki henüz oluşturulmamış giderlere, maaş/ek iş ayarları henüz ödenmemiş uygun günlük işlemlere etki eder. Eski bordro tekrar ödenmez. Cüzdan integer üst sınırına gelmişse otomatik maaş atlanır; tek hesap tüm cron transaction'ını taşmayla durdurmaz. Manuel artış/ek iş üst sınır aşımı reddedilir. Sıfır maaş/ödül yeni ödeme üretmez; geçmiş dönemi yeniden hesaplamaz.
 
 `staff_operations_history` ayrı `staff.audit.read` izniyle sadece yetkili bina hareketlerini, eski/yeni değer ve gerekçeleri döndürür. Eski genel rol dizini de mevcut audit yetkisi altında bu değerleri görüntüler. Ekonomik bilgileri okuma yetkisi olmayan moderatörün bakiye/kasa alanları maskelenir.
 
@@ -46,7 +46,7 @@ Mevcut StaffOperations korunmuştur; kategorili StaffControlCenter eklendi. Oyun
 
 - npm test: 16 statik/kontrat testi.
 - test:sql / test:v02 / test:rbac: mevcut 11 + 24 + 14 PostgreSQL grup korunur.
-- test:advanced: tüm ilk dört migration üzerine üç yeni migration uygulanır. 13 gerçek PostgreSQL grup; çok sayıda alt assertion ile ekonomi/idempotency/kapsam/MFA/muhasebe/telafi/aidat etkisi, yaptırım süresi/iptali/aktif-claim bypass engeli/bordro, normal/zorunlu seçim/iptal/takvim/görev/çakışma/bütçe/cron yarışları doğrulanır.
+- test:advanced: tüm ilk dört migration üzerine üç yeni migration uygulanır. 14 gerçek PostgreSQL grup; çok sayıda alt assertion ile ekonomi/idempotency/kapsam/MFA/muhasebe/telafi/aidat etkisi, yaptırım süresi/iptali/aktif-claim bypass engeli/bordro, normal/zorunlu seçim/iptal/takvim/görev/çakışma/bütçe/cron yarışları doğrulanır.
 - test:ui: mevcut React statik render kontrolleri.
 - test:db: tam yerel Supabase stack ister. work/local-status.json bulunmayan bu ortamda gerçek Auth/Realtime testi çalıştırılamaz; canlıya yönlendirilmez.
 - npm run build: strict TypeScript ve gerçek publishable değişkenlerle Vite.
