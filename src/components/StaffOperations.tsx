@@ -365,10 +365,9 @@ export function StaffOperations({ identity }: { identity: StaffIdentity }) {
                     setting_key: settingKey,
                     new_value: amount,
                   },
-                  settingNames[settingKey] +
-                    " değeri " +
-                    amount +
-                    " OP olarak değiştirilsin mi?",
+                  settingKey === "weekly_dues"
+                    ? "Haftalık aidat gelecek pazartesiden itibaren " + amount + " OP olsun mu? Bu haftaki borçlar değişmez."
+                    : settingNames[settingKey] + " değeri " + amount + " OP olarak değiştirilsin mi?",
                 );
               }}
             >
@@ -381,7 +380,11 @@ export function StaffOperations({ identity }: { identity: StaffIdentity }) {
                     const key = e.target.value;
                     setSettingKey(key);
                     setSettingAmount(
-                      String(chosenBuilding?.settings?.[key] ?? ""),
+                      String(
+                        key === "weekly_dues"
+                          ? (chosenBuilding?.settings?.weekly_dues_next_week ?? "")
+                          : (chosenBuilding?.settings?.[key] ?? ""),
+                      ),
                     );
                   }}
                 >
@@ -393,10 +396,18 @@ export function StaffOperations({ identity }: { identity: StaffIdentity }) {
                 </select>
               </label>
               {chosenBuilding.settings && (
-                <p className="subtle">
-                  Mevcut değer:{" "}
-                  {String(chosenBuilding.settings[settingKey] ?? "—")} OP
-                </p>
+                settingKey === "weekly_dues" ? (
+                  <div className="subtle">
+                    <p>Bu haftanın aidatı: {String(chosenBuilding.settings.weekly_dues ?? "—")} OP</p>
+                    <p>Gelecek hafta ({String(chosenBuilding.settings.weekly_dues_next_week_starts ?? "—")})
+                    için geçerli/plânlı aidat: {String(chosenBuilding.settings.weekly_dues_next_week ?? "—")} OP</p>
+                    <p>Değişiklik gelecek pazartesi yürürlüğe girer. Bu haftanın borçlarını değiştirmez.</p>
+                  </div>
+                ) : (
+                  <p className="subtle">
+                    Mevcut değer: {String(chosenBuilding.settings[settingKey] ?? "—")} OP
+                  </p>
+                )
               )}
               <label>
                 Yeni değer
