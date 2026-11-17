@@ -143,7 +143,8 @@ begin
  perform private.wallet_post(salary_row.user_id,s.daily_salary,'salary',d::text,'Günlük iş maaşı · '||d::text);
  end loop;
  if wk>=s.first_week then
- select coalesce((select amount from (select r.amount,r.effective_week,p.resolved_at as decided_at from public.dues_rates r join public.polls p on p.id=r.poll_id where r.building_id=b and r.effective_week<=wk union all select s.dues_override_amount,s.dues_override_from,s.dues_override_at where s.dues_override_from<=wk) rates order by effective_week desc,decided_at desc limit 1),s.weekly_dues) into rate;
+ -- Shared rate resolver prevents future staff changes leaking into current-week invoices.
+ select private.staff_dues_rate(b,wk) into rate;
  insert into public.dues(building_id,user_id,week_start,amount)
  select b,w.user_id,wk,rate from public.wallets w join public.memberships m using(user_id)
  where w.building_id=b and not private.player_blocked(w.user_id,false) and w.last_active_at>=clock_timestamp()-interval '7 days'
