@@ -255,6 +255,19 @@ try {
         [b, "Test aidat ayarı", uuid()],
       );
       assert.equal(await scalar("select sum(amount) from public.dues"), debts);
+      // The new 250 OP rate starts next Monday: current-week fallback remains 150 OP.
+      assert.equal(
+        await scalar("select weekly_dues from public.economy_settings where building_id=$1",[b]),
+        150,
+      );
+      assert.equal(
+        await scalar("select private.staff_dues_rate($1,date_trunc('week',now() at time zone 'Europe/Istanbul')::date)",[b]),
+        150,
+      );
+      assert.equal(
+        await scalar("select private.staff_dues_rate($1,(date_trunc('week',now() at time zone 'Europe/Istanbul')+interval '7 days')::date)",[b]),
+        250,
+      );
       await as(
         owner,
         "select public.staff_update_economy($1,'daily_salary',150,$2,$3)",
@@ -323,7 +336,7 @@ try {
         "update public.memberships set joined_at=now()-interval '15 days'",
       );
       await db.query(
-        "update public.economy_settings set first_week=date_trunc('week',now() at time zone 'Europe/Istanbul')::date,dues_override_from=date_trunc('week',now() at time zone 'Europe/Istanbul')::date where building_id=$1",
+        "update public.economy_settings set first_week=date_trunc('week',now() at time zone 'Europe/Istanbul')::date where building_id=$1",
         [b],
       );
       await db.query("select private.economy_tick($1)", [b]);
@@ -331,7 +344,7 @@ try {
         await scalar("select amount from public.dues where user_id=$1", [
           other,
         ]),
-        250,
+        150,
       );
       assert.equal(
         await scalar("select amount from public.dues where user_id=$1", [
@@ -339,6 +352,42 @@ try {
         ]),
         150,
       );
+      assert.equal(
+        await scalar("select private.staff_dues_rate($1,(date_trunc('week',now() at time zone 'Europe/Istanbul')+interval '7 days')::date)",[b]),
+        250,
+      );
+    },
+  );
+  await check(
+    "Stage 1: consecutive dated dues updates preserve current and future weeks",
+    async () => {
+      const rateFor = (weeks) => scalar(
+        "select private.staff_dues_rate($1,(date_trunc('week',now() at time zone 'Europe/Istanbul')+($2::integer*interval '7 days'))::date)",
+        [b,weeks],
+      );
+      await as(owner,"select public.staff_update_economy($1,'weekly_dues',275,$2,$3)",[
+        b,"Test aynı hafta ikinci değişiklik",uuid(),
+      ]);
+      assert.equal(await rateFor(0),150);
+      assert.equal(await rateFor(1),275);
+      assert.equal(await scalar("select amount from public.dues where user_id=$1",[other]),150);
+
+      // In this disposable fixture, move one decision to the following week
+      // to simulate a second calendar week without shifting the live DB clock.
+      await db.query(
+        "update private.staff_dues_schedules set effective_week=(date_trunc('week',now() at time zone 'Europe/Istanbul')+interval '14 days')::date where building_id=$1 and amount=275",
+        [b],
+      );
+      assert.equal(await rateFor(1),250);
+      assert.equal(await rateFor(2),275);
+      await as(owner,"select public.staff_update_economy($1,'weekly_dues',300,$2,$3)",[
+        b,"Test ardışık hafta değişikliği",uuid(),
+      ]);
+      assert.equal(await rateFor(0),150);
+      assert.equal(await rateFor(1),300);
+      assert.equal(await rateFor(2),275);
+      assert.equal(await scalar("select weekly_dues from public.economy_settings where building_id=$1",[b]),150);
+      assert.equal(await scalar("select count(*)::int from private.staff_dues_schedules where building_id=$1",[b]),3);
     },
   );
   await check(
