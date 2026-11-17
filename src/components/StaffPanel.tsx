@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase, errorText } from "../api";
 import { StaffMfa } from "./StaffMfa";
+import { StaffOperations } from "./StaffOperations";
 
 export type StaffIdentity = {
   roles: {
@@ -200,6 +201,7 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
         <p>Yetki dizinini görüntülemek için ayrıca izin gereklidir.</p>
       )}
       <StaffMfa />
+      <StaffOperations identity={identity} />
       {directory && (
         <>
           <article className="card">
