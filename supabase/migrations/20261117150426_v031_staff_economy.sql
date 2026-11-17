@@ -212,7 +212,7 @@ begin
  end if;
  insert into private.staff_audit(actor_id,action,target_type,target_id,old_value,new_value,reason)
  values(auth.uid(),'economy.setting','building',target_building::text,old_state,new_state,btrim(reason));
-end $;
+end $$;
 create function public.staff_update_economy(target_building uuid,setting_key text,new_value integer,reason text,operation_id uuid)
 returns void language sql security invoker set search_path='' as $$
  select private.staff_update_economy(target_building,setting_key,new_value,reason,operation_id)
