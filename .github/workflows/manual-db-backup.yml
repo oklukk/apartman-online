@@ -1,0 +1,77 @@
+name: APARTMAN — Şifreli manuel veritabanı yedeği
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    name: Tam PostgreSQL dump ve şifreleme
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Yedekleme sırlarını ve hedefi doğrula
+        shell: bash
+        env:
+          DATABASE_URL: ${{ secrets.APARTMAN_BACKUP_DATABASE_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.APARTMAN_BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${DATABASE_URL:-}" ]]; then
+            echo "::error::APARTMAN_BACKUP_DATABASE_URL repo secret eksik."
+            exit 1
+          fi
+          if [[ "$DATABASE_URL" != *"rmoytuncahutqurttknt"* ]]; then
+            echo "::error::Yanlış Supabase proje bağlantısı; işlem iptal."
+            exit 1
+          fi
+          if [[ "$DATABASE_URL" != *"sslmode=require"* && "$DATABASE_URL" != *"sslmode=verify-full"* ]]; then
+            echo "::error::PostgreSQL bağlantısında sslmode=require veya verify-full gerekli."
+            exit 1
+          fi
+          if [[ "${#BACKUP_PASSPHRASE}" -lt 24 ]]; then
+            echo "::error::APARTMAN_BACKUP_PASSPHRASE en az 24 karakter olmalı."
+            exit 1
+          fi
+
+      - name: Canlı veritabanını salt okunur dump alarak şifrele
+        shell: bash
+        env:
+          DATABASE_URL: ${{ secrets.APARTMAN_BACKUP_DATABASE_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.APARTMAN_BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          umask 077
+          BACKUP_NAME="apartman-$(date -u +'%Y%m%dT%H%M%SZ').pgdump.gpg"
+          BACKUP_FILE="$RUNNER_TEMP/$BACKUP_NAME"
+          echo "BACKUP_FILE=$BACKUP_FILE" >> "$GITHUB_ENV"
+
+          # Database URL only in job secrets. Never print SQL or unencrypted data.
+          # Session pooler (5432), not transaction pooler, is recommended.
+          docker run --rm -e DATABASE_URL postgres:17 \
+            pg_dump --dbname="$DATABASE_URL" --format=custom --no-owner --no-acl \
+            | gpg --batch --yes --symmetric --cipher-algo AES256 \
+                --pinentry-mode loopback --passphrase-fd 3 \
+                --output "$BACKUP_FILE" 3<<< "$BACKUP_PASSPHRASE"
+
+          test -s "$BACKUP_FILE"
+          # Verify decryption and archive structure, without restoring or modifying DB.
+          gpg --batch --quiet --pinentry-mode loopback --passphrase-fd 3 \
+            --decrypt "$BACKUP_FILE" 3<<< "$BACKUP_PASSPHRASE" \
+            | docker run --rm -i postgres:17 pg_restore --list >/dev/null
+
+          sha256sum "$BACKUP_FILE" > "$BACKUP_FILE.sha256"
+          echo "Şifreli arşiv ve pg_restore liste kontrolü başarılı."
+          echo "Arşivin SHA-256 toplamı oluşturuldu; hiçbir açık SQL dosyası kaydedilmedi."
+
+      - name: Sadece şifreli yedeği artefakt olarak sakla
+        uses: actions/upload-artifact@v4
+        with:
+          name: apartman-encrypted-database-backup
+          path: |
+            ${{ env.BACKUP_FILE }}
+            ${{ env.BACKUP_FILE }}.sha256
+          if-no-files-found: error
+          retention-days: 7
