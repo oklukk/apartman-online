@@ -58,7 +58,7 @@ test("staging is the reviewed stage-1 migration and later stages remain isolated
   assert.equal(
     sql,
     readFileSync(
-      "supabase/migrations/20261117150426_v031_staff_economy.sql",
+      "supabase/migrations/20261118203012_v031_staff_economy.sql",
       "utf8",
     ),
   );
