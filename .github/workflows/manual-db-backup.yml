@@ -95,12 +95,85 @@ jobs:
               PGPASSWORD=password,
               PGSSLMODE=sslmode,
           )
-          print("Session pooler hedefi ve kiracı kapsamlı kullanıcı adı doğrulandı.", file=sys.stderr)
+          print("Supabase bağlantı hedefi doğrulandı; parola karşılaştırması yapılacak.", file=sys.stderr)
+
+          # Never expose secret values, checksums or authentication responses in logs.
+          # Compare the encoded and literal URI password only if they differ.
+          def run_pg(program, options, *, password, port, quiet=False):
+              pg_env = dict(env)
+              pg_env["PGPASSWORD"] = password
+              pg_env["PGPORT"] = str(port)
+              cmd = ["docker", "run", "--rm"]
+              for name in ("PGHOST", "PGPORT", "PGUSER", "PGDATABASE", "PGPASSWORD", "PGSSLMODE"):
+                  cmd.extend(["--env", name])
+              cmd.extend(["postgres:17", program])
+              cmd.extend(options)
+              return subprocess.run(
+                  cmd, env=pg_env, check=not quiet,
+                  stdout=subprocess.DEVNULL if quiet else None,
+                  stderr=subprocess.PIPE if quiet else None,
+                  timeout=60 if quiet else 240,
+              )
+
+          def login_works(port, pwd):
+              try:
+                  result = run_pg(
+                      "psql",
+                      ["--no-psqlrc", "--no-password",
+                       "--username=postgres.rmoytuncahutqurttknt",
+                       "--host=aws-0-eu-central-1.pooler.supabase.com",
+                       "--port=" + str(port),
+                       "--dbname=postgres", "--tuples-only", "--command=select 1"],
+                      password=pwd, port=port, quiet=True,
+                  )
+                  return result.returncode == 0
+              except (subprocess.TimeoutExpired, OSError):
+                  return False
+
+          raw_password = userinfo.split(":", 1)[1]
+          chosen_password = password
+          if login_works(5432, chosen_password):
+              print("Session pooler: kimlik doğrulaması başarılı.", file=sys.stderr)
+          elif raw_password != chosen_password and login_works(5432, raw_password):
+              chosen_password = raw_password
+              print(
+                  "Session pooler: düz parola biçimi başarılı. "
+                  "URI yüzde-kodlaması yanlış yorumlanmış olabilir.",
+                  file=sys.stderr,
+              )
+          else:
+              transaction_works = login_works(6543, chosen_password)
+              if not transaction_works and raw_password != chosen_password:
+                  transaction_works = login_works(6543, raw_password)
+              if transaction_works:
+                  print(
+                      "::error::Transaction pooler kimlik doğrulaması başarılı, "
+                      "ancak Session pooler bağlantısı reddedildi. "
+                      "Session pooler/Supavisor tarafı incelenmeli.",
+                      file=sys.stderr,
+                  )
+              else:
+                  print(
+                      "::error::Session ve Transaction pooler aynı kimlik bilgilerini "
+                      "reddediyor. Secret'taki DB parolası ile Supabase DB parolası "
+                      "veya Supavisor kimlik doğrulama senkronizasyonu kontrol edilmeli. "
+                      "Parola loglara yazılmadı.",
+                      file=sys.stderr,
+                  )
+              sys.exit(3)
+
+          env["PGPASSWORD"] = chosen_password
           command = ["docker", "run", "--rm"]
           for key in ("PGHOST", "PGPORT", "PGUSER", "PGDATABASE", "PGPASSWORD", "PGSSLMODE"):
-              command.extend(["-e", key])
-          command.extend(["postgres:17", "pg_dump", "--format=custom", "--no-owner", "--no-acl"])
-          subprocess.run(command, env=env, check=True)
+              command.extend(["--env", key])
+          command.extend([
+              "postgres:17", "pg_dump", "--format=custom", "--no-owner",
+              "--no-acl", "--no-password",
+              "--username=postgres.rmoytuncahutqurttknt",
+              "--host=aws-0-eu-central-1.pooler.supabase.com",
+              "--port=5432", "--dbname=postgres",
+          ])
+          subprocess.run(command, env=env, check=True, timeout=240)
           PY
 
           test -s "$BACKUP_FILE"
