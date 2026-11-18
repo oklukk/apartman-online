@@ -29,3 +29,10 @@
 - Yeni modüllerde katalog izin kodu ve checked sunucu RPC zorunlu. İstemci rolü/metadata yetki kaynağı değildir.
 - RBAC yazmalarında ortak 741029030 transaction advisory lock'u yetki kontrolünden önce al; çözümleyicinin VOLATILE snapshot davranışını koru. Yeni yazma RPC'sine AAL2, kapsam, gerekçe, audit ve iptal yarış testleri ekle.
 - `npm run test:rbac` CI'da zorunlu. Canlıda fixture, tarih veya seçim sonucu değiştirme.
+
+## Gelişmiş yönetim (PR #4)
+- v031/v032/v033 yalnız ayrı rollout onayıyla canlıya uygulanır. Staging ayrıca çalıştırılmaz; eski dört migration değişmez.
+- Yeni staff mutasyonları staff_game_write_check + staff_claim_request, AAL2, kapsam, gerekçe ve audit gerektirir. Para silinmeyen ledger ve unique request ile yazılır; ters kayıt telafisi orijinal audit'e bir kez bağlanır.
+- Yeni oyuncu mutasyonu assert_player_allowed guard'ını kullanmalı; eski *_before_moderation fonksiyonlarını authenticated'a açma. Aktif JWT ban/mute kontrolünü atlayamaz.
+- Seçim müdahalesi snapshot revision ve building lock ile cron/oylar karşısında kontrol edilir; geçmiş aday/oy/görev silinmez. Görev çakışma constraint'i kaldırılmaz; voided kayıtlar etkin yönetici sayılmaz.
+- test:advanced CI'da zorunludur. Gerçek MFA/tarayıcı testini fixture SQL testiyle karıştırma.

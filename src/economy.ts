@@ -76,6 +76,7 @@ export interface Elector {
   user_id: string;
 }
 export interface Term {
+  voided?: boolean;
   id: string;
   user_id: string;
   starts_at: string;
@@ -167,7 +168,10 @@ export function trWeek() {
 export function currentTerm(terms: Term[]) {
   const now = Date.now();
   return terms.find(
-    (t) => Date.parse(t.starts_at) <= now && Date.parse(t.ends_at) > now,
+    (t) =>
+      !t.voided &&
+      Date.parse(t.starts_at) <= now &&
+      Date.parse(t.ends_at) > now,
   );
 }
 export type Perform = (
