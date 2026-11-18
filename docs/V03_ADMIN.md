@@ -4,7 +4,7 @@
 
 Mevcut APARTMAN v0.2 oyuncularını, mesajlarını, seçimlerini ve ekonomisini bozmadan, bir Süper Yönetici tarafından yönetilebilen ve gelecekte yeni yetkilerle genişletilebilen rol tabanlı yönetim sistemi.
 
-**Mevcut durum:** Kod yalnızca feat/v03-admin-rbac-foundation geliştirme dalında hazırlanmıştır. İncelenen staging SQL, CLI ile üretilen `20261116131716_v03_admin_rbac_foundation.sql` migration ile birebir eşleştirilmiştir. Canlı veritabanına uygulanmamıştır. Migration ve canlı yayın ayrıca onay bekler.
+**Canlı durum (19 Kasım 2026):** v0.3 RBAC sistemi canlıdadır. İncelenen SQL içeriği değiştirilmeden migration dosyasının zaman damgası, Supabase'de daha önce uygulanmış olan `20261116134945_v03_admin_rbac_foundation.sql` kaydıyla eşleştirilmiştir. Önceki `20261116131716` adı yalnız geliştirme geçmişindedir. Canlı geçmişe müdahale edilmemiştir.
 
 ## Mimari
 
