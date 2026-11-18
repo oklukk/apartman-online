@@ -50,11 +50,58 @@ jobs:
 
           # Database URL only in job secrets. Never print SQL or unencrypted data.
           # Session pooler (5432), not transaction pooler, is recommended.
-          docker run --rm -e DATABASE_URL postgres:17 \
-            pg_dump --dbname="$DATABASE_URL" --format=custom --no-owner --no-acl \
-            | gpg --batch --yes --symmetric --cipher-algo AES256 \
+          # Use the existing encrypted GitHub secret, but never trust its URI
+          # username. Supabase Session pooler requires postgres.<project-ref>.
+          # Parse only the password from URI, pass PostgreSQL fields separately
+          # through environment variables, not command-line arguments/logs.
+          python3 - <<'PY' | gpg --batch --yes --symmetric --cipher-algo AES256 \
                 --pinentry-mode loopback --passphrase-fd 3 \
                 --output "$BACKUP_FILE" 3<<< "$BACKUP_PASSPHRASE"
+          import os
+          import subprocess
+          import sys
+          from urllib.parse import parse_qs, unquote
+
+          def stop(msg):
+              print(f"::error::{msg}", file=sys.stderr)
+              sys.exit(2)
+
+          raw = os.environ["DATABASE_URL"].strip()
+          scheme, sep, rest = raw.partition("://")
+          if not sep or scheme not in ("postgresql", "postgres"):
+              stop("Bağlantı URI şeması beklenenden farklı.")
+          userinfo, sep, destination = rest.rpartition("@")
+          if not sep or ":" not in userinfo:
+              stop("URI parola/kullanıcı ayrıştırılamadı; parolayı paylaşmayın.")
+          password = unquote(userinfo.split(":", 1)[1])
+          if not password or password == "[YOUR-PASSWORD]":
+              stop("URI içinde gerçek veritabanı parolası bulunamadı.")
+          hostport, sep, db_and_options = destination.partition("/")
+          if hostport != "aws-0-eu-central-1.pooler.supabase.com:5432":
+              stop("Hedef Supabase Frankfurt Session pooler :5432 değil.")
+          database, _, query = db_and_options.partition("?")
+          if database != "postgres":
+              stop("Veritabanı adı postgres olmalı.")
+          sslmode = parse_qs(query).get("sslmode", [""])[0]
+          if sslmode not in ("require", "verify-full"):
+              stop("URI parametresi sslmode=require veya verify-full olmalı.")
+
+          env = dict(os.environ)
+          env.update(
+              PGHOST="aws-0-eu-central-1.pooler.supabase.com",
+              PGPORT="5432",
+              PGUSER="postgres.rmoytuncahutqurttknt",
+              PGDATABASE="postgres",
+              PGPASSWORD=password,
+              PGSSLMODE=sslmode,
+          )
+          print("Session pooler hedefi ve kiracı kapsamlı kullanıcı adı doğrulandı.", file=sys.stderr)
+          command = ["docker", "run", "--rm"]
+          for key in ("PGHOST", "PGPORT", "PGUSER", "PGDATABASE", "PGPASSWORD", "PGSSLMODE"):
+              command.extend(["-e", key])
+          command.extend(["postgres:17", "pg_dump", "--format=custom", "--no-owner", "--no-acl"])
+          subprocess.run(command, env=env, check=True)
+          PY
 
           test -s "$BACKUP_FILE"
           # Verify decryption and archive structure, without restoring or modifying DB.
