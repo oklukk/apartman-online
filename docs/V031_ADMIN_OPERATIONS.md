@@ -1,10 +1,10 @@
 # APARTMAN gelişmiş Yönetim Merkezi — PR #4
 
-Bu sürüm mevcut PR #4 / feat/v031-advanced-admin-actions üzerinde tamamlanmıştır. Canlı migration/yönetim mutasyonu, yeni hesap/rol/proje, PR birleşimi veya Pages yayını yapılmaz. Aşağıdaki üç migration yalnız disposable PostgreSQL üzerinde sınanmıştır. İlk dört migration değişmez.
+**Canlı durum (19 Kasım 2026):** PR #4 birleştirilmiş, v031/v032/v033 canlıya uygulanmış ve GitHub Pages yayımlanmıştır. Aşağıdaki teknik açıklamalar uygulanan sürümü anlatır. Canlıya uygulama sonrasında ilk yedi migration'ın SQL gövdeleri değiştirilmeden GitHub'daki zaman damgaları, Supabase'in kayıtlı geçmişiyle eşleştirilmiştir. Testlerde yalnız disposable PostgreSQL kullanılır; canlı işlevsel testlerde oyuncu verisi değiştirilmez.
 
 ## 1. Oyuncu ve ekonomi
 
-`20261117150426_v031_staff_economy.sql`: mevcut staging taslağının incelenmiş hali. Kullanıcı adı (benzersiz, 3–20 ASCII harf/rakam/alt çizgi), kişisel bakiye, ortak kasa ve sekiz ekonomi ayarı için checked RPC'ler. AAL2, kapsam izni, 5–500 karakter gerekçe ve audit zorunlu.
+`20261118203012_v031_staff_economy.sql`: mevcut staging taslağının incelenmiş hali. Kullanıcı adı (benzersiz, 3–20 ASCII harf/rakam/alt çizgi), kişisel bakiye, ortak kasa ve sekiz ekonomi ayarı için checked RPC'ler. AAL2, kapsam izni, 5–500 karakter gerekçe ve audit zorunlu.
 
 Cüzdan/kasa düzeltmeleri mevcut deftere `admin_adjustment` olarak yazılır; negatif bakiye ve integer taşması engellenir. İşlem başına delta sınırı ±1.000.000 OP. `private.staff_requests` global işlem UUID'sini aktör, eylem ve payload'a bağlar: aynı isteğin tekrarı etkisizdir, farklı payload/aktör/işlem türünde aynı UUID reddedilir. Audit ve para güncellemeleri aynı transaction'dadır. UI ağ hatasında aynı UUID'yi korur; başarıdan sonra yeni istek açar. Kullanıcı yeni bir operasyon başlatırsa yeni UUID bilinçli yeni işlemdir; sekme yenilemesinden sonra belirsiz ağ sonucunu audit'ten kontrol etmeden tekrar göndermemelidir.
 
@@ -16,7 +16,7 @@ Aidat ayarının gerçek etkisi sonraki Türkiye pazartesisinde başlar. `econom
 
 ## 2. Oyuncu denetimi
 
-`20261117150533_v032_moderation.sql`: private.player_sanctions ile süreli/süresiz ban, susturma, kaldırma ve kalıcı uyarı geçmişi. `players.ban` ban/kaldırma; `players.moderate` mute/kaldırma/uyarı ve izinli yaptırım geçmişi içindir. Rol adıyla yetki verilmez; katalogdaki atamalar ve apartman kapsamı sunucuda değerlendirilir. Son banlanmamış global Süper Yönetici korunur.
+`20261118203040_v032_moderation.sql`: private.player_sanctions ile süreli/süresiz ban, susturma, kaldırma ve kalıcı uyarı geçmişi. `players.ban` ban/kaldırma; `players.moderate` mute/kaldırma/uyarı ve izinli yaptırım geçmişi içindir. Rol adıyla yetki verilmez; katalogdaki atamalar ve apartman kapsamı sunucuda değerlendirilir. Son banlanmamış global Süper Yönetici korunur.
 
 Ban, Auth hesabını silmez ve token süresinin dolmasını beklemez. Aktif JWT'yle dahi güncel yaptırım tablosu okunur. Mevcut join/send/vote/settle/job/pay/election/proposal private girişleri guarded wrapper olur; önceki gövdeler authenticated/anon için kapatılır. Blocks/reports doğrudan yazmalarında trigger guard vardır. Banlı kullanıcının bina verisi kapsamı kapanır; kendi hesap güvenliği/Auth erişimi korunur. Susturma sohbet göndermeyi durdurur; diğer oyun işlemlerini durdurmaz. Kaldırma eski yaptırımı silmez; revoked_at ekler. Süre bitişi sunucu saatiyle kendiliğinden etkisiz olur.
 
@@ -26,7 +26,7 @@ Kilit sırası: staff RBAC transaction advisory lock → building → kullanıc�
 
 ## 3. Seçim ve yöneticilik
 
-`20261117150534_v033_governance_operations.sql`:
+`20261118203100_v033_governance_operations.sql`:
 
 - Seçim başlat/olağanüstü seçim, yeniden başlat, iptal ve takvim değişikliği: `governance.elections.manage`.
 - Normal erken sonuç: adaylık bitmiş olmalı, mevcut oylar ve katılım koşullarıyla normal resolver çalışır.
