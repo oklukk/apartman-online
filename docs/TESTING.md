@@ -34,3 +34,8 @@ Yeterli disk alanına sahip ayrı bir **bulut geliştirme ortamında**:
 - Gerçek GitHub Actions ve Pages URL'sinde alt dizin dosyalarının yüklenmesi.
 
 Bu ortamda Sites yönetilen önizlemesi için gerekli `cua_repl.js` mevcut değil. Tarayıcı önizlemesi ve mobil görsel QA çalıştırılamadı. Responsive CSS uygulanmış olması mobil kabul testinin geçtiği anlamına gelmez.
+
+
+## UI/UX v1 (19 Kasım 2026)
+
+`npm test`, `test:ui`, `build`, `test:sql`, `test:v02`, `test:rbac` ve `test:advanced` başarılı. Ayrıntılı kapsam ve tamamlanmamış mobil/masaüstü tarayıcı kabul listesi [UI yenileme belgesinde](UI_REFRESH_V1.md). Tema testleri normal metin, form sınırları ve odak rengi kontrastını hesaplar; statik React testleri yerleşim veya gerçek Auth/Realtime testi sayılmaz.
