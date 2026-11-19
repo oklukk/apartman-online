@@ -1,5 +1,7 @@
 # APARTMAN v0.2
 
+UI/UX v1 sunum iyileştirmeleri, test sonuçları ve bekleyen tarayıcı kontrol listesi: [UI yenileme notları](docs/UI_REFRESH_V1.md).
+
 Çınar Apartmanı'nda gerçek oyuncuların birlikte yaşadığı, Türkçe metin ve menü tabanlı online oyunun ilk sürümü. React + TypeScript + Vite, Supabase Auth/PostgreSQL/Realtime, GitHub Pages. Ayrı uygulama sunucusu veya ücretli kaynak gerekmez.
 
 **v0.2:** Mevcut dört ekran ve sosyal sistem korunarak kişisel cüzdan/iş hayatı, haftalık aidat/işletme giderleri ve 14 günlük yönetici seçimleri eklendi. Ekonomi, takvim, güvenlik, testler ve veri koruma yaklaşımı [v0.2 belgesinde](docs/V02.md). Başlangıç 300 OP, eşit maaşlı üç meslek 100 OP/gün, ek iş 25 OP/gün, aidat 150 OP/hafta. Bütün para ve yetki işlemleri sunucudadır.

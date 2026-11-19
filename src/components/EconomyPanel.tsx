@@ -41,6 +41,9 @@ export function EconomyPanel({
             Bu bakiye ve kişisel hareketlerin yalnızca sana görünür.
           </p>
           <h3>Son para hareketleri</h3>
+          {!data.wallet_transactions.length && (
+            <p className="empty-state">Henüz para hareketin yok.</p>
+          )}
           <ul className="ledger">
             {data.wallet_transactions.map((t) => (
               <li key={t.id}>
@@ -67,7 +70,7 @@ export function EconomyPanel({
             taşınanlara sonraki dönemden itibaren borç oluşur.
           </p>
           {!data.dues.length && (
-            <p className="subtle">Henüz aidat borcun yok.</p>
+            <p className="empty-state">Henüz aidat borcun yok.</p>
           )}
           <ul className="ledger">
             {[...data.dues]
@@ -177,8 +180,7 @@ export function EconomyPanel({
               ) : taskStarted ? (
                 <>
                   <p className="footnote">
-                    Görevi tamamla. Sunucu en az 3 saniye geçtiğini kontrol
-                    eder.
+                    Görevi tamamlamak için en az 3 saniye bekle.
                   </p>
                   <button
                     disabled={busy || !ready}

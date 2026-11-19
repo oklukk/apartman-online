@@ -114,10 +114,11 @@ export function StaffMfa() {
   }
 
   return (
-    <article className="card">
+    <article className="card security-card">
       <h2>Çok faktörlü doğrulama</h2>
       <p>
-        Rol, izin ve apartman adı değiştirmek için sunucu AAL2 oturumu ister.
+        Hesabını doğrulama uygulamasındaki kodla koru. Yönetim işlemleri için
+        iki aşamalı doğrulanmış oturum gerekir.
         MFA kurulumu tek başına yönetici yetkisi vermez.
       </p>
       {status && <p role="status">{status}</p>}

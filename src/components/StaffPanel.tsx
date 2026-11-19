@@ -1,3 +1,5 @@
+import { uiText } from "../uiText";
+import { PanelGroup } from "./PanelGroup";
 import { useCallback, useEffect, useState, lazy, Suspense } from "react";
 import { supabase, errorText } from "../api";
 import { StaffMfa } from "./StaffMfa";
@@ -179,10 +181,10 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
       <header className="page-heading">
         <div>
           <div className="eyebrow">SİSTEM YÖNETİM MERKEZİ</div>
-          <h1>Yetki ve rol yönetimi</h1>
+          <h1>Yönetim merkezi</h1>
           <p className="subtle">
-            Roller sunucu tarafından doğrulanır. Her değişiklik gerekçesiyle
-            kaydedilir.
+            Oyuncular, ekonomi ve yetkiler tek yerde. Her değişiklik
+            gerekçesiyle işlem geçmişine kaydedilir.
           </p>
         </div>
       </header>
@@ -191,7 +193,7 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
           {status}
         </div>
       )}
-      <article className="card">
+      <article className="card role-overview">
         <h2>Yetkilerim</h2>
         {identity.roles.map((r, i) => (
           <p key={i}>
@@ -204,12 +206,20 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
       {!canRead && (
         <p>Yetki dizinini görüntülemek için ayrıca izin gereklidir.</p>
       )}
-      <StaffMfa />
+      <PanelGroup
+        title="Hesap güvenliği"
+        description="İki aşamalı doğrulama kurulumu ve güvenli oturum."
+      >
+        <StaffMfa />
+      </PanelGroup>
       <Suspense fallback={<p>Yönetim işlemleri yükleniyor…</p>}>
         <StaffOperations identity={identity} />
       </Suspense>
       {directory && (
-        <>
+        <PanelGroup
+          title="Roller ve apartman ayarları"
+          description="Rol atamaları, özel izinler, apartman adı ve yetki geçmişi."
+        >
           <article className="card">
             <h2>Rol kataloğu</h2>
             {directory.roles.map((r) => (
@@ -320,7 +330,7 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
               </form>
               {role === "super_admin" && (
                 <p className="subtle">
-                  İkinci bir Süper Yönetici atamak için MFA/AAL2 oturumu
+                  İkinci bir Süper Yönetici atamak için iki aşamalı doğrulanmış oturum
                   gerekir.
                 </p>
               )}
@@ -337,12 +347,12 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
                   </strong>
                   <small>
                     {" "}
-                    · {a.role} · {a.scope_kind}
+                    · {directory.roles.find((r) => r.code === a.role)?.title || uiText(a.role)} · {uiText(a.scope_kind)}
                   </small>
                 </span>
                 {isSuper && (
                   <button
-                    className="text-button"
+                    className="text-button danger"
                     disabled={busy || !reasonValid}
                     onClick={() => {
                       if (window.confirm("Rol ataması kaldırılsın mı?"))
@@ -493,9 +503,10 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
               <h2>İşlem geçmişi</h2>
               {directory.audit.map((entry, i) => (
                 <div key={i} className="staff-audit">
-                  <strong>{entry.action}</strong> · {entry.target_type}
+                  <strong>{uiText(entry.action)}</strong> · {uiText(entry.target_type)}
                   <details>
                     <summary>Eski / yeni değerler</summary>
+                    <small>İşlem kodu: {entry.action}</small>
                     <pre className="staff-json">
                       {JSON.stringify(
                         { önce: entry.old_value, sonra: entry.new_value },
@@ -510,10 +521,10 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
                   </p>
                 </div>
               ))}
-              {!directory.audit.length && <p>Henüz kayıt yok.</p>}
+              {!directory.audit.length && <p className="empty-state">Henüz yönetim işlemi kaydedilmedi.</p>}
             </article>
           )}
-        </>
+        </PanelGroup>
       )}
     </section>
   );

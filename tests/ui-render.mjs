@@ -137,8 +137,63 @@ try {
   assert.ok(staff.includes("Editör"));
   assert.ok(staff.includes("MFA hazırla"));
   assert.ok(!staff.includes("Kullanıcıya yetki ver"));
+  const { PanelGroup } = await vite.ssrLoadModule("/src/components/PanelGroup.tsx");
+  const group = renderToStaticMarkup(React.createElement(PanelGroup, {
+    title: "Oyuncular ve ekonomi",
+    description: "Bakiye ve kasa işlemleri",
+    children: React.createElement("form", null,
+      React.createElement("label", null, "İşlem gerekçesi",
+        React.createElement("textarea", { required: true, defaultValue: "Kontrol için açıklama" }))),
+  }));
+  assert.match(group, /<details class="panel-group"><summary>/);
+  assert.match(group, /Oyuncular ve ekonomi/);
+  assert.match(group, /<textarea required="">Kontrol için açıklama<\/textarea>/,
+    "Closed disclosures keep forms in the document rather than unmounting them");
+  assert.doesNotMatch(group, /open=""/);
+  assert.ok(staff.includes("Hesap güvenliği"));
+  assert.ok(staff.includes("Yönetim merkezi"));
+
+  const { StaffMfa } = await vite.ssrLoadModule("/src/components/StaffMfa.tsx");
+  const security = renderToStaticMarkup(React.createElement(StaffMfa));
+  assert.ok(security.includes("MFA hazırla / doğrula"));
+  assert.ok(security.includes("tek başına yönetici yetkisi vermez"));
+  assert.ok(!security.includes("AAL2"));
+
+  const { PollCard } = await vite.ssrLoadModule("/src/components/PollCard.tsx");
+  const pollProps = {
+    poll: { id: "poll", ends_at: iso(now + 3600000), status: "open", yes_count: 1, no_count: 0, minimum_votes: 3 },
+    event: { title: "Asansör arızası", description: "Birlikte karar veriyoruz.", cost: 1200 },
+    busy: false, onVote: () => {},
+  };
+  const openPoll = renderToStaticMarkup(React.createElement(PollCard, pollProps));
+  assert.ok(openPoll.includes(">Onayla</button>"));
+  assert.ok(openPoll.includes(">Reddet</button>"));
+  const votedPoll = renderToStaticMarkup(React.createElement(PollCard, {
+    ...pollProps, vote: { choice: true },
+  }));
+  assert.ok(!votedPoll.includes(">Onayla</button>"));
+  assert.ok(votedPoll.includes("Bir kez oy kullanabilirsiniz"));
+
+  const insufficient = structuredClone(data);
+  insufficient.wallets[0].balance = 100;
+  insufficient.dues = [{ id: "due", week_start: "2026-11-16", amount: 150, paid_at: null }];
+  const dueMarkup = renderToStaticMarkup(React.createElement(EconomyPanel, { ...props, data: insufficient }));
+  assert.match(dueMarkup, /<button disabled="">Bakiye yetersiz<\/button>/);
+  insufficient.dues[0].paid_at = iso(now);
+  const paidMarkup = renderToStaticMarkup(React.createElement(EconomyPanel, { ...props, data: insufficient }));
+  assert.ok(paidMarkup.includes("Ödendi"));
+  assert.ok(!paidMarkup.includes("Bakiye yetersiz"));
+
+  const { ManagementSummary } = await vite.ssrLoadModule("/src/components/GovernancePanel.tsx");
+  const summary = renderToStaticMarkup(React.createElement(ManagementSummary, props));
+  assert.match(summary, /<dl class="finance-summary" aria-label="Bu haftanın kasa özeti">/);
+  assert.ok(summary.includes("Haftalık gelir") && summary.includes("Haftalık gider"));
+  const { uiText } = await vite.ssrLoadModule("/src/uiText.ts");
+  assert.equal(uiText("wallet.adjust"), "Kişisel bakiye düzeltildi");
+  assert.equal(uiText("future.module"), "future.module", "Unknown audit codes remain traceable");
+  assert.equal(uiText("toString"), "toString");
   console.log(
-    "PASS static React: wallet/job/dues, candidacy, manager-only controls and empty states. Browser/mobile/Realtime NOT tested.",
+    "PASS static React: wallet/job/dues/payment states, election permissions, poll voting, native disclosures, account security, semantic financial summary and audit labels. Browser/mobile/Realtime NOT tested.",
   );
 } finally {
   await vite.close();
