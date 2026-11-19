@@ -41,14 +41,10 @@ export function ManagementSummary({
       {manager && (
         <p className="footnote">Görev bitişi: {time(manager.ends_at)}</p>
       )}
-      <div className="spread">
-        <p>
-          Gelir <strong>+{money(income)} OP</strong>
-        </p>
-        <p>
-          Gider <strong>−{money(expense)} OP</strong>
-        </p>
-      </div>
+      <dl className="finance-summary" aria-label="Bu haftanın kasa özeti">
+        <div><dt>Haftalık gelir</dt><dd>+{money(income)} OP</dd></div>
+        <div><dt>Haftalık gider</dt><dd>−{money(expense)} OP</dd></div>
+      </dl>
       <p className="footnote">
         Maaş, aidat, işletme giderleri ve seçim takvimi yönetici çevrimdışıyken
         de çalışır.
@@ -200,7 +196,7 @@ export function GovernancePanel({
                 </ul>
                 {!data.election_candidates.some(
                   (c) => c.election_id === active.id,
-                ) && <p className="subtle">Henüz aday yok.</p>}
+                ) && <p className="empty-state">Henüz aday yok.</p>}
               </>
             ) : (
               <>
@@ -388,7 +384,7 @@ export function GovernancePanel({
               ))}
             </ul>
             {!data.treasury_history.length && (
-              <p className="subtle">Henüz kasa hareketi yok.</p>
+              <p className="empty-state">Henüz kasa hareketi yok.</p>
             )}
           </article>
         </div>

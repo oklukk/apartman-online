@@ -321,6 +321,7 @@ function App() {
   const activity = <ActivityFeed items={data?.activity || []} />;
   return (
     <div className="shell">
+      <a className="skip-link" href="#main-content">İçeriğe geç</a>
       <aside className="sidebar">
         <a href={import.meta.env.BASE_URL} className="brand">
           <span className="brand-icon">
@@ -344,11 +345,11 @@ function App() {
                   <button
                     key={t}
                     className={tab === t ? "selected" : ""}
+                    aria-current={tab === t ? "page" : undefined}
                     onClick={() => setTab(t)}
                   >
-                    <span className="nav-icon">{["▦", "⌂", "☷", "≡"][i]}</span>
+                    <span className="nav-icon" aria-hidden="true">{["▦", "⌂", "☷", "≡"][i]}</span>
                     {t}
-                    <span className="nav-arrow">›</span>
                   </button>
                 ))}
               </nav>
@@ -356,6 +357,7 @@ function App() {
             <nav aria-label="Hesap güvenliği">
               <button
                 className={tab === "Güvenlik" ? "selected" : ""}
+                aria-current={tab === "Güvenlik" ? "page" : undefined}
                 onClick={() => setTab("Güvenlik")}
               >
                 Hesap güvenliği
@@ -365,6 +367,7 @@ function App() {
               <nav aria-label="Sistem yönetimi">
                 <button
                   className={tab === "Sistem" ? "selected" : ""}
+                  aria-current={tab === "Sistem" ? "page" : undefined}
                   onClick={() => setTab("Sistem")}
                 >
                   Sistem yönetimi
@@ -373,7 +376,7 @@ function App() {
             )}
             {me && (
               <div className="sidebar-bottom">
-                <span className="live-dot" />
+                <span className="live-dot" aria-hidden="true" />
                 {live}
                 <small>Gelişmeler 30 saniyede de yenilenir.</small>
               </div>
@@ -393,7 +396,7 @@ function App() {
           </select>
         </label>
       </aside>
-      <main>
+      <main id="main-content" tabIndex={-1}>
         <header className="topbar">
           <span>
             {building?.name || "Çınar Apartmanı"}{" "}
@@ -420,7 +423,7 @@ function App() {
           </div>
         )}
         {starting ? (
-          <p role="status">Oturum kontrol ediliyor…</p>
+          <p className="empty-state" role="status">Oturum kontrol ediliyor…</p>
         ) : !client ? (
           <section className="auth card">
             <div className="eyebrow">KURULUM BEKLENİYOR</div>
@@ -449,12 +452,14 @@ function App() {
               <div className="auth-tabs">
                 <button
                   className={authMode === "login" ? "active" : ""}
+                  aria-pressed={authMode === "login"}
                   onClick={() => setAuthMode("login")}
                 >
                   Giriş yap
                 </button>
                 <button
                   className={authMode === "signup" ? "active" : ""}
+                  aria-pressed={authMode === "signup"}
                   onClick={() => setAuthMode("signup")}
                 >
                   Hesap oluştur
@@ -525,7 +530,7 @@ function App() {
         ) : tab === "Sistem" && staff.roles.length > 0 ? (
           <StaffPanel identity={staff} />
         ) : !data ? (
-          <p role="status">Apartman bilgileri yükleniyor…</p>
+          <p className="empty-state" role="status">Apartman bilgileri yükleniyor…</p>
         ) : !me ? (
           <section className="auth card">
             <div className="eyebrow">YENİ BİR BAŞLANGIÇ</div>
@@ -627,6 +632,9 @@ function App() {
                     <article className="card announcements">
                       <div className="eyebrow">PANODAN</div>
                       <h2>Duyurular</h2>
+                      {!data.announcements.length && (
+                        <p className="empty-state">Şu anda yeni bir duyuru yok.</p>
+                      )}
                       {data.announcements.map((a) => (
                         <section key={a.id}>
                           <h3>{a.title}</h3>
@@ -848,7 +856,7 @@ function App() {
                         </div>
                       ))}
                     {!data.messages.length && (
-                      <p className="subtle">
+                      <p className="empty-state">
                         Henüz mesaj yok. Komşularına ilk selamı ver.
                       </p>
                     )}
@@ -879,7 +887,7 @@ function App() {
                       rows={2}
                       placeholder="Komşularına bir şey söyle…"
                     />
-                    <button disabled={busy}>Gönder ↑</button>
+                    <button disabled={busy}>Gönder</button>
                   </form>
                 </article>
               </div>

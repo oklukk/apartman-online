@@ -10,12 +10,12 @@ export function ActivityFeed({ items }: { items: Activity[] }) {
           {items.map((a) => (
             <li key={a.id}>
               <p>{a.description}</p>
-              <time>{time(a.created_at)}</time>
+              <time dateTime={a.created_at}>{time(a.created_at)}</time>
             </li>
           ))}
         </ol>
       ) : (
-        <p className="subtle">
+        <p className="empty-state">
           İlk gelişme komşular taşındığında burada görünecek.
         </p>
       )}
