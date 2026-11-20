@@ -1,0 +1,82 @@
+[
+  {
+    "id": "portrait-01",
+    "file": "portrait-01.svg",
+    "description": "Dalgalı kısa bob, yuvarlak yaka"
+  },
+  {
+    "id": "portrait-02",
+    "file": "portrait-02.svg",
+    "description": "Kıvırcık kısa saç, çilli yüz"
+  },
+  {
+    "id": "portrait-03",
+    "file": "portrait-03.svg",
+    "description": "Düz uzun saç, ince çerçeve gözlük"
+  },
+  {
+    "id": "portrait-04",
+    "file": "portrait-04.svg",
+    "description": "Kısa saç, altın saç bandı"
+  },
+  {
+    "id": "portrait-05",
+    "file": "portrait-05.svg",
+    "description": "Toplu kıvırcık saç, halka küpe"
+  },
+  {
+    "id": "portrait-06",
+    "file": "portrait-06.svg",
+    "description": "Kısa saç ve dolgun sakal"
+  },
+  {
+    "id": "portrait-07",
+    "file": "portrait-07.svg",
+    "description": "Gümüş kısa saç, yuvarlak gözlük"
+  },
+  {
+    "id": "portrait-08",
+    "file": "portrait-08.svg",
+    "description": "Uzun düz saç, altın bluz"
+  },
+  {
+    "id": "portrait-09",
+    "file": "portrait-09.svg",
+    "description": "Asimetrik saç, adaçayı bandana"
+  },
+  {
+    "id": "portrait-10",
+    "file": "portrait-10.svg",
+    "description": "Hacimli afro, krem yaka"
+  },
+  {
+    "id": "portrait-11",
+    "file": "portrait-11.svg",
+    "description": "Dik kısa saç, petrol ceket"
+  },
+  {
+    "id": "portrait-12",
+    "file": "portrait-12.svg",
+    "description": "Beyaz saç ve sakal, hırka"
+  },
+  {
+    "id": "portrait-13",
+    "file": "portrait-13.svg",
+    "description": "Yüksek topuz, altın küpe"
+  },
+  {
+    "id": "portrait-14",
+    "file": "portrait-14.svg",
+    "description": "Adaçayı başörtüsü ve bluz"
+  },
+  {
+    "id": "portrait-15",
+    "file": "portrait-15.svg",
+    "description": "Altın şapka, iş önlüğü"
+  },
+  {
+    "id": "portrait-16",
+    "file": "portrait-16.svg",
+    "description": "Kıvırcık saç, kulak üstü kulaklık"
+  }
+]
