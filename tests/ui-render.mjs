@@ -198,6 +198,8 @@ try {
   const shell = renderToStaticMarkup(React.createElement(AppShell,shellProps));
   for (const label of ['Bugün','Dairem','Apartman','Komşular','Profilim','Ayarlar','Hesap güvenliği']) assert.ok(shell.includes(label),label);
   assert.ok(!shell.includes('Sistem Yönetim Merkezi'));
+  assert.equal((shell.match(/class="navigation-icon"/g)||[]).length,4);
+  assert.equal((shell.match(/aria-hidden="true" focusable="false"/g)||[]).length,4);
   assert.ok(renderToStaticMarkup(React.createElement(AppShell,{...shellProps,access:{authenticated:true,resident:false,staff:true}})).includes('Sistem Yönetim Merkezi'));
   const managerNav = renderToStaticMarkup(React.createElement(SectionNav,{route:{page:'building'},manager:true}));
   const residentNav = renderToStaticMarkup(React.createElement(SectionNav,{route:{page:'building'},manager:false}));

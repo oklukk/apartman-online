@@ -78,7 +78,7 @@ Tekrar üretim (bulut geliştirme ortamında, mevcut Playwright Python/Chromium 
 
 Yerel Vite test sunucusu, gerçek App bileşenini kullanır; API modülünü yalnız bu sunucuda `tests/fixtures/navigation/api.ts` ile değiştirir. Üretim entry point bu fixture'ı import etmez. Yerel sayfa aynı `/apartman-online/` taban yolunda test edilir. Sentetik hesaplar/veriler ekranın üstünde açıkça etiketlidir. Mutasyon RPC'leri reddedilir; mevcut heartbeat/settle çağrıları yalnız fixture'da veri değiştirmeyen no-op'tur. Auth/Realtime sonuçları simüledir. Önceden mevcut Google Fonts import'u yalnız bu fixture sunucusunda kaldırılır; görüntüler sistem fontu fallback'i ile alınır. Dış ağ istekleri reddedilir ve test hata verir. Üretim font davranışı değişmez.
 
-Chromium'da doğrulananlar: doğrudan alt hedef/focus, yenileme/geri/ileri, sohbet alt sekmesinde taslak koruma, hesap menüsünde Escape ve odağın dönüşü, tema saklama, rol gerektirmeyen MFA ekranı, normal oyuncunun korunan personel RPC'sini çağırmaması, apartman yöneticisinin personel menüsü görmemesi, yerleşmemiş personel erişimi, ziyaretçi/yerleşmemiş oyuncu ve callback fragment'ının korunması. 320/390/768/1440 px açık/koyu örneklerde taşma yok; mobil menü ekran tabanında; gerçek tema değişkenleri/yüzeyleri yüklü. Görseller test fixture'ı çıktılarıdır; canlı oyun kanıtı değildir.
+Chromium'da doğrulananlar: doğrudan alt hedef/focus, yenileme/geri/ileri, sohbet alt sekmesinde taslak koruma, hesap menüsünde Escape ve odağın dönüşü, dış fare/dokunma ile kapanma ve dış odaklanabilir hedefe doğal odak, tema saklama, rol gerektirmeyen MFA ekranı, normal oyuncunun korunan personel RPC'sini çağırmaması, apartman yöneticisinin personel menüsü görmemesi, yerleşmemiş personel erişimi, ziyaretçi/yerleşmemiş oyuncu ve callback fragment'ının korunması. 320/390/768/1440 px açık/koyu örneklerde taşma yok; mobil menü ekran tabanında; gerçek tema değişkenleri/yüzeyleri yüklü. Görseller test fixture'ı çıktılarıdır; canlı oyun kanıtı değildir.
 
 ### Ekran görüntüleri
 
@@ -87,9 +87,38 @@ Chromium'da doğrulananlar: doğrudan alt hedef/focus, yenileme/geri/ileri, sohb
 | Bugün | [Açık](design/navigation/today-light-390.png) / [Koyu](design/navigation/today-dark-390.png) | [Açık](design/navigation/today-light-1440.png) / [Koyu](design/navigation/today-dark-1440.png) |
 | Apartman / Kararlar | [Açık](design/navigation/decisions-light-390.png) / [Koyu](design/navigation/decisions-dark-390.png) | [Açık](design/navigation/decisions-light-1440.png) / [Koyu](design/navigation/decisions-dark-1440.png) |
 | Sistem Yönetim Merkezi | [Açık](design/navigation/staff-light-390.png) / [Koyu](design/navigation/staff-dark-390.png) | [Açık](design/navigation/staff-light-1440.png) / [Koyu](design/navigation/staff-dark-1440.png) |
+| Dairem / Daire | [Açık](design/navigation/home-light-390.png) / [Koyu](design/navigation/home-dark-390.png) | [Açık](design/navigation/home-light-1440.png) / [Koyu](design/navigation/home-dark-1440.png) |
+| Dairem / İşler | [Açık](design/navigation/work-light-390.png) / [Koyu](design/navigation/work-dark-390.png) | [Açık](design/navigation/work-light-1440.png) / [Koyu](design/navigation/work-dark-1440.png) |
+| Dairem / Cüzdan | [Açık](design/navigation/wallet-light-390.png) / [Koyu](design/navigation/wallet-dark-390.png) | [Açık](design/navigation/wallet-light-1440.png) / [Koyu](design/navigation/wallet-dark-1440.png) |
+| Komşular / Sakinler | [Açık](design/navigation/residents-light-390.png) / [Koyu](design/navigation/residents-dark-390.png) | [Açık](design/navigation/residents-light-1440.png) / [Koyu](design/navigation/residents-dark-1440.png) |
+| Komşular / Sohbet | [Açık](design/navigation/chat-light-390.png) / [Koyu](design/navigation/chat-dark-390.png) | [Açık](design/navigation/chat-light-1440.png) / [Koyu](design/navigation/chat-dark-1440.png) |
+| Hesap menüsü (açık) | [Açık](design/navigation/account-menu-light-390.png) / [Koyu](design/navigation/account-menu-dark-390.png) | [Açık](design/navigation/account-menu-light-1440.png) / [Koyu](design/navigation/account-menu-dark-1440.png) |
+| Ayarlar | [Açık](design/navigation/settings-light-390.png) / [Koyu](design/navigation/settings-dark-390.png) | [Açık](design/navigation/settings-light-1440.png) / [Koyu](design/navigation/settings-dark-1440.png) |
 
 ## Sınırlar ve geri alma
 
 Gerçek e-posta/giriş, MFA töreni, WebSocket/Realtime, gerçek sunucuda ödeme/oy verme ve canlı GitHub Pages yayını bu PR'da tarayıcıdan yeniden sınanmadı. Yalnız görünüm testleri yapılmışken bunlar canlı kabul edilmiş sayılmaz. %200 zoom, ekran okuyucu ve fiziksel iOS/Android safe-area kabulü manuel kontrol bekler. V2.1 sosyal veri, bildirim ve avatar seçimi yoktur; C/D/E/F aşamalarının kapsamlı ekran/ayar/profil tasarımları eklenmez.
 
 Geri alma yalnız bu PR'ın istemci değişikliklerini geri almakla yapılır; migration veya veri telafisi gerekmez. Taslak PR inceleme/onay bekler; otomatik merge/yayın yapılmaz. C aşamasına ancak bu PR'ın ayrı incelemesi ve birleştirilmesinden sonra geçilir.
+
+
+## B aşaması inceleme düzeltmeleri — 23 Kasım 2026
+
+Bu tur aynı PR #11 / `feat/uiux-v2-navigation` dalındadır; yeni PR veya C/D tasarımı yoktur.
+
+- Dört ana bağlantı yerel 24×24 SVG ikonlar kullanır: takvim/onay, daire, apartman ve komşular. 1,8 px yuvarlak kontur ve `currentColor` mevcut temayla uyumludur. SVG'ler dekoratif `aria-hidden` / `focusable=false`; erişilebilir isimler hâlâ Bugün/Dairem/Apartman/Komşular'dır. Mobilde ikon üstte, yazı altta; masaüstünde yan yana. Seçili bağlantı renk, kenar vurgusu ve kalın yazıyla gösterilir. Yeni bağımlılık ve onaylı sanat dosyalarında değişiklik yoktur.
+- Hesap menüsü `pointerdown` ile dış fare/dokunma olayında kapanır. Menünün içinde kalmış odak görünür summary'ye alınır; pointer'ın normal varsayılan davranışı iptal edilmediğinden dışarıdaki bağlantı/girdi/düğme kendi odağını alabilir. Menü dışındaki geçerli odak çalınmaz. Escape odağı summary'ye döndürür; içerideki bağlantılar normal gezinir. Mobile özgü genel grid kuralından ayrılarak tek sütun hâline getirildi.
+- `useRouteFocus` hedefe ulaşmayı rota/kullanıcı anahtarıyla takip eder. Veri başlangıçta gecikirse hazır olmayı, hedef sonradan DOM'a gelirse mevcut veri revizyonunu/DOM eklenmesini bekler. Başarıdan sonra aynı rotanın veri yenilemeleri odağı çalmaz. Geçersiz hedef bildirimi 2,5 saniye bekler; hedef sonradan bulunursa yalnız bu bildirim temizlenir. Hook veri çekmez veya işlem yapmaz; URL, Auth ve API davranışı değişmez.
+- Fixture, ilk sorgunun bekletilmesi ve eksik oylamanın sonraki sentetik veri yenilemesinde gelmesi için kontrollü tetikleyiciler içerir. Gerçek veri/Realtime olayı üretilmez. Süresi dolmuş, gelecekte başlayacak ve iptal edilmiş yönetici görevlerinde Yönetici Masası bağlantısı/teklif formunun yokluğu da sınandı.
+
+### Son doğrulama
+
+33 kaynak/navigasyon testi, genişletilmiş SSR, TypeScript/Vite derlemesi ve mevcut PostgreSQL süitleri (11 + 24 + 14 + 15 grup) başarılı. PostgreSQL yalnız disposable localhost altyapısındadır; canlı Supabase kullanılmadı.
+
+Gerçek Chromium: bütün ana/alt bağlantılar; aidat/ek iş/oylama/seçim/sohbet hedefleri; geri/ileri/yenileme; başlangıçta geciken veri ve sonra gelen hedefte kaydırma/odak; hedefe ulaştıktan sonra odak çalmayan veri yenilemesi; hesap menüsünde Escape/dış fare/dokunma/iç bağlantı/dış input odağı; geçerli ve geçersiz yönetici görevi; personel URL kapısı ve dairesiz personel; MFA erişimi ve dokunulmayan Auth callback fragment'ı kontrol edildi.
+
+Tablodaki **40 PNG**, 10 görünüm × 2 tema × 390/1440 px gerçek Chromium viewport görüntüleridir. 320 ve 768 px'te de aynı görünümlerin açık/koyu taşma kontrolleri çalıştırıldı. Açık hesap menüsü ekran içinde ve bağlantılar dikey tek sütunda; ana ikonların mobilde üstte/masaüstünde yanda olduğu koordinatlarla doğrulandı. Resimler sentetik veri etiketi taşır. Görsellerin yalnız ilk üç ekranla sınırlı olduğu önceki rapor kapsamı bu tabloyla genişletildi.
+
+Bu tur değişen uygulama dosyaları: `App.tsx` (odak hook'u çağrısı), `useRouteFocus.ts`, `AppShell.tsx`, `NavigationIcon.tsx`, `styles/navigation.css`. Test fixture'ı, SSR ve Chromium kontrol aracı, bu rapor ve 40 ekran kanıtı güncellendi. Oyun ekonomisi, RPC, RLS, Auth/MFA, personel izinleri, migration'lar, workflow'lar ve onaylanmış `public/art/v2` dosyaları korunur.
+
+Gerçek Auth/MFA/Realtime hizmet testi ve canlı yayın yapılmadı; önceki manuel kabul sınırları geçerlidir. PR taslak kalır ve kullanıcı onayı bekler.

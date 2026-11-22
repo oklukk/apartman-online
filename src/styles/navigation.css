@@ -1,7 +1,7 @@
 .navigation-v2 { color:var(--ink); background:var(--bg); font:inherit; }
 .navigation-v2 .brand span { min-width:0; }
 .navigation-v2 .brand img { flex:none; }
-.navigation-v2 .primary-nav a { display:block; padding:14px 16px; border-radius:var(--art-radius-sm); min-height:48px; font-weight:600; }
+.navigation-v2 .primary-nav a { display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:var(--art-radius-sm); min-height:48px; font-weight:600; }
 .navigation-v2 a[aria-current="page"] { background:var(--soft); color:var(--accent); box-shadow:inset 3px 0 var(--accent); }
 .navigation-v2 a:hover { text-decoration:underline; text-underline-offset:4px; }
 .navigation-v2 .topbar { gap:16px; min-height:84px; height:auto; padding-block:14px; }
@@ -24,8 +24,8 @@
   .navigation-v2 .sidebar { display:flex; flex-direction:row; align-items:center; padding:14px; }
   .navigation-v2 .building-label,.navigation-v2 .sidebar-bottom { display:none; }
   .navigation-v2 .primary-nav { position:fixed; z-index:20; bottom:0; left:0; right:0; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0; padding:6px 8px calc(6px + env(safe-area-inset-bottom)); border-top:1px solid var(--line); background:var(--panel); }
-  .navigation-v2 .primary-nav a { text-align:center; font-size:.875rem; padding:12px 2px; min-height:48px; }
-  .navigation-v2 { padding-bottom:calc(78px + env(safe-area-inset-bottom)); }
+  .navigation-v2 .primary-nav a { flex-direction:column; justify-content:center; gap:4px; text-align:center; font-size:.875rem; padding:8px 2px; min-height:64px; }
+  .navigation-v2 { padding-bottom:calc(94px + env(safe-area-inset-bottom)); }
   .navigation-v2 .topbar { min-height:76px; gap:10px; }
   .navigation-v2 .account-menu { max-width:48%; }
   .account-menu summary > span:last-child { max-width:10ch; font-size:.875rem; }
@@ -33,3 +33,10 @@
 }
 
 .navigation-v2 h1:focus-visible, .navigation-v2 .route-target:focus-visible { outline:2px solid var(--gold); outline-offset:5px; border-radius:6px; }
+
+.navigation-icon { flex:none; }
+.navigation-v2 .primary-nav a[aria-current="page"] { font-weight:700; }
+/* Account links stay one readable column, including under the mobile nav rules. */
+.navigation-v2 .account-menu nav { grid-template-columns:minmax(0,1fr); }
+.navigation-v2 .account-menu nav a { display:block; }
+.navigation-v2 .account-menu nav button { font-size:1rem; justify-content:flex-start; padding:12px; border-radius:10px; }

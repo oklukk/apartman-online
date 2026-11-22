@@ -1,5 +1,11 @@
 // Browser fixture: synthetic data; not an Auth/Realtime implementation or production client.
 const scenario = new URLSearchParams(location.search).get('scenario') || 'resident';
+const delay = new URLSearchParams(location.search).get('delay');
+let releaseInitial!: () => void;
+const initialGate = delay === 'initial' ? new Promise<void>(resolve => { releaseInitial=resolve; }) : Promise.resolve();
+let targetAvailable = delay !== 'target';
+let publish: () => void = () => {};
+Object.assign(window,{fixtureReleaseInitial:()=>releaseInitial?.(),fixturePublishTarget:()=>{targetAvailable=true;publish();}});
 const now = Date.now(), iso = (offset = 0) => new Date(now + offset).toISOString();
 const unjoined = ['unjoined','staff-unjoined'].includes(scenario);
 const staff = ['staff','staff-unjoined'].includes(scenario);
@@ -13,7 +19,7 @@ const economy = {
   elections:[{id:'election1',starts_at:iso(-7200000),nominations_end:iso(-3600000),voting_end:iso(86400000),status:'voting',electorate_size:2,quorum:2}],
   election_candidates:[{election_id:'election1',user_id:'neighbor',statement:'Ortak yaşamı birlikte iyileştirelim.'}],
   election_votes:[],election_electorate:[{election_id:'election1',user_id:user}],
-  manager_terms:scenario==='manager'?[{id:'term',user_id:user,starts_at:iso(-86400000),ends_at:iso(86400000)}]:[],
+  manager_terms:['manager','expired-manager','future-manager','voided-manager'].includes(scenario)?[{id:'term',user_id:user,starts_at:iso(scenario==='future-manager'?86400000:-86400000),ends_at:iso(scenario==='expired-manager'?-1000:172800000),voided:scenario==='voided-manager'}]:[],
   dues_rates:[],expense_catalog:[{kind:'door',title:'Kapı onarımı',cost:300}],dues_overview:[],
 };
 const tables: Record<string, unknown[]> = {
@@ -35,7 +41,7 @@ export const supabase = {
   auth:{getSession:()=>result({session}),onAuthStateChange:(callback:typeof authChanged)=>{authChanged=callback;return {data:{subscription:{unsubscribe(){}}}}},signOut:()=>{session=null;authChanged('SIGNED_OUT',null);return result(null)}},
   from:(name:string)=>{
     const query:any={select:()=>query,order:()=>query,limit:()=>query,lt:()=>query,or:()=>query,eq:()=>query,
-      then:(yes:any,no:any)=>result(tables[name]||[]).then(yes,no)};
+      then:(yes:any,no:any)=>initialGate.then(()=>result(name==='polls' && !targetAvailable ? [] : tables[name]||[])).then(yes,no)};
     return query;
   },
   rpc:(name:string,args?:Record<string,unknown>)=>{
@@ -47,7 +53,7 @@ export const supabase = {
     if(name==='staff_game_overview') return result({players:[],buildings:[]});
     throw new Error('Fixture does not allow mutation RPC: '+name);
   },
-  channel:()=>{const channel:any={on:()=>channel,subscribe:(callback:any)=>{callback('SUBSCRIBED');return channel;}};return channel;},
+  channel:()=>{const channel:any={on:(_kind:any,_filter:any,callback:any)=>{publish=callback;return channel;},subscribe:(callback:any)=>{callback('SUBSCRIBED');return channel;}};return channel;},
   removeChannel:()=>Promise.resolve(),
 };
 export const money=(value:number)=>new Intl.NumberFormat('tr-TR').format(value);

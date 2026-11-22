@@ -35,6 +35,7 @@ import { AppShell } from './components/AppShell';
 import { SectionNav } from './components/SectionNav';
 import { MyProfile, SettingsScreen } from './components/AccountScreens';
 import { TodayActions } from './components/TodayActions';
+import { useRouteFocus } from './useRouteFocus';
 import { useNavigation } from './useNavigation';
 import { routeAccess, routeHref, routeLabel, sectionOf, targets } from './navigation';
 import { currentTerm } from './economy';
@@ -263,17 +264,7 @@ export function App() {
   const access = { authenticated: !!session, resident: !!me, staff: staff.roles.length > 0 };
   const allowed = routeAccess(route, access);
   const isManager = !!session && currentTerm(data?.manager_terms || [])?.user_id === session.user.id;
-  useEffect(() => {
-    if (starting || !session || !data || allowed !== 'allowed') return;
-    const target = route.target ? document.getElementById(route.target) : document.querySelector<HTMLElement>('main h1');
-    if (target && !target.closest('[hidden]')) {
-      if (!route.target) { target.tabIndex = -1; window.scrollTo({top:0}); }
-      if (route.target) target.scrollIntoView({ block:'start' });
-      target.focus({ preventScroll:true });
-    } else if (route.target) {
-      setNotice('Bu işlem bağlantısı artık geçerli olmayabilir veya bu içeriğe erişimin yok. İlgili bölümdeki güncel kayıtları inceleyebilirsin.');
-    }
-  }, [route, starting, !!data, allowed]);
+  useRouteFocus(route, !starting && !!session && !!data && allowed === 'allowed', data, session?.user.id, setNotice);
   const act = async (
     work: () => PromiseLike<{ error: unknown }>,
     success?: string,
