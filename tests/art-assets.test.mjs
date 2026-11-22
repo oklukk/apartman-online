@@ -53,3 +53,20 @@ test('v2 text pairs meet 4.5:1 on the intended broad surfaces',()=>{
     const a=lum(fg),b=lum(bg);assert.ok((Math.max(a,b)+.05)/(Math.min(a,b)+.05)>=4.5,`${fg}/${bg}`);
   }
 });
+test('reviewed apartment coordinates remain byte-identical; at least six portrait geometries change',()=>{
+  const baseline=JSON.parse(readFileSync('tests/fixtures/art-v2/review-baseline.json','utf8'));
+  const hash=s=>createHash('sha256').update(s).digest('hex');
+  assert.equal(hash(readFileSync(root+'apartment-anchors.json')),baseline.anchorsSha256);
+  const changed=avatarFiles.filter(f=>hash(readFileSync(root+'avatars/'+f,'utf8').replace(/<title[^>]*>[\s\S]*?<\/title>/g,'').replace(/#[a-f\d]{6}/gi,'COLOR'))!==baseline.portraitShapes[f]);
+  assert.ok(changed.length>=6, 'Six portraits must differ in shape, not just title or colors');
+});
+test('comparison fixture includes old/new scenes and all portraits at real chat sizes',()=>{
+  const html=readFileSync('tests/fixtures/art-v2/comparison.html','utf8');
+  assert.match(html,/830a5be/);
+  assert.doesNotMatch(html,/<script|https?:|supabase\.co|<button|<form/i);
+  for(const file of ['apartment-facade.svg','apartment-interior.svg','favicon.svg',...avatarFiles.map(f=>'avatars/'+f)]){
+    assert.ok(html.includes('/before/'+file),file+' before');
+    assert.ok(html.includes('/public/art/v2/'+file),file+' after');
+  }
+  assert.match(html,/width="32"/);assert.match(html,/width="40"/);
+});
