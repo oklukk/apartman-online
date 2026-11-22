@@ -7,7 +7,7 @@ const sql = readFileSync(
   "utf8",
 );
 const ui = readFileSync("src/components/StaffPanel.tsx", "utf8");
-const app = readFileSync("src/main.tsx", "utf8");
+const app = readFileSync("src/App.tsx", "utf8");
 
 test("four built-in roles and extensible tables exist", () => {
   for (const role of ["super_admin", "admin", "moderator", "editor"])
@@ -54,9 +54,9 @@ test("staging matches canonical migration and bootstrap is never invoked", () =>
 });
 
 test("account security permits MFA onboarding before staff bootstrap", () => {
-  assert.ok(app.includes('tab === "Güvenlik"'));
+  assert.ok(app.includes("route.page === 'security'"));
   assert.ok(app.includes('<StaffMfa />'));
   assert.ok(app.includes('Hesap güvenliği'));
   assert.ok(app.includes('Doğrulamayı etkinleştirmek yönetim yetkisi vermez.'));
-  assert.ok(app.includes('tab === "Sistem" && staff.roles.length > 0'));
+  assert.ok(app.includes("route.page === 'staff' && staff.roles.length > 0"));
 });
