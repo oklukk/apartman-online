@@ -1,0 +1,39 @@
+/* Opt-in v2 foundation. Not imported by the live application in this art PR. */
+.art-v2 {
+  --art-cream: #F7E8D0;
+  --art-coral: #EB987A;
+  --art-sage: #9BC5AC;
+  --art-petrol: #315D59;
+  --art-gold: #D9AC65;
+  --art-ink: #203F3C;
+  --art-muted: #4D6258;
+  --art-surface: #FFF9F0;
+  --art-line: #C7C9B4;
+  --art-on-primary: #FFF9F0;
+  --art-font: ui-rounded, 'Trebuchet MS', system-ui, sans-serif;
+  --art-text-sm: .875rem;
+  --art-text-body: 1rem;
+  --art-text-title: clamp(1.75rem, 4vw, 3rem);
+  --art-space-1: .25rem;
+  --art-space-2: .5rem;
+  --art-space-3: .75rem;
+  --art-space-4: 1rem;
+  --art-space-6: 1.5rem;
+  --art-space-8: 2rem;
+  --art-radius-sm: .75rem;
+  --art-radius-card: 1.5rem;
+  --art-radius-pill: 99rem;
+  --art-shadow: 0 6px 0 rgb(49 93 89 / .08);
+  --art-focus: #315D59;
+  color: var(--art-ink);
+  background: var(--art-cream);
+  font: var(--art-text-body)/1.6 var(--art-font);
+}
+.art-v2[data-theme="dark"] {
+  --art-cream: #1B302E;
+  --art-surface: #253F3B;
+  --art-ink: #FFF3DF;
+  --art-muted: #C3D2C4;
+  --art-line: #718B7D;
+  --art-focus: #D9AC65;
+}
