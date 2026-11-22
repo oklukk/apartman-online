@@ -1,6 +1,6 @@
 # UI/UX v2 — sanat temeli ve inceleme rehberi
 
-Durum: **sanat onayı bekliyor**. Başlangıç main `c459a4c`. Ana referans: [UIUX_V2_SPEC.md](../UIUX_V2_SPEC.md). Varlıklar özgün, kodla çizilmiş düz vektör illüstrasyonlardır; profesyonel karakter sanatçısı onayı alınmış veya final oyun sanatı olarak kabul edilmiş değildir.
+Durum: **PR #10 sanat koleksiyonu kullanıcı tarafından 22 Kasım 2026'da onaylandı.** Başlangıç main `c459a4c`. **Tek yetkili UI/UX v2 ana şartnamesi: [UIUX_V2_SPEC.md](../UIUX_V2_SPEC.md).** Bu rehber varlık envanteri, üretim ve doğrulama kaydıdır; alternatif şartname değildir. Varlıklar özgün, kodla çizilmiş vektörlerdir; bağımsız profesyonel sanatçı incelemesi iddia edilmez. Birleştirme/yayın ayrı talimat bekler.
 
 ## Görsel kanıt
 
@@ -27,11 +27,11 @@ Aşağıdakiler SVG maketi veya hayalî ekran çıktısı değildir: Chromium'un
 | --- | --- |
 | Renk | Kesin beş renk korunur. Petrol birincil yüzeyde açık `#FFF9F0` metin; açık yüzeylerde `#203F3C` gövde ve `#4D6258` yardımcı metin. Mercan/altın/adaçayı üzerinde koyu yazı; petrol üzerinde koyu yazı kullanılmaz. |
 | Koyu yüzey | Opt-in `[data-theme=dark]` için koyu yüzey/açık metin tokenları. İllüstrasyon renkleri ters çevrilmez. Sistem teması entegrasyonu bu PR'da yapılmaz. |
-| Tipografi | 16 px gövde, 14 px yardımcı metin, 28–48 px duyarlı ana başlık. Yuvarlak sistem fontları; haricî indirme yok. Nihai font henüz onaylanmadı. |
+| Tipografi | 16 px gövde, 14 px yardımcı metin, 28–48 px duyarlı ana başlık. Yuvarlak sistem fontları; haricî indirme yok. Sonraki uygulama entegrasyonunda ana şartname esas alınır. |
 | Boşluk | 4, 8, 12, 16, 24, 32 px ritmi. Sohbet alanında görsel payı düşük kalmalı. |
 | Köşe | 12 px küçük yüzey, 24 px kart, hap biçimi yalnız kısa durum etiketi. |
 | Gölge | 6 px düşük opaklıklı sabit taban gölgesi. Çok katmanlı blur/filtre yok. |
-| İkon | Sonraki UI için mevcut bağımlılık eklemeden 24×24 viewBox, 2 px yuvarlak petrol çizgi kullanan tek bir yerel SVG seti önerilir. Görsel onaydan önce yeni ikon kütüphanesi eklenmedi. Emoji avatar yerine kullanılmaz. |
+| İkon | Ana şartnameye göre tutarlı UI ikon seti kullanılır; tercih edilen `lucide-react` sonraki UI aşamasında değerlendirilir. Bu sanat PR'ında yeni ikon bağımlılığı eklenmedi. Emoji avatar yerine kullanılmaz. |
 | Erişim | Bilgi yalnız renk ile verilmez. Sonraki cephe overlay'i gerçek HTML buton, klavye odağı, açık daire adı ve en az 44 px dokunma alanı gerektirir. SVG dekoratifse boş alt; anlamlıysa yerelleştirilmiş alt gerekir. |
 
 ## Dosya envanteri ve gerçek kullanımlar
@@ -72,13 +72,13 @@ Yerel `file://` gezintisi Chromium ortam politikası tarafından engellendi. Ekr
 - `npm run test:ui`, `npm run build` ve mevcut dört PostgreSQL süiti çalıştırıldı; sonuçlar PR açıklamasındadır. PostgreSQL yalnız mevcut localhost:55432 disposable altyapıdadır.
 - Gerçek Chromium 390 ve 1440 px: bütün görsellerin yüklenmesi, yatay taşma yokluğu ve dış ağ yokluğu kontrol edildi. Sanat galerisi görsel olarak incelendi.
 - Gerçek oyun ekranları, Auth/MFA, Realtime ve backend etkileşimleri bu PR'da tarayıcıdan yeniden sınanmadı; bunlar değiştirilmedi. 768 px, diğer telefonlar, koyu galeri ve ekran okuyucu kabulü tamamlanmış sayılmaz.
-- Portreler stilize düz vektördür; final karakter estetiği, anatomi/ifade çeşitliliğinin yeterliliği ve küçük simgede logo algısı insan sanat onayı bekler. Yeni animasyon pozları, koyu sahne varyantı ve tam ekran oyun UI maketleri teslim kapsamında yoktur.
-- İstenen temel 24 SVG'den eksik dosya yoktur. Sanat kalitesi kabulü açık kalır; kullanıcı onayı gelmeden merge yapılmaz.
+- Portreler stilize düz vektördür; güncellenmiş koleksiyon kullanıcı sanat onayını almıştır. Yeni animasyon pozları, koyu sahne varyantı ve tam ekran oyun UI maketleri teslim kapsamında yoktur.
+- İstenen temel 24 SVG'den eksik dosya yoktur. Sanat kalitesi kullanıcı tarafından kabul edilmiştir; birleştirme/yayın talimatı henüz verilmemiştir.
 
 
 ## 22 Kasım 2026 — PR #10 sanat iyileştirmesi
 
-Nihai sanat onayı hâlâ beklenir. Aynı palet, 16 portre ID'si, aynı sahne yerleşimleri ve numarasız 4×3 cephe korunur. `docs/UIUX_V2_SPEC.md`, başlangıç notlarından daha güncel ana referanstır; şartnamenin kendisi bu iyileştirmede değiştirilmez. Üretim ekranı veya yeni oyun mekaniği eklenmez.
+Bu bölümdeki sanat iyileştirmesi kullanıcı tarafından 22 Kasım 2026'da onaylandı. Aynı palet, 16 portre ID'si, aynı sahne yerleşimleri ve numarasız 4×3 cephe korunur. `docs/UIUX_V2_SPEC.md` tek yetkili ana şartnamedir; şartnamenin kendisi bu iyileştirmede değiştirilmez. Üretim ekranı veya yeni oyun mekaniği eklenmez.
 
 ### Değişen çizimler
 
@@ -97,7 +97,7 @@ Nihai sanat onayı hâlâ beklenir. Aynı palet, 16 portre ID'si, aynı sahne ye
 
 Önce görselleri `830a5bef3d2c30373a7f4f1c3dc9228ea42ac05a` commit'inden `git show` ile salt okunur sunulur; yeni görseller çalışma ağacından alınır. Karşılaştırma PNG'leri gerçek Chromium render'ıdır; eski ve yeni PNG'leri görüntü düzenleyicide birleştirme değildir. Tekrar üretmek için bu commit'in Git geçmişinde bulunması gerekir (shallow checkout kullanılıyorsa önce ilgili geçmiş alınmalıdır).
 
-`tests/fixtures/art-v2/comparison.html` hem altı değişen portreyi büyük gösterir hem de 16 portrenin tamamını gerçek **32 ve 40 CSS px** boyutlarında yan yana sunar. Favicon 16/24/32/48 px'te incelenir. Bina, oda ve küçük boyut örnekleri görsel olarak kontrol edildi; silüet farkları görünür, ancak algısal tanınabilirlik ve sanat kalitesi için nihai kullanıcı onayının yerine geçmez.
+`tests/fixtures/art-v2/comparison.html` hem altı değişen portreyi büyük gösterir hem de 16 portrenin tamamını gerçek **32 ve 40 CSS px** boyutlarında yan yana sunar. Favicon 16/24/32/48 px'te incelenir. Bina, oda ve küçük boyut örnekleri görsel olarak kontrol edildi; silüet farkları görünür, güncellenmiş koleksiyon kullanıcı onayı almıştır. Bu değerlendirme gerçek oyun etkileşim testinin yerine geçmez.
 
 `apartment-anchors.json` inceleme öncesi sürümle **bayt düzeyinde aynıdır**. Yeni test bunu sabit SHA-256 ile ve en az altı portrede renkten bağımsız geometri değişimini denetler. Koordinat fixture'ı yalnız hash/ID tutar, oyun verisi içermez. Galeri/karşılaştırmada 390 ve 1440 px yatay taşma, eksik görsel veya dış ağ isteği yoktur; 32/40 px örneklerin gerçek boyutları da tarayıcıda ölçülür.
 
@@ -106,3 +106,12 @@ Nihai sanat onayı hâlâ beklenir. Aynı palet, 16 portre ID'si, aynı sahne ye
 `npm test` (29), `npm run test:ui`, `npm run build`, `npm run test:sql` (11), `npm run test:v02` (24), `npm run test:rbac` (14), `npm run test:advanced` (15) başarılı. PostgreSQL yalnız mevcut disposable localhost altyapısında çalıştırılır. SVG'ler XML olarak ayrıştırıldı. Auth/MFA/Realtime canlı oyun etkileşimi bu sanat çalışmasında yeniden test edilmedi; 320/768 px ve koyu galeri kabulü bu turda doğrulanmış sayılmaz.
 
 Geri dönüş: bu sanat iyileştirme commit'i geri alınır veya varlıklar/üreticiler önceki commit'ten geri yüklenir; migration/veri telafisi gerekmez. Ayrı PR, merge veya yayın yapılmaz. Sonraki uygulama aşaması yalnız kullanıcı sanat onayı ve önceki PR'ın ayrı incelemesinden sonra başlayabilir.
+
+
+## Son belge tutarlılığı kontrolü — 22 Kasım 2026
+
+- Tek yetkili şartname `docs/UIUX_V2_SPEC.md` olarak doğrulandı; dosyanın içeriği değiştirilmedi.
+- `docs/UI_UX_V2_MASTER.md` yalnız bu şartnameye yönlendiren kısa özettir; ayrı karar kaynağı değildir. Özgün şartnamenin eksik olduğuna ilişkin eski ifadeler kaldırıldı.
+- Sanat rehberi ve PR #10 açıklaması aynı şartnameyi ve kullanıcı sanat onayını esas alır. Görseller, uygulama kodu, koordinatlar, güvenlik kuralları ve veritabanı değiştirilmedi.
+- Mevcut PNG kanıtları sanat onayından önce alınmış tarihsel Chromium çıktılarıdır. İçlerindeki “sanat onayı bekliyor” etiketleri çekim anını yansıtır; güncel onay durumunu bu belge ve PR açıklaması gösterir. Sırf etiketi değiştirmek için görseller yeniden üretilmedi.
+- Uygulama ekranlarına entegrasyon yapılmış sayılmaz. Ana şartnamedeki sonraki PR sırası ve mevcut test kapsamı/sınırları geçerliliğini korur. Birleştirme/yayın için ayrı talimat beklenir.
