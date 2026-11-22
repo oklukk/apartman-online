@@ -1,0 +1,55 @@
+// Browser fixture: synthetic data; not an Auth/Realtime implementation or production client.
+const scenario = new URLSearchParams(location.search).get('scenario') || 'resident';
+const now = Date.now(), iso = (offset = 0) => new Date(now + offset).toISOString();
+const unjoined = ['unjoined','staff-unjoined'].includes(scenario);
+const staff = ['staff','staff-unjoined'].includes(scenario);
+const user = 'fixture-player', building = 'fixture-building';
+const economy = {
+  wallets: [{user_id:user,balance:300,job:'office',job_changed_at:null,employment_started_on:'2026-11-01',side_job_started_at:null}],
+  wallet_transactions:[{id:'t',kind:'starting',amount:300,balance_after:300,description:'Başlangıç bakiyesi',period_key:'once',created_at:iso()}],
+  dues:[{id:'due',user_id:user,week_start:'2026-11-23',amount:150,paid_at:null}],
+  economy_settings:[{building_id:building,first_week:'2026-11-23',weekly_dues:150,daily_salary:100,side_job_reward:25,cleaning_base:80,cleaning_per_resident:20,maintenance_base:50,maintenance_per_resident:10}],
+  operating_expenses:[],treasury_history:[{id:'h',amount:-1200,kind:'poll',description:'Asansör tamiri',created_at:iso()}],
+  elections:[{id:'election1',starts_at:iso(-7200000),nominations_end:iso(-3600000),voting_end:iso(86400000),status:'voting',electorate_size:2,quorum:2}],
+  election_candidates:[{election_id:'election1',user_id:'neighbor',statement:'Ortak yaşamı birlikte iyileştirelim.'}],
+  election_votes:[],election_electorate:[{election_id:'election1',user_id:user}],
+  manager_terms:scenario==='manager'?[{id:'term',user_id:user,starts_at:iso(-86400000),ends_at:iso(86400000)}]:[],
+  dues_rates:[],expense_catalog:[{kind:'door',title:'Kapı onarımı',cost:300}],dues_overview:[],
+};
+const tables: Record<string, unknown[]> = {
+  ...economy, profiles:[{id:user,username:'Deniz'},{id:'neighbor',username:'Ece'}],
+  memberships:unjoined?[]:[{user_id:user,building_id:building,apartment_id:'apt1'},{user_id:'neighbor',building_id:building,apartment_id:'apt2'}],
+  apartments:Array.from({length:12},(_,i)=>({id:'apt'+(i+1),number:i+1})), buildings:[{id:building,name:'Çınar Apartmanı',treasury:3800}],
+  messages:[{id:'m1',author_id:'neighbor',body:'Günaydın komşular! Bugün apartmanda neler var?',created_at:iso(-60000)}],
+  polls:[{id:'poll1',event_id:'event',ends_at:iso(86400000),status:'open',yes_count:1,no_count:0,minimum_votes:3}],
+  events:[{id:'event',title:'Asansör arızası',description:'Tamir için ortak kararımızı verelim.',cost:1200}],
+  activity:[{id:'activity',description:'Yeni bir komşu taşındı.',created_at:iso(-86400000)}],
+  announcements:[{id:'announcement',title:'Komşu panosu',body:'Ortak alanları temiz tutalım.'}],votes:[],blocks:[],treasury_transactions:[],
+};
+let session: unknown = scenario==='visitor'?null:{user:{id:user}};
+let authChanged: (event: string, value: unknown) => void = () => {};
+const calls: string[] = [];
+Object.assign(window,{fixtureCalls:calls});
+const result=(data:unknown)=>Promise.resolve({data,error:null});
+export const supabase = {
+  auth:{getSession:()=>result({session}),onAuthStateChange:(callback:typeof authChanged)=>{authChanged=callback;return {data:{subscription:{unsubscribe(){}}}}},signOut:()=>{session=null;authChanged('SIGNED_OUT',null);return result(null)}},
+  from:(name:string)=>{
+    const query:any={select:()=>query,order:()=>query,limit:()=>query,lt:()=>query,or:()=>query,eq:()=>query,
+      then:(yes:any,no:any)=>result(tables[name]||[]).then(yes,no)};
+    return query;
+  },
+  rpc:(name:string,args?:Record<string,unknown>)=>{
+    calls.push(name);
+    if(name==='staff_me') return result({roles:staff?[{code:'super_admin',title:'Süper Yönetici',scope_kind:'global',scope_id:''}]:[],permissions:[],scoped_permissions:[]});
+    if(name==='settle_polls' || (name==='player_action' && args?.action==='heartbeat')) return result(null); // fixture-only no-op, no state mutation
+    if(name==='dues_overview') return result([]);
+    if(name==='staff_directory') return result({roles:[],permissions:[],users:[],buildings:[],assignments:[],audit:[]});
+    if(name==='staff_game_overview') return result({players:[],buildings:[]});
+    throw new Error('Fixture does not allow mutation RPC: '+name);
+  },
+  channel:()=>{const channel:any={on:()=>channel,subscribe:(callback:any)=>{callback('SUBSCRIBED');return channel;}};return channel;},
+  removeChannel:()=>Promise.resolve(),
+};
+export const money=(value:number)=>new Intl.NumberFormat('tr-TR').format(value);
+export const time=(value:string)=>new Intl.DateTimeFormat('tr-TR',{dateStyle:'short',timeStyle:'short'}).format(new Date(value));
+export const errorText=(error:unknown)=>String(error);
