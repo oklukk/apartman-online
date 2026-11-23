@@ -205,6 +205,31 @@ try {
   const residentNav = renderToStaticMarkup(React.createElement(SectionNav,{route:{page:'building'},manager:false}));
   assert.ok(managerNav.includes('Yönetici Masası'));
   assert.ok(!residentNav.includes('Yönetici Masası'));
+  const { TodayScreen, HomeScene, BuildingScene, EmptyIllustration } = await vite.ssrLoadModule('/src/components/PlayerScenes.tsx');
+  const sceneData = { ...data, profiles:[],memberships:[{user_id:'a'}],apartments:Array.from({length:12},(_,i)=>({id:String(i),number:i+1})),buildings:[{name:'Çınar Apartmanı',treasury:3800}],polls:[],events:[],votes:[],activity:[],announcements:[] };
+  const today = renderToStaticMarkup(React.createElement(TodayScreen,{data:sceneData,userId:'a',name:'Ayşe'}));
+  assert.ok(today.includes('300 OP'));
+  assert.ok(today.includes('Bugün maaş kaydı yok'));
+  assert.ok(today.includes('Aidatta için rahat'));
+  assert.ok(today.includes('href="#/dairem/isler/ek-is"'));
+  assert.ok(!today.includes('Birlikte karar veriyoruz'), 'No empty decision card');
+  assert.ok(!today.includes('Maaşını al'));
+  const { trDay } = await vite.ssrLoadModule('/src/economy.ts');
+  const completed = structuredClone(sceneData);
+  completed.wallet_transactions.push({kind:'side_job',period_key:trDay(),amount:25,created_at:iso(now)});
+  const doneToday = renderToStaticMarkup(React.createElement(TodayScreen,{data:completed,userId:'a',name:'Ayşe'}));
+  assert.ok(doneToday.includes('Bugünün işi tamam'));
+  assert.ok(!doneToday.includes('href="#/dairem/isler/ek-is"'), 'Completed job has no active repeat shortcut');
+  completed.wallets[0].job=null;
+  completed.wallet_transactions=[];
+  assert.ok(renderToStaticMarkup(React.createElement(TodayScreen,{data:completed,userId:'a',name:'Ayşe'})).includes('Meslek seç'));
+  const room = renderToStaticMarkup(React.createElement(HomeScene,{name:'Ayşe',number:1,building:'Çınar Apartmanı'}));
+  assert.match(room,/src="\/apartman-online\/art\/v2\/apartment-interior.svg"/);
+  const facade = renderToStaticMarkup(React.createElement(BuildingScene,{data:sceneData,username:()=> 'Ayşe'}));
+  assert.ok(facade.includes('apartment-facade.svg') && facade.includes('Bu görünüm etkileşimli değildir'));
+  assert.ok(!facade.includes('<button'), 'No nonfunctional apartment hotspots');
+  assert.ok(!facade.includes('avatars/'), 'No premature avatar mapping');
+  for (const kind of ['chat','mail','vote']) assert.ok(renderToStaticMarkup(React.createElement(EmptyIllustration,{kind,title:'Boş durum'})).includes('empty-'+kind+'.svg'));
   console.log(
     "PASS static React: wallet/job/dues/payment states, election permissions, poll voting, native disclosures, account security, semantic financial summary and audit labels. Browser/mobile/Realtime NOT tested.",
   );

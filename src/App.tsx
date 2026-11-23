@@ -2,10 +2,7 @@ import { StaffPanel, getStaffIdentity } from "./components/StaffPanel";
 import { StaffMfa } from "./components/StaffMfa";
 import type { StaffIdentity } from "./components/StaffPanel";
 import { EconomyPanel } from "./components/EconomyPanel";
-import {
-  GovernancePanel,
-  ManagementSummary,
-} from "./components/GovernancePanel";
+import { GovernancePanel } from "./components/GovernancePanel";
 import { economyTables } from "./economy";
 import type { EconomyData, Perform } from "./economy";
 import { PollCard } from "./components/PollCard";
@@ -14,45 +11,20 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Session } from "@supabase/supabase-js";
 import { supabase as client, errorText, money, time } from "./api";
-import type {
-  Profile,
-  Member,
-  Apartment,
-  Building,
-  Message,
-  Poll,
-  GameEvent,
-  Activity,
-  Announcement,
-  Vote,
-  Block,
-  Transaction,
-} from "./api";
+import type { Message, Poll } from "./api";
 import "./style.css";
 import "./styles/tokens.css";
 import "./styles/navigation.css";
 import { AppShell } from './components/AppShell';
 import { SectionNav } from './components/SectionNav';
 import { MyProfile, SettingsScreen } from './components/AccountScreens';
-import { TodayActions } from './components/TodayActions';
+import { TodayScreen, HomeScene, BuildingScene, Announcements, EmptyIllustration } from './components/PlayerScenes';
+import './styles/player-screens.css';
 import { useRouteFocus } from './useRouteFocus';
 import { useNavigation } from './useNavigation';
-import { routeAccess, routeHref, routeLabel, sectionOf, targets } from './navigation';
+import { routeAccess, routeHref, routeLabel, sectionOf } from './navigation';
 import { currentTerm } from './economy';
-type Data = EconomyData & {
-  profiles: Profile[];
-  memberships: Member[];
-  apartments: Apartment[];
-  buildings: Building[];
-  messages: Message[];
-  polls: Poll[];
-  events: GameEvent[];
-  activity: Activity[];
-  announcements: Announcement[];
-  votes: Vote[];
-  blocks: Block[];
-  treasury_transactions: Transaction[];
-};
+import type { Data } from "./gameData";
 export function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [starting, setStarting] = useState(true);
@@ -330,6 +302,9 @@ export function App() {
     />
     </section>
   );
+  const visibleMessages = [...new Map([...(data?.messages || []), ...older].map(m => [m.id,m])).values()]
+    .filter(m => !data?.blocks.some(b => b.blocked_id === m.author_id))
+    .sort((a,b) => a.created_at.localeCompare(b.created_at));
   const activity = <ActivityFeed items={data?.activity || []} />;
   return (
     <AppShell route={route} access={access} name={myProfile?.username || 'Hesabım'} building={building?.name || 'Çınar Apartmanı'} live={live} busy={busy} theme={theme} onTheme={setTheme} onSignOut={() => void act(() => client!.auth.signOut())}>
@@ -487,21 +462,17 @@ export function App() {
             </form>
           </section>
         ) : (
-          <>
-            <section className="page-heading">
+          <div className={'player-screens player-'+route.page+' player-view-'+(section || 'default')}>
+            {tab !== 'Bugün' && <section className="page-heading">
               <div>
                 <div className="eyebrow">
-                  {tab === "Bugün" ? "EVİNE HOŞ GELDİN" : "ÇINAR APARTMANI"}
+                  ÇINAR APARTMANI
                 </div>
                 <h1>
-                  {tab === "Bugün"
-                    ? `Merhaba, ${myProfile?.username}.`
-                    : tab}
+                  {tab}
                 </h1>
                 <p className="subtle">
-                  {tab === "Bugün"
-                    ? "Bugün apartmanda neler oluyor?"
-                    : tab === "Komşular"
+                  {tab === "Komşular"
                       ? "Bir selamla başlar komşuluk."
                       : tab === "Apartman"
                         ? "Aynı çatı, ortak kararlar."
@@ -512,105 +483,19 @@ export function App() {
                 DAİRE{" "}
                 <strong>{String(myApartment?.number).padStart(2, "0")}</strong>
               </span>
-            </section>
+            </section>}
             <SectionNav route={route} manager={isManager} />
-            {tab === 'Bugün' && <TodayActions data={data} userId={session.user.id} />}
-            {(tab === "Bugün" || (tab === "Apartman" && section === 'kesfet')) && (
-              <>
-                <ManagementSummary data={data} username={username} />
-                <div className="stats">
-                  <article className="card">
-                    <span className="eyebrow">APARTMAN</span>
-                    <h2>{building?.name}</h2>
-                    <p className="subtle">
-                      {data.memberships.length} / 12 daire dolu
-                    </p>
-                    <progress max={12} value={data.memberships.length} />
-                  </article>
-                  <article className="card">
-                    <span className="eyebrow">ORTAK KASA</span>
-                    <div className="big-number">
-                      {money(building?.treasury || 0)} <small>OP</small>
-                    </div>
-                    <p className="subtle">Apartmanımızın ortak birikimi</p>
-                  </article>
-                  <article className="card">
-                    <span className="eyebrow">KOMŞULUK</span>
-                    <div className="big-number">
-                      {data.memberships.length}
-                      <small> sakin</small>
-                    </div>
-                    <button
-                      className="text-button"
-                      onClick={() => { window.location.hash = routeHref(targets.chat); }}
-                    >
-                      Sohbete katıl
-                    </button>
-                  </article>
-                </div>
-                <div className="columns">
-                  <div>
-                    {data.polls
-                      .filter((p) => p.status === "open")
-                      .map(pollCard)}
-                    {activity}
-                  </div>
-                  <div>
-                    <article className="card announcements">
-                      <div className="eyebrow">PANODAN</div>
-                      <h2>Duyurular</h2>
-                      {!data.announcements.length && (
-                        <p className="empty-state">Şu anda yeni bir duyuru yok.</p>
-                      )}
-                      {data.announcements.map((a) => (
-                        <section key={a.id}>
-                          <h3>{a.title}</h3>
-                          <p>{a.body}</p>
-                        </section>
-                      ))}
-                    </article>
-                    <article className="card">
-                      <div className="eyebrow">ORTAK YAŞAM</div>
-                      <h2>Birlikte karar veriyoruz.</h2>
-                      <p>
-                        Her komşunun bir oyu var. Apartman kasası ve karar
-                        geçmişi tüm sakinlere açık.
-                      </p>
-                      <button
-                        className="text-button"
-                        onClick={() => { window.location.hash = routeHref({page:"building",section:"kararlar"}); }}
-                      >
-                        Kararları görüntüle
-                      </button>
-                    </article>
-                  </div>
-                </div>
-              </>
-            )}
+            {tab === 'Bugün' && <TodayScreen data={data} userId={session.user.id} name={myProfile?.username || 'Komşu'} />}
+            {tab === 'Apartman' && section === 'kesfet' && <BuildingScene data={data} username={username} />}
             {tab === "Dairem" && (
               <>
-                <article className="card profile-card" hidden={section !== "daire"}>
-                  <div className="door">
-                    {String(myApartment?.number).padStart(2, "0")}
-                  </div>
-                  <div>
-                    <div className="eyebrow">SENİN DAİREN</div>
-                    <h2>{myProfile?.username}</h2>
-                    <p>
-                      {building?.name} · Daire {myApartment?.number}
-                    </p>
-                    <p className="subtle">
-                      Her hesap bir daireye sahiptir. Komşuların seni bu
-                      kullanıcı adıyla görür.
-                    </p>
-                  </div>
-                </article>
+                <div hidden={section !== 'daire'}><HomeScene name={myProfile?.username || 'Komşu'} number={myApartment?.number || 0} building={building?.name || ''}/></div>
                 <div hidden={section === "daire"}><EconomyPanel data={data} busy={busy} perform={perform} view={section === "isler" ? "work" : "wallet"} /></div>
               </>
             )}
             {tab === "Komşular" && (
-              <div className="neighbors-layout single-panel">
-                <article className="card" hidden={section !== 'sakinler'}>
+              <div className="neighbors-layout single-panel neighbor-space">
+                <article className="card resident-directory" hidden={section !== 'sakinler'}>
                   <div className="eyebrow">
                     {data.memberships.length} / 12 DAİRE DOLU
                   </div>
@@ -627,7 +512,7 @@ export function App() {
                         );
                         return (
                           <li key={a.id}>
-                            <span className="door-number">
+                            <span className="door-number" aria-label={'Daire '+a.number}>
                               {String(a.number).padStart(2, "0")}
                             </span>
                             <div>
@@ -664,7 +549,7 @@ export function App() {
                                   );
                                 }}
                               >
-                                {blocked ? "Engeli kaldır" : "Engelle"}
+                                {blocked ? "Engeli kaldır" : "Mesajları gizle"}
                               </button>
                             )}
                           </li>
@@ -716,26 +601,14 @@ export function App() {
                         Önceki mesajlar
                       </button>
                     )}
-                    {[
-                      ...new Map(
-                        [...data.messages, ...older].map((m) => [m.id, m]),
-                      ).values(),
-                    ]
-                      .filter(
-                        (m) =>
-                          !data.blocks.some(
-                            (b) => b.blocked_id === m.author_id,
-                          ),
-                      )
-                      .sort((a, b) => a.created_at.localeCompare(b.created_at))
-                      .map((m) => (
+                    {visibleMessages                      .map((m) => (
                         <div
                           className={`message ${m.author_id === session.user.id ? "own" : ""}`}
                           key={m.id}
                         >
                           <div className="spread">
                             <strong>{username(m.author_id)}</strong>
-                            <time>{time(m.created_at)}</time>
+                            <time dateTime={m.created_at}>{time(m.created_at)}</time>
                           </div>
                           <p>{m.body}</p>
                           {m.author_id !== session.user.id && (
@@ -782,10 +655,8 @@ export function App() {
                           )}
                         </div>
                       ))}
-                    {!data.messages.length && (
-                      <p className="empty-state">
-                        Henüz mesaj yok. Komşularına ilk selamı ver.
-                      </p>
+                    {!visibleMessages.length && (
+                      <EmptyIllustration kind="chat" title={data.blocks.length ? "Görüntülenecek mesaj yok" : "İlk selam senden olsun"}><p>{data.blocks.length ? "Gizlediğin komşuların mesajları burada görünmez. Sakinler bölümünden engeli kaldırabilirsin." : "Henüz mesaj yok. Komşularına ilk selamı ver."}</p></EmptyIllustration>
                     )}
                   </div>
                   <form
@@ -830,11 +701,11 @@ export function App() {
                   perform={perform}
                   view={section === 'kararlar' ? 'decisions' : section === 'yonetici' ? 'manager' : 'treasury'}
                 />}
-                {section === 'kasa-pano' && <article className="card"><h2>Duyurular</h2>{data.announcements.map(a => <section key={a.id}><h3>{a.title}</h3><p>{a.body}</p></section>)}{!data.announcements.length && <p>Şu anda yeni bir duyuru yok.</p>}</article>}
+                {section === 'kasa-pano' && <Announcements data={data}/>}
                 <div className="columns single-panel" hidden={section !== 'kararlar' && section !== 'kasa-pano'}>
                   <div hidden={section !== "kararlar"}>
                     {section === 'kararlar' && data.polls.map(pollCard)}
-                    {section === 'kararlar' && !data.polls.length && <p>Henüz oylama yok.</p>}
+                    {section === 'kararlar' && !data.polls.length && <EmptyIllustration kind="vote" title="Henüz ortak karar yok"><p>Yeni oylamalar başladığında burada görünecek.</p></EmptyIllustration>}
                   </div>
                   <div hidden={section !== 'kasa-pano'}>
                     <article className="card">
@@ -852,7 +723,7 @@ export function App() {
                 </div>
               </>
             )}
-          </>
+          </div>
         )}
     </AppShell>
   );
