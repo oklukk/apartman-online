@@ -1,10 +1,14 @@
 """Run against tools/serve-navigation-fixture.mjs; Chromium + existing Python Playwright only."""
 from pathlib import Path
+import argparse
 from playwright.sync_api import sync_playwright, expect
 root=Path(__file__).resolve().parents[1]
 origin='http://127.0.0.1:5178'
 base=origin+'/apartman-online/'
-out=root/'docs/design/navigation'
+parser=argparse.ArgumentParser()
+parser.add_argument('--player-screens',action='store_true')
+args=parser.parse_args()
+out=root/('docs/design/player-screens' if args.player_screens else 'docs/design/navigation')
 out.mkdir(parents=True,exist_ok=True)
 with sync_playwright() as p:
  browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
@@ -25,8 +29,12 @@ with sync_playwright() as p:
  for label,path in [('Bugün','bugun'),('Dairem','dairem'),('Apartman','apartman'),('Komşular','komsular')]:
   page.get_by_role('navigation',name='Ana bölümler').get_by_role('link',name=label,exact=True).click()
   assert page.url.endswith('#/'+path)
-  for link in page.get_by_role('navigation',name='Alt bölümler').get_by_role('link').all():
-   expected=link.get_attribute('href');link.click();assert page.url.endswith(expected)
+  expect(page.get_by_role('navigation',name='Ana bölümler').get_by_role('link',name=label,exact=True)).to_have_attribute('aria-current','page')
+  hrefs=page.get_by_role('navigation',name='Alt bölümler').get_by_role('link').evaluate_all('links=>links.map(a=>a.getAttribute("href"))')
+  for expected in hrefs:
+   link=page.locator(f'.section-nav a[href="{expected}"]')
+   link.click();assert page.url.endswith(expected)
+   expect(link).to_have_attribute('aria-current','page')
  visit()
  # Deep shortcut -> correct subview, focus and refresh.
  page.get_by_role('navigation',name='İşlem kısayolları').get_by_role('link',name='Aidat öde').click()
@@ -98,15 +106,54 @@ with sync_playwright() as p:
  page.evaluate('window.fixturePublishTarget()')
  page.wait_for_timeout(400) # waits past the fixture's existing 150ms reload debounce
  expect(page.locator('.account-menu summary')).to_be_focused()
+ if args.player_screens:
+  visit('complete')
+  expect(page.get_by_text('Bugünün işi tamam',exact=True)).to_be_visible()
+  expect(page.get_by_role('link',name='Ek iş',exact=True)).to_have_count(0)
+  expect(page.get_by_role('link',name='Aidat öde',exact=True)).to_have_count(0)
+  expect(page.get_by_role('link',name='Kararı gör',exact=True)).to_be_visible()
+  visit('complete','#/apartman/kararlar/poll-poll1')
+  expect(page.get_by_role('button',name='Onayla',exact=True)).to_have_count(0)
+  visit('low-balance','#/dairem/cuzdan/aidat')
+  expect(page.get_by_role('button',name='Bakiye yetersiz',exact=True)).to_be_disabled()
+  visit('no-job');expect(page.get_by_role('link',name='Meslek seç',exact=True)).to_be_visible()
+  visit('empty');expect(page.get_by_text('Pano şimdilik sakin',exact=True)).to_be_visible()
+  visit('empty','#/komsular/sohbet');expect(page.get_by_text('İlk selam senden olsun',exact=True)).to_be_visible()
+  visit('blocked','#/komsular/sohbet');expect(page.get_by_text('Görüntülenecek mesaj yok',exact=True)).to_be_visible()
+  for width in [320,390]:
+   page.set_viewport_size({'width':width,'height':844})
+   visit('long-chat','#/komsular/sohbet');page.reload();expect(page.locator('.chat-history')).to_be_visible();no_overflow()
+   assert page.locator('.chat-history').evaluate('el=>el.scrollHeight>el.clientHeight'), 'Long chat is internally scrollable'
+   assert page.locator('#message').bounding_box()['y']+page.locator('#message').bounding_box()['height'] <= page.locator('.primary-nav').bounding_box()['y'], 'Composer stays above mobile navigation'
+   page.locator('.message:not(.own)').first.get_by_role('button',name='Şikâyet et',exact=True).click()
+   expect(page.get_by_label('Şikâyet nedeni')).to_be_visible()
+   page.locator('.chat-history').evaluate('el=>el.scrollTop=el.scrollHeight')
+ if args.player_screens:
+  asset='**/art/v2/apartment-interior.svg'
+  page.route(asset,lambda route:route.abort())
+  visit('resident','#/dairem/daire');page.reload()
+  expect(page.get_by_text('Görsel yüklenemedi. Oyun bölümlerini kullanmaya devam edebilirsin.',exact=True)).to_be_visible()
+  expect(page.get_by_role('navigation',name='Alt bölümler').get_by_role('link',name='Cüzdan')).to_be_visible()
+  page.unroute(asset)
+  page.evaluate("localStorage.setItem('apartman-theme','system')")
+  page.emulate_media(color_scheme='dark')
+  visit('resident');page.reload()
+  page.wait_for_function("document.querySelector('.player-shell') && getComputedStyle(document.querySelector('.player-shell')).getPropertyValue('--bg').trim()==='#172b28'")
+  page.emulate_media(color_scheme='light')
+  page.wait_for_function("document.querySelector('.player-shell') && getComputedStyle(document.querySelector('.player-shell')).getPropertyValue('--bg').trim()==='#f9f3e8'")
  # Viewport/contrast-theme evidence from real production components with a substituted API.
  for width in [320,390,768,1440]:
   page.set_viewport_size({'width':width,'height':844 if width<900 else 1000})
   for theme in ['light','dark']:
    page.evaluate(f"localStorage.setItem('apartman-theme','{theme}')")
-   for scenario,fragment,label in [('resident','#/bugun','today'),('resident','#/apartman/kararlar','decisions'),('staff','#/sistem','staff'),('resident','#/dairem/daire','home'),('resident','#/dairem/isler','work'),('resident','#/dairem/cuzdan','wallet'),('resident','#/komsular/sakinler','residents'),('resident','#/komsular/sohbet','chat'),('resident','#/bugun','account-menu'),('resident','#/ayarlar','settings')]:
-    visit(scenario,fragment);no_overflow()
+   for scenario,fragment,label in ([('resident','#/bugun','today'),('resident','#/apartman/kesfet','building'),('resident','#/apartman/kararlar','decisions'),('resident','#/apartman/kasa-pano','treasury'),('manager','#/apartman/yonetici','manager'),('resident','#/dairem/daire','home'),('resident','#/dairem/isler','work'),('resident','#/dairem/cuzdan','wallet'),('resident','#/komsular/sakinler','residents'),('resident','#/komsular/sohbet','chat')] if args.player_screens else [('resident','#/bugun','today'),('resident','#/apartman/kararlar','decisions'),('staff','#/sistem','staff'),('resident','#/dairem/daire','home'),('resident','#/dairem/isler','work'),('resident','#/dairem/cuzdan','wallet'),('resident','#/komsular/sakinler','residents'),('resident','#/komsular/sohbet','chat'),('resident','#/bugun','account-menu'),('resident','#/ayarlar','settings')]):
+    visit(scenario,fragment)
+    # Hash-only navigation may retain React theme state; capture a fresh document.
+    page.reload();expect(page.locator('main h1')).to_be_visible()
+    page.wait_for_function("theme => document.documentElement.dataset.theme === theme",arg=theme)
+    no_overflow()
     assert page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--ink').trim().length > 0"), 'Root design variables must load'
-    assert page.locator('.card').first.evaluate("el => getComputedStyle(el).backgroundColor !== 'rgba(0, 0, 0, 0)'"), 'Cards must have their real theme surface'
+    assert page.locator('.card:not(.resident-directory)').first.evaluate("el => getComputedStyle(el).backgroundColor !== 'rgba(0, 0, 0, 0)'"), 'Cards must have their real theme surface'
     if label=='account-menu':
      page.locator('.account-menu summary').click()
      bounds=page.locator('.account-menu nav').bounding_box()
@@ -123,6 +170,10 @@ with sync_playwright() as p:
     if width<900:
      box=page.locator('.primary-nav').bounding_box() if scenario=='resident' else None
      if box: assert abs(box['y']+box['height']-page.viewport_size['height'])<2
+    if args.player_screens and label in ['home','building']:
+     scene=page.locator('.home-scene img' if label=='home' else '.facade-scene img')
+     expect(scene).to_be_visible()
+     assert scene.evaluate('el=>el.complete && el.naturalWidth>0'), 'Approved scene loads under Pages base path'
     if width in [390,1440]:page.screenshot(path=str(out/f'{label}-{theme}-{width}.png'))
  assert not remote,remote
  assert not errors,errors
