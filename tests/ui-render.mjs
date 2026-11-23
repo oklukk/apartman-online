@@ -192,6 +192,19 @@ try {
   assert.equal(uiText("wallet.adjust"), "Kişisel bakiye düzeltildi");
   assert.equal(uiText("future.module"), "future.module", "Unknown audit codes remain traceable");
   assert.equal(uiText("toString"), "toString");
+  const { AppShell } = await vite.ssrLoadModule('/src/components/AppShell.tsx');
+  const { SectionNav } = await vite.ssrLoadModule('/src/components/SectionNav.tsx');
+  const shellProps = { route: { page:'today' }, access:{authenticated:true,resident:true,staff:false},name:'Ayşe',building:'Çınar Apartmanı',live:'Bağlanıyor',busy:false,theme:'system',onTheme:()=>{},onSignOut:()=>{},children:React.createElement('h1',null,'İçerik') };
+  const shell = renderToStaticMarkup(React.createElement(AppShell,shellProps));
+  for (const label of ['Bugün','Dairem','Apartman','Komşular','Profilim','Ayarlar','Hesap güvenliği']) assert.ok(shell.includes(label),label);
+  assert.ok(!shell.includes('Sistem Yönetim Merkezi'));
+  assert.equal((shell.match(/class="navigation-icon"/g)||[]).length,4);
+  assert.equal((shell.match(/aria-hidden="true" focusable="false"/g)||[]).length,4);
+  assert.ok(renderToStaticMarkup(React.createElement(AppShell,{...shellProps,access:{authenticated:true,resident:false,staff:true}})).includes('Sistem Yönetim Merkezi'));
+  const managerNav = renderToStaticMarkup(React.createElement(SectionNav,{route:{page:'building'},manager:true}));
+  const residentNav = renderToStaticMarkup(React.createElement(SectionNav,{route:{page:'building'},manager:false}));
+  assert.ok(managerNav.includes('Yönetici Masası'));
+  assert.ok(!residentNav.includes('Yönetici Masası'));
   console.log(
     "PASS static React: wallet/job/dues/payment states, election permissions, poll voting, native disclosures, account security, semantic financial summary and audit labels. Browser/mobile/Realtime NOT tested.",
   );

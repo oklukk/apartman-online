@@ -6,7 +6,9 @@ export function EconomyPanel({
   data,
   busy,
   perform,
+  view,
 }: {
+  view?: "work" | "wallet";
   data: EconomyData;
   busy: boolean;
   perform: Perform;
@@ -30,8 +32,8 @@ export function EconomyPanel({
     trDay(new Date(w.side_job_started_at)) === trDay();
   const ready = taskStarted && now - Date.parse(w.side_job_started_at!) >= 3000;
   return (
-    <div className="columns economy-panels">
-      <div>
+    <div className={"columns economy-panels" + (view ? " single-panel" : "")}>
+      <div hidden={view === 'work'}>
         <article className="card">
           <div className="eyebrow">KİŞİSEL CÜZDAN</div>
           <div className="big-number">
@@ -62,7 +64,7 @@ export function EconomyPanel({
             ))}
           </ul>
         </article>
-        <article className="card">
+        <article className="card route-target" id="aidat" tabIndex={-1}>
           <div className="eyebrow">HAFTALIK AİDAT</div>
           <h2>Borç ve ödemelerin</h2>
           <p className="footnote">
@@ -112,7 +114,7 @@ export function EconomyPanel({
           </p>
         </article>
       </div>
-      <div>
+      <div hidden={view === "wallet"}>
         <article className="card">
           <div className="eyebrow">İŞ HAYATI</div>
           <h2>{w.job ? jobs[w.job].title : "Henüz meslek seçmedin"}</h2>
@@ -167,7 +169,7 @@ export function EconomyPanel({
             </p>
           )}
         </article>
-        <article className="card">
+        <article className="card route-target" id="ek-is" tabIndex={-1}>
           <div className="eyebrow">GÜNLÜK EK İŞ · {s.side_job_reward} OP</div>
           <h2>{w.job ? jobs[w.job].task : "Önce bir meslek seç"}</h2>
           {w.job && (

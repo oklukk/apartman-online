@@ -2,6 +2,7 @@ import { money, time } from "../api";
 import { currentTerm, trWeek } from "../economy";
 import type { EconomyData, Perform } from "../economy";
 interface Props {
+  view?: "decisions" | "treasury" | "manager";
   data: EconomyData;
   userId: string;
   username: (id: string) => string;
@@ -58,6 +59,7 @@ export function GovernancePanel({
   username,
   busy,
   perform,
+  view,
 }: Props) {
   const term = currentTerm(data.manager_terms),
     isManager = term?.user_id === userId;
@@ -85,9 +87,9 @@ export function GovernancePanel({
   return (
     <>
       <ManagementSummary data={data} username={username} />
-      <div className="columns">
-        <div>
-          <article className="card">
+      <div className={"columns" + (view ? " single-panel" : "")}>
+        <div hidden={!!view && view !== "decisions"}>
+          <article className="card route-target" id={active ? "election-"+active.id : undefined} tabIndex={-1}>
             <div className="eyebrow">YÖNETİCİ SEÇİMİ</div>
             <h2>
               {active
@@ -241,8 +243,8 @@ export function GovernancePanel({
             </p>
           </article>
         </div>
-        <div>
-          <article className="card">
+        <div hidden={view === 'decisions'}>
+          <article className="card" hidden={view === 'manager'}>
             <div className="eyebrow">AİDAT VE GİDERLER</div>
             <h2>Haftalık düzen</h2>
             <p>
@@ -300,7 +302,7 @@ export function GovernancePanel({
               yalnızca Dairem ekranında sana görünür.
             </p>
           </article>
-          {isManager && (
+          {isManager && (!view || view === "manager") && (
             <article className="card">
               <div className="eyebrow">YÖNETİCİ İŞLEMLERİ</div>
               <h2>Ortak karar öner</h2>
@@ -366,7 +368,7 @@ export function GovernancePanel({
               </p>
             </article>
           )}
-          <article className="card">
+          <article className="card" hidden={view === "manager"}>
             <div className="eyebrow">ORTAK MUHASEBE</div>
             <h2>Bütün gelir ve giderler</h2>
             <ul className="ledger">
