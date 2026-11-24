@@ -1,3 +1,4 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-export default defineConfig({ plugins: [react()], base: "/apartman-online/" });
+import { artCatalog } from './tools/art-catalog.mjs';
+export default defineConfig({ plugins: [artCatalog(), react()], base: "/apartman-online/" });

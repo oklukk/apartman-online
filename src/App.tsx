@@ -25,8 +25,16 @@ import { useNavigation } from './useNavigation';
 import { routeAccess, routeHref, routeLabel, sectionOf } from './navigation';
 import { currentTerm } from './economy';
 import type { Data } from "./gameData";
+import { publicApartments, type ResidentPublicInfo } from './social';
+import { useQuickProfile } from './useQuickProfile';
+import { Avatar } from './components/Avatar';
+import { ResidentDirectory } from './components/BuildingWorld';
+import { ResidentFullProfile, ResidentQuickProfile } from './components/ResidentProfiles';
+import './styles/social-world.css';
 export function App() {
   const [session, setSession] = useState<Session | null>(null);
+  const quick = useQuickProfile(session?.user.id);
+  const [socialNow, setSocialNow] = useState(Date.now);
   const [starting, setStarting] = useState(true);
   const [staff, setStaff] = useState<StaffIdentity>({
     roles: [],
@@ -45,6 +53,9 @@ export function App() {
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [older, setOlder] = useState<Message[]>([]);
   const [hasOlder, setHasOlder] = useState(true);
+  const [chatDraft, setChatDraft] = useState("");
+  const chatPosition = useRef(0);
+  const restoreChat = useCallback((node: HTMLDivElement | null) => { if (node) node.scrollTop = chatPosition.current; }, []);
   const [report, setReport] = useState<string | null>(null);
   const requestNumber = useRef(0);
   const activeUser = useRef<string | undefined>(undefined);
@@ -125,6 +136,8 @@ export function App() {
   useEffect(() => {
     setData(null);
     setOlder([]);
+    setChatDraft("");
+    chatPosition.current = 0;
     setHasOlder(true);
     void load();
   }, [load]);
@@ -161,7 +174,21 @@ export function App() {
   const me = data?.memberships.find((m) => m.user_id === session?.user.id);
   const myProfile = data?.profiles.find((p) => p.id === session?.user.id);
   const myApartment = data?.apartments.find((a) => a.id === me?.apartment_id);
-  const building = data?.buildings[0];
+  const building = data?.buildings.find(b => b.id === me?.building_id);
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const update = () => {
+      const now = Date.now();
+      setSocialNow(now);
+      const next = data?.manager_terms.flatMap(t => [Date.parse(t.starts_at),Date.parse(t.ends_at)]).filter(t => t > now).sort((a,b) => a-b)[0];
+      if (next) timer = setTimeout(update,Math.min(next-now+1,2147483647));
+    };
+    update();
+    return () => clearTimeout(timer);
+  }, [data?.manager_terms]);
+  const units = publicApartments(session?.user.id || '', building, data?.profiles || [], data?.memberships || [], data?.apartments || [], data?.manager_terms || [], socialNow);
+  const residents = units.flatMap(a => a.resident ? [a.resident] : []);
+  const openResident = (resident: ResidentPublicInfo, trigger: HTMLElement) => quick.open(resident.userId,trigger);
   useEffect(() => {
     if (!client || !me) return;
     let reloadTimer: ReturnType<typeof setTimeout>;
@@ -236,7 +263,7 @@ export function App() {
   const access = { authenticated: !!session, resident: !!me, staff: staff.roles.length > 0 };
   const allowed = routeAccess(route, access);
   const isManager = !!session && currentTerm(data?.manager_terms || [])?.user_id === session.user.id;
-  useRouteFocus(route, !starting && !!session && !!data && allowed === 'allowed', data, session?.user.id, setNotice);
+  useRouteFocus(route, !starting && !!session && !!data && allowed === 'allowed' && !quick.userId, data, session?.user.id, setNotice);
   const act = async (
     work: () => PromiseLike<{ error: unknown }>,
     success?: string,
@@ -257,6 +284,15 @@ export function App() {
   };
   const perform: Perform = (rpc, args, success) => {
     void act(() => client!.rpc(rpc, args), success);
+  };
+  const toggleResidentBlock = (id: string) => {
+    if (!session || id === session.user.id || !residents.some(r => r.userId === id)) return;
+    const blocked = data?.blocks.some(b => b.blocked_id === id);
+    setOlder([]);
+    void act(() => blocked
+      ? client!.from("blocks").delete().eq("user_id",session.user.id).eq("blocked_id",id)
+      : client!.from("blocks").insert({user_id:session.user.id,blocked_id:id}),
+      blocked ? "Engel kaldırıldı." : "Bu komşunun mesajları gizlendi.");
   };
   const username = (id: string) =>
     data?.profiles.find((p) => p.id === id)?.username || "Komşu";
@@ -307,7 +343,7 @@ export function App() {
     .sort((a,b) => a.created_at.localeCompare(b.created_at));
   const activity = <ActivityFeed items={data?.activity || []} />;
   return (
-    <AppShell route={route} access={access} name={myProfile?.username || 'Hesabım'} building={building?.name || 'Çınar Apartmanı'} live={live} busy={busy} theme={theme} onTheme={setTheme} onSignOut={() => void act(() => client!.auth.signOut())}>
+    <AppShell route={route} access={access} userId={session?.user.id} name={myProfile?.username || 'Hesabım'} building={building?.name || 'Çınar Apartmanı'} live={live} busy={busy} theme={theme} onTheme={setTheme} onSignOut={() => void act(() => client!.auth.signOut())}>
         {notice && (
           <div className="notice" role="status">
             {notice}
@@ -412,7 +448,7 @@ export function App() {
             </div>
           </section>
         ) : tab === "Profilim" ? (
-          <MyProfile name={myProfile?.username || 'Hesabım'} apartment={myApartment?.number} building={building?.name} />
+          <MyProfile name={myProfile?.username || 'Hesabım'} userId={session.user.id} resident={residents.find(r => r.userId === session.user.id)} />
         ) : tab === "Ayarlar" ? (
           <SettingsScreen theme={theme} onTheme={setTheme} />
         ) : route.page === 'security' ? (
@@ -461,6 +497,8 @@ export function App() {
               <button disabled={busy}>Apartmana katıl</button>
             </form>
           </section>
+        ) : route.page === 'resident' ? (
+          <ResidentFullProfile resident={residents.find(r => r.userId === route.userId)} own={route.userId === session.user.id} blocked={data.blocks.some(b => b.blocked_id === route.userId)} busy={busy} back={route.from || routeHref({page:'neighbors',section:'sakinler'})} onBlock={() => toggleResidentBlock(route.userId || '')}/>
         ) : (
           <div className={'player-screens player-'+route.page+' player-view-'+(section || 'default')}>
             {tab !== 'Bugün' && <section className="page-heading">
@@ -486,7 +524,7 @@ export function App() {
             </section>}
             <SectionNav route={route} manager={isManager} />
             {tab === 'Bugün' && <TodayScreen data={data} userId={session.user.id} name={myProfile?.username || 'Komşu'} />}
-            {tab === 'Apartman' && section === 'kesfet' && <BuildingScene data={data} username={username} />}
+            {tab === 'Apartman' && section === 'kesfet' && <BuildingScene data={data} username={username} units={units} viewerId={session.user.id} target={route.target} onResident={openResident}/>}
             {tab === "Dairem" && (
               <>
                 <div hidden={section !== 'daire'}><HomeScene name={myProfile?.username || 'Komşu'} number={myApartment?.number || 0} building={building?.name || ''}/></div>
@@ -500,62 +538,8 @@ export function App() {
                     {data.memberships.length} / 12 DAİRE DOLU
                   </div>
                   <h2>Komşuların</h2>
-                  <ul className="resident-list">
-                    {[...data.apartments]
-                      .sort((a, b) => a.number - b.number)
-                      .map((a) => {
-                        const m = data.memberships.find(
-                          (m) => m.apartment_id === a.id,
-                        );
-                        const blocked = data.blocks.some(
-                          (b) => b.blocked_id === m?.user_id,
-                        );
-                        return (
-                          <li key={a.id}>
-                            <span className="door-number" aria-label={'Daire '+a.number}>
-                              {String(a.number).padStart(2, "0")}
-                            </span>
-                            <div>
-                              {m ? (
-                                username(m.user_id)
-                              ) : (
-                                <span className="subtle">Boş daire</span>
-                              )}
-                              {m?.user_id === session.user.id && (
-                                <small>Senin dairen</small>
-                              )}
-                            </div>
-                            {m && m.user_id !== session.user.id && (
-                              <button
-                                className="text-button"
-                                disabled={busy}
-                                onClick={() => {
-                                  setOlder([]);
-                                  void act(
-                                    () =>
-                                      blocked
-                                        ? client!
-                                            .from("blocks")
-                                            .delete()
-                                            .eq("user_id", session.user.id)
-                                            .eq("blocked_id", m.user_id)
-                                        : client!.from("blocks").insert({
-                                            user_id: session.user.id,
-                                            blocked_id: m.user_id,
-                                          }),
-                                    blocked
-                                      ? "Engel kaldırıldı."
-                                      : "Bu komşunun mesajları gizlendi.",
-                                  );
-                                }}
-                              >
-                                {blocked ? "Engeli kaldır" : "Mesajları gizle"}
-                              </button>
-                            )}
-                          </li>
-                        );
-                      })}
-                  </ul>
+                  <ResidentDirectory units={units} viewerId={session.user.id} busy={busy} blockedIds={data.blocks.map(b => b.blocked_id)} onResident={openResident} onBlock={toggleResidentBlock}/>
+
                 </article>
                 <article className="card chat" hidden={section !== "sohbet"}>
                   <div className="spread">
@@ -565,7 +549,7 @@ export function App() {
                   <p className="footnote">
                     Mesajlar kalıcıdır. 500 karakter · Mesajlar arası 2 saniye.
                   </p>
-                  <div className="chat-history" aria-label="Sohbet geçmişi">
+                  <div className="chat-history" aria-label="Sohbet geçmişi" ref={restoreChat} onScroll={e => { chatPosition.current = e.currentTarget.scrollTop; }}>
                     {hasOlder && data.messages.length >= 50 && (
                       <button
                         className="secondary"
@@ -607,7 +591,7 @@ export function App() {
                           key={m.id}
                         >
                           <div className="spread">
-                            <strong>{username(m.author_id)}</strong>
+                            <button type="button" className="chat-person" aria-label={(residents.find(r => r.userId === m.author_id)?.username || 'Komşu')+' · komşu kartını aç'} onClick={e => quick.open(m.author_id,e.currentTarget)}><Avatar userId={m.author_id} name={residents.find(r => r.userId === m.author_id)?.username || 'Komşu'} size={36}/><strong>{residents.find(r => r.userId === m.author_id)?.username || 'Komşu'}</strong></button>
                             <time dateTime={m.created_at}>{time(m.created_at)}</time>
                           </div>
                           <p>{m.body}</p>
@@ -669,7 +653,7 @@ export function App() {
                         const r = await client!.rpc("send_message", {
                           message_body: body,
                         });
-                        if (!r.error) form.reset();
+                        if (!r.error) { setChatDraft(""); form.reset(); }
                         return r;
                       });
                     }}
@@ -678,6 +662,8 @@ export function App() {
                       Mesajın
                     </label>
                     <textarea
+                      value={chatDraft}
+                      onChange={e => setChatDraft(e.target.value)}
                       id="message"
                       name="message"
                       maxLength={500}
@@ -725,6 +711,7 @@ export function App() {
             )}
           </div>
         )}
+      {quick.userId && session && <ResidentQuickProfile resident={residents.find(r => r.userId === quick.userId)} own={quick.userId === session.user.id} blocked={!!data?.blocks.some(b => b.blocked_id === quick.userId)} busy={busy} origin={route} opener={quick.opener} onClose={quick.close} onNavigate={quick.navigate} onBlock={() => toggleResidentBlock(quick.userId || '')}/>}
     </AppShell>
   );
 }

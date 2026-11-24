@@ -10,14 +10,14 @@ export const accountPages = [
   { page: 'security', label: 'Hesap güvenliği', path: 'guvenlik' },
   { page: 'staff', label: 'Sistem Yönetim Merkezi', path: 'sistem' },
 ] as const;
-export type Page = (typeof mainPages)[number]['page'] | (typeof accountPages)[number]['page'];
-export type Route = { page: Page; section?: string; target?: string };
+export type Page = (typeof mainPages)[number]['page'] | (typeof accountPages)[number]['page'] | 'resident';
+export type Route = { page: Page; section?: string; target?: string; userId?: string; from?: string };
 export const sections: Partial<Record<Page, readonly { key: string; label: string }[]>> = {
   home: [{ key: 'daire', label: 'Daire' }, { key: 'isler', label: 'İşler' }, { key: 'cuzdan', label: 'Cüzdan' }],
   building: [{ key: 'kesfet', label: 'Binayı Keşfet' }, { key: 'kararlar', label: 'Kararlar' }, { key: 'kasa-pano', label: 'Kasa ve Pano' }, { key: 'yonetici', label: 'Yönetici Masası' }],
   neighbors: [{ key: 'sakinler', label: 'Sakinler' }, { key: 'sohbet', label: 'Sohbet' }],
 };
-const pages = [...mainPages, ...accountPages];
+const pages = [...mainPages, ...accountPages, {page:'resident',label:'Komşu profili',path:'komsu'}] as const;
 export const routeLabel = (route: Route) => pages.find(p => p.page === route.page)!.label;
 export const sectionOf = (route: Route) => route.section || sections[route.page]?.[0].key;
 export const targets = {
@@ -28,6 +28,7 @@ export const targets = {
   election: (id: string): Route => ({ page: 'building', section: 'kararlar', target: 'election-'+id }),
 } satisfies Record<string, Route | ((id: string) => Route)>;
 export function routeHref(route: Route): string {
+  if (route.page === 'resident') return '#/komsu/'+encodeURIComponent(route.userId || '')+(safeProfileBack(route.from) ? '?from='+encodeURIComponent(route.from!) : '');
   const path = pages.find(p => p.page === route.page)!.path;
   return '#/'+[path, route.section, route.target].filter(Boolean).map(v => encodeURIComponent(v!)).join('/');
 }
@@ -35,6 +36,12 @@ export function parseRoute(hash: string): Route {
   // Auth callback fragments are owned by Supabase, never rewritten by this router.
   if (!hash.startsWith('#/')) return { page: 'today' };
   try {
+    if (hash.startsWith('#/komsu/')) {
+      const [id, query, extra] = hash.slice(8).split('?');
+      if (extra || !/^[a-zA-Z0-9_-]{1,100}$/.test(id)) return {page:'resident'};
+      const from = new URLSearchParams(query).get('from') || undefined;
+      return {page:'resident',userId:id,...(safeProfileBack(from) ? {from} : {})};
+    }
     const [path, section, target, extra] = hash.slice(2).split('/').map(decodeURIComponent);
     const page = pages.find(p => p.path === path)?.page;
     if (!page || extra !== undefined) return { page: 'today' };
@@ -49,4 +56,9 @@ export function routeAccess(route: Route, access: Access): 'allowed' | 'login' |
   if (route.page === 'staff') return access.staff ? 'allowed' : 'forbidden';
   if (accountPages.some(p => p.page === route.page)) return 'allowed';
   return access.resident ? 'allowed' : 'join';
+}
+
+export function safeProfileBack(href?: string): boolean {
+  if (!href || !/^#\/(bugun|dairem|apartman|komsular|profilim)(\/[a-zA-Z0-9_-]+){0,2}$/.test(href)) return false;
+  return routeHref(parseRoute(href)) === href;
 }
