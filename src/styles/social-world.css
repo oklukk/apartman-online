@@ -1,0 +1,58 @@
+/* D stage: public identity and HTML interactions over the approved, unchanged art. */
+.resident-avatar { display:inline-flex; flex:none; align-items:center; justify-content:center; overflow:hidden; border-radius:50%; background:var(--soft); color:var(--ink); font-weight:700; vertical-align:middle; }
+.resident-avatar img { display:block; width:100%; height:100%; object-fit:contain; }
+.resident-badges { display:flex; flex-wrap:wrap; gap:6px; }
+.resident-badges:empty { display:none; }
+.resident-badges .state-pill { font-size:.75rem; padding:4px 8px; white-space:normal; }
+.manager-badge { border:1px solid var(--gold); }
+.resident-identity { display:flex; align-items:center; gap:20px; margin:24px 0; overflow-wrap:anywhere; }
+.resident-identity > div { min-width:0; }
+.resident-identity h2 { margin:0 0 8px; }
+.resident-identity p { margin:5px 0; font-size:.9375rem; }
+.social-profile { max-width:800px; margin:28px auto; }
+.social-profile h1 { margin-top:24px; }
+.social-links { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-top:20px; }
+.social-links .footnote { flex-basis:100%; margin:0; }
+.profile-back { display:inline-block; padding:10px 0; }
+.resident-sheet { position:fixed; inset:0 0 0 auto; width:min(440px,100%); max-width:100%; height:100dvh; max-height:100dvh; margin:0; padding:28px; border:0; border-left:1px solid var(--line); border-radius:24px 0 0 24px; background:var(--panel); color:var(--ink); overflow-y:auto; box-shadow:-12px 0 32px #0002; font:inherit; }
+.resident-sheet::backdrop { background:#102b2866; }
+.sheet-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.sheet-heading h2 { margin:0; font-size:1.2rem; }
+.profile-close { width:44px; height:44px; padding:0; flex:none; font-size:1.5rem; }
+.resident-sheet .social-links { flex-direction:column; align-items:stretch; }
+.resident-sheet .route-link { justify-content:center; }
+.resident-sheet .footnote { font-size:.875rem; }
+.facade-scroll { overflow-x:auto; border-radius:18px; border:1px solid var(--line); background:var(--soft); }
+.facade-map { position:relative; width:100%; min-width:400px; aspect-ratio:1000/1100; }
+.facade-scene .facade-map > img { display:block; width:100%; height:100%; max-height:none; object-fit:contain; border-radius:0; }
+.facade-unavailable { margin:0; padding:20px; }
+.facade-door,.facade-entry { position:absolute; display:flex; justify-content:space-between; align-items:flex-start; border:2px solid transparent; background:transparent; box-shadow:none; padding:2px; border-radius:5px; color:#254844; text-decoration:none; font:inherit; }
+.facade-door:hover,.facade-door[aria-pressed="true"],.facade-entry:hover { border-color:#315D59; background:#f7e8d026; }
+.facade-door:focus-visible,.facade-entry:focus-visible { outline:3px solid #254844; outline-offset:2px; background:#f7e8d050; }
+.facade-door.own-door { border-color:#315D59; }
+.map-number,.facade-entry span { flex:none; white-space:nowrap; display:flex; flex-direction:column; align-items:center; gap:0; border-radius:4px; padding:2px 4px; background:#fff9f0; color:#254844; font-size:.8125rem; font-weight:700; line-height:1.15; }
+.map-state { font-size:.625rem; font-weight:400; }
+.map-badges { flex:none; display:flex; flex-direction:column; gap:2px; align-self:flex-end; }
+.map-badges span { padding:2px 3px; font-size:.625rem; font-weight:700; color:#fff9f0; background:#315D59; border-radius:3px; line-height:1.2; }
+.facade-entry { justify-content:center; align-items:flex-end; }
+.apartment-info { padding:16px; border:1px solid var(--line); background:var(--panel); border-radius:14px; margin:16px 0; }
+.apartment-info p { margin:6px 0; }
+.apartment-info button { margin-top:12px; }
+.apartment-alternatives { list-style:none; padding:0; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.apartment-alternatives button { display:flex; flex-direction:column; align-items:flex-start; width:100%; min-height:70px; padding:10px; gap:5px; text-align:left; font-size:.8125rem; overflow-wrap:anywhere; }
+.player-screens .social-directory li { display:flex; }
+.player-screens .social-directory .resident-open { display:flex; flex-basis:100%; align-items:center; flex-wrap:wrap; gap:12px; padding:0; border:0; border-radius:8px; background:transparent; color:var(--ink); }
+.resident-open > span:not(.resident-avatar) { min-width:0; overflow-wrap:anywhere; }
+.resident-open .resident-badges { flex-basis:100%; }
+.player-screens .social-directory .resident-open small { margin-top:6px; }
+.chat-person { display:inline-flex; align-items:center; gap:8px; background:transparent; color:var(--ink); padding:0; border:0; min-width:0; max-width:100%; text-align:left; border-radius:6px; }
+.chat-person strong { min-width:0; overflow-wrap:anywhere; }
+.player-neighbors .message .spread { flex-wrap:wrap; gap:8px; }
+@media(max-width:1100px) { .apartment-alternatives { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:900px) {
+ .resident-sheet { inset:auto 0 0; width:100%; height:auto; max-height:85dvh; border:0; border-top:1px solid var(--line); border-radius:24px 24px 0 0; padding:20px 20px calc(24px + env(safe-area-inset-bottom)); }
+ .resident-sheet .resident-identity { gap:14px; }
+ .social-profile .resident-identity { flex-wrap:wrap; }
+ .resident-identity h2 { font-size:1.35rem; }
+}
+@media(max-width:360px) { .resident-sheet { padding-inline:16px; } .resident-sheet .resident-identity { align-items:flex-start; } .resident-sheet .resident-avatar { width:60px !important; height:60px !important; } }

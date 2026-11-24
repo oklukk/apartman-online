@@ -7,6 +7,7 @@ origin='http://127.0.0.1:5178'
 base=origin+'/apartman-online/'
 parser=argparse.ArgumentParser()
 parser.add_argument('--player-screens',action='store_true')
+parser.add_argument('--verify-only',action='store_true',help='Run regressions without overwriting historical screenshots')
 args=parser.parse_args()
 out=root/('docs/design/player-screens' if args.player_screens else 'docs/design/navigation')
 out.mkdir(parents=True,exist_ok=True)
@@ -174,7 +175,7 @@ with sync_playwright() as p:
      scene=page.locator('.home-scene img' if label=='home' else '.facade-scene img')
      expect(scene).to_be_visible()
      assert scene.evaluate('el=>el.complete && el.naturalWidth>0'), 'Approved scene loads under Pages base path'
-    if width in [390,1440]:page.screenshot(path=str(out/f'{label}-{theme}-{width}.png'))
+    if width in [390,1440] and not args.verify_only:page.screenshot(path=str(out/f'{label}-{theme}-{width}.png'))
  assert not remote,remote
  assert not errors,errors
  browser.close()

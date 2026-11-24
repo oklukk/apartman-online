@@ -1,3 +1,5 @@
+import { BuildingWorld } from './BuildingWorld';
+import type { PublicApartment, ResidentPublicInfo } from '../social';
 import { useState } from 'react';
 import { money, time } from '../api';
 import { jobs, trDay } from '../economy';
@@ -140,16 +142,14 @@ export function HomeScene({ name, number, building }: {
     <Artwork file="apartment-interior.svg" width={900} height={600} alt="Kitaplar, çay ve sıcak ışıkla sakin bir daire içi"/>
     </article>;
 }
-export function BuildingScene({ data, username }: {
+export function BuildingScene({ data, username, units, viewerId, target, onResident }: {
+    units: PublicApartment[]; viewerId: string; target?: string; onResident: (resident: ResidentPublicInfo, trigger: HTMLElement) => void;
     data: Data;
     username: (id: string) => string;
 }) {
     const building = data.buildings[0];
     return <div className="building-stage">
-    <figure className="facade-scene">
-    <Artwork file="apartment-facade.svg" width={1000} height={1100} alt="Dört konut katında üçer daire, ayrı giriş ve ortak bahçeli apartman"/>
-    <figcaption>Pencereler ve balkonlar dekoratiftir; çevrim içi durum göstermez. Bu görünüm etkileşimli değildir.</figcaption>
-    </figure>
+    <div className="facade-scene"><BuildingWorld units={units} viewerId={viewerId} target={target} onResident={onResident}/></div>
     <div className="building-companion">
     <div className="building-intro">
     <div className="eyebrow">AYNI ÇATI ALTINDA</div>

@@ -19,9 +19,11 @@ export interface Member {
   user_id: string;
   building_id: string;
   apartment_id: string;
+  joined_at?: string;
 }
 export interface Apartment {
   id: string;
+  building_id: string;
   number: number;
 }
 export interface Building {

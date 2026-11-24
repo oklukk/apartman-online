@@ -225,11 +225,25 @@ try {
   assert.ok(renderToStaticMarkup(React.createElement(TodayScreen,{data:completed,userId:'a',name:'Ayşe'})).includes('Meslek seç'));
   const room = renderToStaticMarkup(React.createElement(HomeScene,{name:'Ayşe',number:1,building:'Çınar Apartmanı'}));
   assert.match(room,/src="\/apartman-online\/art\/v2\/apartment-interior.svg"/);
-  const facade = renderToStaticMarkup(React.createElement(BuildingScene,{data:sceneData,username:()=> 'Ayşe'}));
-  assert.ok(facade.includes('apartment-facade.svg') && facade.includes('Bu görünüm etkileşimli değildir'));
-  assert.ok(!facade.includes('<button'), 'No nonfunctional apartment hotspots');
-  assert.ok(!facade.includes('avatars/'), 'No premature avatar mapping');
+  const facade = renderToStaticMarkup(React.createElement(BuildingScene,{data:sceneData,username:()=> 'Ayşe',units:Array.from({length:12},(_,i)=>({number:i+1,status:'empty'})),viewerId:'a',onResident:()=>{}}));
+  assert.ok(facade.includes('apartment-facade.svg') && facade.includes('Etkileşimli apartman'));
+  assert.equal((facade.match(/class="facade-door/g)||[]).length,12,'All twelve real apartment targets');
+  assert.ok(facade.includes('Apartman girişi · Kasa ve Pano'));
   for (const kind of ['chat','mail','vote']) assert.ok(renderToStaticMarkup(React.createElement(EmptyIllustration,{kind,title:'Boş durum'})).includes('empty-'+kind+'.svg'));
+  const catalog = await vite.ssrLoadModule('virtual:apartman-art-catalog');
+  const { readFileSync } = await import('node:fs');
+  assert.deepEqual(catalog.anchors,JSON.parse(readFileSync('public/art/v2/apartment-anchors.json')));
+  assert.deepEqual(catalog.avatars,JSON.parse(readFileSync('public/art/v2/avatars/manifest.json')));
+  const { Avatar } = await vite.ssrLoadModule('/src/components/Avatar.tsx');
+  const { ResidentFullProfile } = await vite.ssrLoadModule('/src/components/ResidentProfiles.tsx');
+  const { publicApartments } = await vite.ssrLoadModule('/src/social.ts');
+  const publicInfo=publicApartments('a',{id:'b',name:'Çınar Apartmanı'},[{id:'a',username:'Ayşe',email:'NEVER_SHOW',balance:7654321}], [{user_id:'a',building_id:'b',apartment_id:'apt',joined_at:'2026-11-01'}], [{id:'apt',building_id:'b',number:1}],[])[0].resident;
+  const social=renderToStaticMarkup(React.createElement(ResidentFullProfile,{resident:publicInfo,own:true,blocked:false,busy:false,back:'#/komsular/sakinler',onBlock:()=>{}}));
+  assert.ok(social.includes('/apartman-online/art/v2/avatars/portrait-'));
+  assert.ok(social.includes('Kasım 2026') && social.includes('Daireme Git'));
+  assert.doesNotMatch(social,/NEVER_SHOW|7654321|staff_roles|MFA/);
+  assert.ok(renderToStaticMarkup(React.createElement(Avatar,{userId:'../invalid',name:'Ayşe'})).includes('aria-label="Ayşe avatarı"'));
+  assert.ok(renderToStaticMarkup(React.createElement(ResidentFullProfile,{own:false,blocked:false,busy:false,back:'#/komsular/sakinler',onBlock:()=>{}})).includes('Bu profile erişilemiyor'));
   console.log(
     "PASS static React: wallet/job/dues/payment states, election permissions, poll voting, native disclosures, account security, semantic financial summary and audit labels. Browser/mobile/Realtime NOT tested.",
   );

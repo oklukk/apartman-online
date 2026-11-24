@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
+import { Avatar } from './Avatar';
 import { NavigationIcon } from './NavigationIcon';
 import { accountPages, mainPages, routeHref, routeLabel, type Route, type Access } from '../navigation';
 export function ThemeControl({ theme, onTheme }: { theme: string; onTheme: (theme: string) => void }) {
@@ -6,8 +7,8 @@ export function ThemeControl({ theme, onTheme }: { theme: string; onTheme: (them
     <option value="system">Sistem</option><option value="light">Açık</option><option value="dark">Koyu</option>
   </select></label>;
 }
-export function AppShell({ route, access, name, building, live, busy, theme, onTheme, onSignOut, children }: {
-  route: Route; access: Access; name: string; building: string; live: string; busy: boolean;
+export function AppShell({ route, access, name, userId, building, live, busy, theme, onTheme, onSignOut, children }: {
+  route: Route; access: Access; name: string; userId?: string; building: string; live: string; busy: boolean;
   theme: string; onTheme: (theme: string) => void; onSignOut: () => void; children: ReactNode;
 }) {
   const menu = useRef<HTMLDetailsElement>(null);
@@ -39,7 +40,7 @@ export function AppShell({ route, access, name, building, live, busy, theme, onT
       <header className="topbar"><span>{building}<span className="subtle"> / {access.authenticated ? routeLabel(route) : 'Hoş geldiniz'}</span></span>
         {access.authenticated ? <details className="account-menu" ref={menu} onKeyDown={e => {
           if (e.key === 'Escape') { close(); menu.current?.querySelector('summary')?.focus(); }
-        }}><summary><span className="account-initial" aria-hidden="true">{name.slice(0,1).toLocaleUpperCase('tr-TR')}</span><span>{name}</span></summary>
+        }}><summary><Avatar userId={userId} name={name} size={36}/><span>{name}</span></summary>
           <nav aria-label="Hesap menüsü">{accountPages.filter(p => p.page !== 'staff' || access.staff).map(p => <a key={p.page} href={routeHref({ page:p.page })} onClick={close} aria-current={route.page === p.page ? 'page' : undefined}>{p.label}</a>)}
             <button type="button" className="secondary" disabled={busy} onClick={() => { close(); onSignOut(); }}>Çıkış yap</button>
           </nav>
