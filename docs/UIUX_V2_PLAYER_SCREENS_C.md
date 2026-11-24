@@ -92,3 +92,31 @@ Tekrar üretim: mevcut bulut ortamında `node tools/serve-navigation-fixture.mjs
 Gerçek Auth kaydı/girişi, MFA töreni, WebSocket/Realtime ve gerçek Supabase üzerinden ekonomi/oy mutasyonları bu çalışmada tarayıcıdan yeniden doğrulanmadı. SQL işlemlerinin PostgreSQL regresyonları ve UI/handler karşılaştırması, gerçek hizmet uçtan uca kabulü olarak sunulmaz. Ekran okuyucu, %200 zoom ve fiziksel iOS/Android klavye/safe-area kabulü manuel kontrol bekler. Viewport görüntüleri sayfanın ilk görünür alanıdır; uzun ekonomi/pano listeleri sayfa kaydırmasıyla, mesajlar iç kaydırmayla erişilir.
 
 C dalı birleştirilmedi veya yayımlanmadı. Geri alma yalnız istemci commit'lerini geri almakla yapılır; veritabanı/migration telafisi yoktur. D/E/F kapsamına ancak ayrı kullanıcı talimatıyla geçilir.
+
+## PR #12 inceleme düzeltmeleri — 25 Kasım 2026
+
+Uygulama değişiklikleri yalnız `src/styles/player-screens.css` ve `src/styles/navigation.css` içindedir. 900 px ve altında oda görseli kimlik panelinden önce gelir; oyuncu adı, apartman ve daire numarası kompakt bir grid içinde gösterilir. İşler/Cüzdan alt bölümleri ve veri akışı değişmez. 1440 px'te önceki ve sonraki oda/kimlik alanlarının konum ve boyutları Chromium ölçümüyle aynı doğrulandı (1 px altı tolerans).
+
+Sayfa başlığının programatik odağı artık dikdörtgen çerçeve yerine ince alt çizgiyle gösterilir. `useRouteFocus` ve hedefe kaydırma kodu değiştirilmedi. Bağlantı/düğme klavye odak halkaları ve doğrudan işlem hedeflerinin çerçeveleri korunur.
+
+### Gerçek önce / sonra karşılaştırması
+
+Karşılaştırma tabanı önceki PR teslim commit'i `14227cfc3864dbd2d78425a443e20ea1e53c842e` içindeki iki CSS dosyasıdır. İzole fixture sunucusunda aynı gerçek uygulama, aynı SVG'ler ve aynı sentetik veriler önce bu dosyalarla, sonra güncel CSS ile Chromium'da ayrı ayrı render edildi. Görüntüler montaj değildir; önceki CSS, test tarayıcısında modül yanıtı olarak sunulur. Her temada sayfa yenilenir ve aktif tema doğrulanır.
+
+| Görünüm | Önce | Sonra |
+| --- | --- | --- |
+| 390 px açık | [Önce](design/player-review/before-home-light-390.png) | [Sonra](design/player-review/after-home-light-390.png) |
+| 390 px koyu | [Önce](design/player-review/before-home-dark-390.png) | [Sonra](design/player-review/after-home-dark-390.png) |
+| 1440 px açık | [Önce](design/player-review/before-home-light-1440.png) | [Sonra](design/player-review/after-home-light-1440.png) |
+| 1440 px koyu | [Önce](design/player-review/before-home-dark-1440.png) | [Sonra](design/player-review/after-home-dark-1440.png) |
+
+Yukarıdaki 40 ekranlık C galerisi de yeniden üretildi. Görüntüler gerçek Chromium çıktısıdır; üstte sentetik veri etiketi bulunur, canlı Supabase/Pages ekranları değildir.
+
+### Yeniden çalıştırılan kontroller
+
+- `npm test`: 36 başarılı, sıfır başarısız; `npm run test:ui` ve `npm run build` başarılı.
+- PostgreSQL: `test:sql` 11, `test:v02` 24, `test:rbac` 14, `test:advanced` 15 başarılı kontrol/grup; yalnız mevcut disposable localhost:55432 altyapısı kullanıldı.
+- `python tools/check-navigation-browser.py --player-screens`: ana/alt bağlantılar, aidat/ek iş/oylama/sohbet kısayolları, geç gelen veride hedefe odak/kaydırma, odağın veri yenilemesinde çalınmaması, hesap menüsü, Auth fragment ve MFA/rol erişim regresyonları başarılı.
+- Yeni `python tools/check-player-review.py`: 320/390/768/1440 px açık/koyu temada yatay taşma yok; mobil/tablette odanın kimlikten önce gelmesi ve ilk görünür alanda en az %70'inin görünmesi, 320/390 px'te kompakt kimlik yüksekliği, 1440 px'te değişmeyen iki sütun geometrisi başarılı. Başlık alt çizgisi, Tab/Shift+Tab ile bağlantı/düğme odak halkaları ve Escape sonrası davranış kontrol edildi; sayfa hatası veya dış ağ isteği yok.
+
+Tekrar üretmek için mevcut fixture sunucusunu çalıştırıp iki Python komutunu yürütün. Önce/sonra aracı, yukarıdaki taban commit'in yerel Git geçmişinde bulunmasını gerektirir. Sanat varlıkları, uygulama işlem kodları, ekonomi, yetkilendirme ve bütün Supabase dosyaları korunur. Gerçek hizmet üzerinden Auth/Realtime ve fiziksel cihaz/ekran okuyucu sınırları yukarıda belirtildiği gibi devam eder. PR #12 inceleme için açık/taslak tutulur; birleştirme ve canlı yayın yapılmaz.
