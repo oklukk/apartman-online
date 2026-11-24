@@ -32,7 +32,9 @@
   .navigation-v2 .section-nav a { font-size:.875rem; }
 }
 
-.navigation-v2 h1:focus-visible, .navigation-v2 .route-target:focus-visible { outline:2px solid var(--gold); outline-offset:5px; border-radius:6px; }
+/* Route headings remain programmatically focusable without a surrounding box. */
+.navigation-v2 h1:focus-visible { outline:none; text-decoration:underline; text-decoration-color:var(--gold); text-decoration-thickness:2px; text-underline-offset:.18em; }
+.navigation-v2 .route-target:focus-visible { outline:2px solid var(--gold); outline-offset:5px; border-radius:6px; }
 
 .navigation-icon { flex:none; }
 .navigation-v2 .primary-nav a[aria-current="page"] { font-weight:700; }

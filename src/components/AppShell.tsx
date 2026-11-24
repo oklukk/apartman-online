@@ -25,7 +25,7 @@ export function AppShell({ route, access, name, building, live, busy, theme, onT
     document.addEventListener('pointerdown', dismissOutside, true);
     return () => document.removeEventListener('pointerdown', dismissOutside, true);
   }, []);
-  return <div className="shell art-v2 navigation-v2">
+  return <div className={'shell art-v2 navigation-v2'+(access.resident && mainPages.some(p=>p.page===route.page) ? ' player-shell' : '')}>
     <a className="skip-link" href="#main-content" onClick={e => { e.preventDefault(); document.getElementById('main-content')?.focus(); }}>İçeriğe geç</a>
     <aside className="sidebar">
       <a href={routeHref({ page: 'today' })} className="brand"><img src={import.meta.env.BASE_URL+'art/v2/logo-mark.svg'} width="40" height="44" alt="" /><span>APARTMAN<small>Birlikte yaşanan bir dünya.</small></span></a>

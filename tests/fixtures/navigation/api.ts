@@ -32,6 +32,16 @@ const tables: Record<string, unknown[]> = {
   activity:[{id:'activity',description:'Yeni bir komşu taşındı.',created_at:iso(-86400000)}],
   announcements:[{id:'announcement',title:'Komşu panosu',body:'Ortak alanları temiz tutalım.'}],votes:[],blocks:[],treasury_transactions:[],
 };
+if(scenario==='empty'){ tables.messages=[]; tables.announcements=[]; tables.activity=[]; tables.polls=[]; tables.elections=[]; }
+if(scenario==='long-chat') tables.messages=Array.from({length:16},(_,i)=>({id:'long'+i,author_id:i%2?user:'neighbor',body:i===4?'UzunMetin'.repeat(50):'Komşuların birbiriyle paylaştığı gündelik bir mesaj. '.repeat(4),created_at:iso(-i*60000)}));
+if(scenario==='blocked') tables.blocks=[{blocked_id:'neighbor'}];
+if(scenario==='complete'){
+ const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ tables.wallet_transactions=[...economy.wallet_transactions,{id:'side',kind:'side_job',period_key:day,amount:25,balance_after:325,description:'Ek iş geliri',created_at:iso()}];
+ tables.dues=[{...economy.dues[0],paid_at:iso()}];tables.votes=[{poll_id:'poll1',choice:true}];
+}
+if(scenario==='no-job') tables.wallets=[{...economy.wallets[0],job:null}];
+if(scenario==='low-balance') tables.wallets=[{...economy.wallets[0],balance:20}];
 let session: unknown = scenario==='visitor'?null:{user:{id:user}};
 let authChanged: (event: string, value: unknown) => void = () => {};
 const calls: string[] = [];
