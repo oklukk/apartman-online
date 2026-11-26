@@ -19,6 +19,7 @@ with sync_playwright() as p:
    page.evaluate('theme=>localStorage.setItem("apartman-theme",theme)',theme);page.reload()
    page.wait_for_function('theme=>document.documentElement.dataset.theme===theme',arg=theme)
   expect(page.locator('main h1')).to_be_focused()
+  expect(page.get_by_text('Yönetim işlemleri yükleniyor…',exact=True)).to_have_count(0)
   if scenario!='staff-editor':
    expect(page.locator('.staff-operations')).to_have_count(1)
    if scenario!='staff-loading':expect(page.get_by_text('Yönetim bilgileri yükleniyor…',exact=True)).to_have_count(0)
@@ -98,9 +99,9 @@ with sync_playwright() as p:
     elif view!='genel':page.locator('.staff-operations' if view in ['oyuncular','ekonomi','secimler','gecmis'] else '.staff-role-content').evaluate('el=>el.scrollIntoView({block:"start"})')
     capture(view,width,theme)
    visit('ekonomi',theme=theme);wallet();no_overflow();capture('confirmation',width,theme);cancel()
-   visit('oyuncular','staff-empty',theme);expect(page.get_by_text('Bu oturum için erişilebilir oyuncu kaydı yok.',exact=True)).to_be_visible();capture('empty',width,theme)
+   visit('oyuncular','staff-empty',theme);empty=page.get_by_text('Bu oturum için erişilebilir oyuncu kaydı yok.',exact=True);expect(empty).to_be_visible();empty.evaluate('el=>el.scrollIntoView({block:"center"})');capture('empty',width,theme)
    visit('roller','staff-editor',theme);capture('limited',width,theme)
-   visit('ekonomi','staff-read-error',theme);expect(page.get_by_text('Bilgiler yüklenemedi:',exact=False)).to_be_visible();capture('error',width,theme)
+   visit('ekonomi','staff-read-error',theme);error=page.get_by_text('Bilgiler yüklenemedi:',exact=False);expect(error).to_be_visible();error.evaluate('el=>el.scrollIntoView({block:"center"})');capture('error',width,theme)
    # Existing E display preferences apply to staff without shrinking controls.
    page.evaluate("localStorage.setItem('apartman-appearance',JSON.stringify({version:1,textSize:'large',density:'compact',reduceMotion:true}))")
    visit('ekonomi',theme=theme);no_overflow();wallet();assert dialog().bounding_box()['width']<=width;cancel()
