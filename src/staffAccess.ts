@@ -28,3 +28,8 @@ export function staffFailure(error:unknown,safeRetry=false):string {
  if (/fetch|network|connection|timeout|bağlantı|ulaşılamadı/i.test(raw)) return 'Sonuç doğrulanamadı. İşlem gerçekleşmiş olabilir; geçmişi kontrol edin.'+(safeRetry?' Aynı bilgilerle yeniden denemek aynı işlem kimliğini kullanır.':' Yeniden göndermeden önce güncel kayıtları inceleyin.');
  return '';
 }
+/** One readable overview error; preserve useful server details without repeating its prefix. */
+export function staffReadError(message:string):string {
+ const detail=message.trim().replace(/^(?:(?:yönetim )?bilgileri? yüklenemedi[:.!]?\s*)+/iu,'').trim();
+ return detail?'Yönetim bilgileri yüklenemedi: '+detail:'Yönetim bilgileri yüklenemedi. Bilgileri yenile düğmesiyle tekrar deneyin.';
+}

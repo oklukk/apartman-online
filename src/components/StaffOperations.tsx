@@ -1,4 +1,4 @@
-import { staffFailure, type StaffView } from '../staffAccess';
+import { staffFailure, staffReadError, type StaffView } from '../staffAccess';
 import { useStaffConfirmation } from './StaffConfirmation';
 import { StaffFeedback } from './StaffFeedback';
 import { useCallback, useEffect, useState, useRef } from "react";
@@ -102,7 +102,7 @@ export function StaffOperations({ identity, view='genel' }: { identity: StaffIde
   useEffect(() => {
     setOverview(empty);setOverviewLoaded(false);
     void refresh().catch((e: unknown) =>
-      setStatus("Bilgiler yüklenemedi: " + errorText(e)),
+      setStatus(staffReadError(errorText(e))),
     );
   }, [refresh]);
 
@@ -169,7 +169,7 @@ export function StaffOperations({ identity, view='genel' }: { identity: StaffIde
       className="staff-operations"
       aria-label="Gelişmiş yönetim işlemleri"
     >
-      <div hidden={view!=='genel'} className="staff-overview-data"><h2>Erişilebilir kayıtlar</h2><p className="footnote">Bu oturum için mevcut API'nin döndürdüğü kapsamdır; oyunun genel toplamı değildir.</p>{loading?<p role="status">Yönetim bilgileri yükleniyor…</p>:!overviewLoaded?<p>Veriler alınamadı. Yeniden yükleyebilirsiniz.</p>:<dl><div><dt>Oyuncu kaydı</dt><dd>{overview.players.length}</dd></div><div><dt>Apartman kaydı</dt><dd>{overview.buildings.length}</dd></div></dl>}<button className="secondary" disabled={busy || loading} onClick={()=>void refresh().catch(e=>setStatus('Bilgiler yüklenemedi: '+errorText(e)))}>Bilgileri yenile</button></div>
+      <div hidden={view!=='genel'} className="staff-overview-data"><h2>Erişilebilir kayıtlar</h2><p className="footnote">Bu oturum için mevcut API'nin döndürdüğü kapsamdır; oyunun genel toplamı değildir.</p>{loading?<p role="status">Yönetim bilgileri yükleniyor…</p>:!overviewLoaded?<p>Veriler alınamadı. Yeniden yükleyebilirsiniz.</p>:<dl><div><dt>Oyuncu kaydı</dt><dd>{overview.players.length}</dd></div><div><dt>Apartman kaydı</dt><dd>{overview.buildings.length}</dd></div></dl>}<button className="secondary" disabled={busy || loading} onClick={()=>void refresh().catch(e=>setStatus(staffReadError(errorText(e))))}>Bilgileri yenile</button></div>
       <div hidden={view!=='oyuncular' && view!=='ekonomi'}>
         <article className="card">
           <div className="eyebrow">GELİŞMİŞ YÖNETİM</div>
@@ -191,7 +191,7 @@ export function StaffOperations({ identity, view='genel' }: { identity: StaffIde
               placeholder="Değişikliğin nedenini yazın"
             />
           </label>
-          <button type="button" className="secondary" disabled={busy || loading} onClick={()=>void refresh().catch(e=>setStatus('Bilgiler yüklenemedi: '+errorText(e)))}>Bilgileri yenile</button>
+          <button type="button" className="secondary" disabled={busy || loading} onClick={()=>void refresh().catch(e=>setStatus(staffReadError(errorText(e))))}>Bilgileri yenile</button>
         </article>
 
         {overviewLoaded && !loading && !overview.players.length && <p className="empty-state">Bu oturum için erişilebilir oyuncu kaydı yok.</p>}

@@ -29,6 +29,12 @@ test('network uncertainty never claims failure or success, and safe retry wordin
  assert.match(staff.staffFailure(new Error('Failed to fetch'),true),/gerçekleşmiş olabilir/);assert.match(staff.staffFailure(new Error('Failed to fetch'),true),/aynı işlem kimliğini/);
  assert.doesNotMatch(staff.staffFailure(new Error('Failed to fetch')),/aynı işlem kimliğini/);assert.equal(staff.staffFailure(new Error('Çok faktörlü doğrulama gerekli.')),'');
 });
+test('overview read error has one explanation, retry guidance and preserves useful server details',()=>{
+ const expected='Yönetim bilgileri yüklenemedi. Bilgileri yenile düğmesiyle tekrar deneyin.';
+ for(const text of ['', 'Bilgiler yüklenemedi.', 'Bilgiler yüklenemedi: Bilgiler yüklenemedi.', 'Yönetim bilgileri yüklenemedi.'])assert.equal(staff.staffReadError(text),expected);
+ assert.equal(staff.staffReadError('Bu işlem için yetkiniz yok.'),'Yönetim bilgileri yüklenemedi: Bu işlem için yetkiniz yok.');
+ assert.equal(staff.staffReadError('Bilgiler yüklenemedi: Bağlantı zaman aşımına uğradı.'),'Yönetim bilgileri yüklenemedi: Bağlantı zaman aşımına uğradı.');
+});
 test('staff module deep links round-trip and do not bypass authenticated membership-independent staff gate',()=>{
  for(const module of staff.staffModules){const route={page:'staff',section:module.key};assert.deepEqual(nav.parseRoute(nav.routeHref(route)),route);assert.equal(new URL(nav.routeHref(route),'https://example.test/apartman-online/').pathname,'/apartman-online/');assert.equal(nav.routeAccess(route,{authenticated:true,resident:false,staff:true}),'allowed');assert.equal(nav.routeAccess(route,{authenticated:true,resident:true,staff:false}),'forbidden');}
  assert.equal(nav.safeProfileBack('#/sistem/ekonomi'),false);assert.deepEqual(nav.parseRoute('#access_token=keep'),{page:'today'});

@@ -101,7 +101,13 @@ with sync_playwright() as p:
    visit('ekonomi',theme=theme);wallet();no_overflow();capture('confirmation',width,theme);cancel()
    visit('oyuncular','staff-empty',theme);empty=page.get_by_text('Bu oturum için erişilebilir oyuncu kaydı yok.',exact=True);expect(empty).to_be_visible();empty.evaluate('el=>el.scrollIntoView({block:"center"})');capture('empty',width,theme)
    visit('roller','staff-editor',theme);capture('limited',width,theme)
-   visit('ekonomi','staff-read-error',theme);error=page.get_by_text('Bilgiler yüklenemedi:',exact=False);expect(error).to_be_visible();error.evaluate('el=>el.scrollIntoView({block:"center"})');capture('error',width,theme)
+   visit('ekonomi','staff-read-error',theme)
+   read_error='Yönetim bilgileri yüklenemedi. Bilgileri yenile düğmesiyle tekrar deneyin.'
+   error=page.get_by_role('alert').filter(has_text=read_error)
+   expect(error).to_have_count(1);expect(error).to_be_visible();expect(error).to_have_text(read_error)
+   page.get_by_role('button',name='Bilgileri yenile',exact=True).click()
+   expect(error).to_have_text(read_error)
+   error.evaluate('el=>el.scrollIntoView({block:"center"})');capture('error',width,theme)
    # Existing E display preferences apply to staff without shrinking controls.
    page.evaluate("localStorage.setItem('apartman-appearance',JSON.stringify({version:1,textSize:'large',density:'compact',reduceMotion:true}))")
    visit('ekonomi',theme=theme);no_overflow();wallet();assert dialog().bounding_box()['width']<=width;cancel()

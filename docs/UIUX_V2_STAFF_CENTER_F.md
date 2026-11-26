@@ -63,7 +63,7 @@ Onaylı krem/petrol/adaçayı paleti, kart tokenları, odak göstergeleri ve mev
 
 | Kontrol | Sonuç |
 | --- | --- |
-| `npm test` | 54 başarılı, 0 başarısız; 47 mevcut + 7 F test grubu |
+| `npm test` | 55 başarılı, 0 başarısız; 47 mevcut + 8 F test grubu |
 | `npm run test:ui` | Başarılı; mevcut SSR ve yeni modal/modül görünürlük kontrolleri |
 | `npm run build` | Başarılı; TypeScript + Vite |
 | `npm run test:sql` | 11 PostgreSQL kontrolü başarılı |
@@ -83,7 +83,7 @@ PostgreSQL testleri yalnız **localhost:55432 disposable** altyapısında çalı
 
 ## Gerçek Chromium görüntüleri
 
-**44 yeni PNG**, yalnız sentetik fixture verisi. 40 normal görüntü 390×844 ve 1440×1000 gerçek viewport'tur; kaydırılmış modüllerde üst başlık/test şeridi viewport dışında kalabilir. Sabit menünün kontrolleri örtebildiği uzun birleştirilmiş sayfa çekimleri kullanılmaz. Ek 4 görüntü gerçek %100/%200 tarayıcı zoom'udur. Eski aşamaların görüntüleri değiştirilmedi.
+**58 PNG**, yalnız sentetik fixture verisi. [İnceleme düzeltmesi ve zoom teşhisi](UIUX_V2_STAFF_CENTER_F_REVIEW.md). 40 normal görüntü 390×844 ve 1440×1000 gerçek viewport'tur; kaydırılmış modüllerde üst başlık/test şeridi viewport dışında kalabilir. Sabit menünün kontrolleri örtebildiği uzun birleştirilmiş sayfa çekimleri kullanılmaz. Ek 18 görüntü gerçek %100/%200 tarayıcı zoom'udur: dört modal başlangıcı, %200'de iki modal düğme görünümü ve altı modülün iki tema görüntüsü. Eski aşamaların görüntüleri değiştirilmedi.
 
 | Görünüm | Mobil açık | Mobil koyu | Masaüstü açık | Masaüstü koyu |
 | --- | --- | --- | --- | --- |
@@ -106,6 +106,7 @@ Tekrar üretim (mevcut bulut ortamında, kullanıcının bilgisayarına kurulum 
 node tools/serve-navigation-fixture.mjs
 # Ayrı terminalde:
 python tools/check-staff-browser.py
+python -m unittest discover -s tests -p test_screenshot_evidence.py
 python tools/check-staff-zoom.py
 python tools/check-navigation-browser.py --player-screens --verify-only
 python tools/check-social-browser.py --verify-only
@@ -123,7 +124,7 @@ Test sunucusu gerçek React uygulamasını ayrı sentetik API adaptörüyle derl
 - `tests/fixtures/navigation/staff.ts`, fixture `api.ts`, iki yeni Chromium aracı: sadece izole test girdileri/kanıtları. E aracına `--verify-only` eklenerek tarihsel görüntülerin değişmeden denetlenmesi sağlandı.
 - Bu rapor ve `docs/design/staff-center/*.png`: yeni F kanıtları.
 
-Production build: ana JS yaklaşık **247.84 kB / gzip 78.59 kB**, lazy personel işlemleri **25.66 kB / gzip 7.89 kB**, toplam CSS **50.39 kB / gzip 10.67 kB**. Bunlar çıktı boyutlarıdır; ağ/CPU hız ölçümü değildir. Yeni runtime bağımlılığı yoktur; mevcut lazy personel modülü korunur. Test adaptörü ve PNG'ler üretim bundle'ına dahil edilmez.
+Production build: ana JS yaklaşık **247.84 kB / gzip 78.59 kB**, lazy personel işlemleri **25.83 kB / gzip 7.97 kB**, toplam CSS **50.39 kB / gzip 10.67 kB**. Bunlar çıktı boyutlarıdır; ağ/CPU hız ölçümü değildir. Yeni runtime bağımlılığı yoktur; mevcut lazy personel modülü korunur. Test adaptörü ve PNG'ler üretim bundle'ına dahil edilmez.
 
 Diff kontrolünde `supabase/`, `src/api.ts`, `StaffMfa.tsx`, ekonomi/oylama bileşenleri, sosyal model, onaylı `public/art/v2`, iş akışları, paket/kilit dosyaları, AGENTS, ana şartname ve A–E görüntüleri değişmemiştir. Mevcut 18 ayrı personel RPC adı korunur; Auth/MFA ve oyun RPC sözleşmeleri değiştirilmez.
 
