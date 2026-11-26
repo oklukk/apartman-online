@@ -47,6 +47,8 @@ Object.assign(window,{
 if(scenario==='empty'){ tables.messages=[]; tables.announcements=[]; tables.activity=[]; tables.polls=[]; tables.elections=[]; }
 if(scenario==='long-chat') tables.messages=Array.from({length:16},(_,i)=>({id:'long'+i,author_id:i%2?user:'neighbor',body:i===4?'UzunMetin'.repeat(50):'Komşuların birbiriyle paylaştığı gündelik bir mesaj. '.repeat(4),created_at:iso(-i*60000)}));
 if(scenario==='blocked') tables.blocks=[{blocked_id:'neighbor'}];
+if(scenario==='blocked-former') tables.blocks=[{blocked_id:'former'}];
+if(scenario==='long-name') tables.profiles=tables.profiles.map((p:any)=>p.id===user?{...p,username:'UzunKomsuAdi_12345678'}:p);
 if(scenario==='complete'){
  const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
  tables.wallet_transactions=[...economy.wallet_transactions,{id:'side',kind:'side_job',period_key:day,amount:25,balance_after:325,description:'Ek iş geliri',created_at:iso()}];
@@ -60,7 +62,10 @@ const calls: string[] = [];
 Object.assign(window,{fixtureCalls:calls});
 const result=(data:unknown)=>Promise.resolve({data,error:null});
 export const supabase = {
-  auth:{getSession:()=>result({session}),onAuthStateChange:(callback:typeof authChanged)=>{authChanged=callback;return {data:{subscription:{unsubscribe(){}}}}},signOut:()=>{session=null;authChanged('SIGNED_OUT',null);return result(null)}},
+  auth:{mfa:{
+    listFactors:()=>{calls.push('fixture.mfa.listFactors');return result({totp:[{id:'fixture-factor',status:'verified'}],all:[{id:'fixture-factor',status:'verified',factor_type:'totp'}]});},
+    challengeAndVerify:()=>{calls.push('fixture.mfa.verify');return result({});},
+  },getSession:()=>result({session}),onAuthStateChange:(callback:typeof authChanged)=>{authChanged=callback;return {data:{subscription:{unsubscribe(){}}}}},signOut:()=>{session=null;authChanged('SIGNED_OUT',null);return result(null)}},
   from:(name:string)=>{
     let mutation: 'insert' | 'delete' | undefined; let payload:any; const filters:Record<string,unknown>={};
     const query:any={select:()=>query,insert:(value:any)=>{mutation='insert';payload=value;return query;},delete:()=>{mutation='delete';return query;},order:()=>query,limit:()=>query,lt:()=>query,or:()=>query,eq:(key:string,value:unknown)=>{filters[key]=value;return query;},

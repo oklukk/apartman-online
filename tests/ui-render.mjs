@@ -199,7 +199,7 @@ try {
   for (const label of ['Bugün','Dairem','Apartman','Komşular','Profilim','Ayarlar','Hesap güvenliği']) assert.ok(shell.includes(label),label);
   assert.ok(!shell.includes('Sistem Yönetim Merkezi'));
   assert.equal((shell.match(/class="navigation-icon"/g)||[]).length,4);
-  assert.equal((shell.match(/aria-hidden="true" focusable="false"/g)||[]).length,4);
+  assert.equal((shell.match(/aria-hidden="true" focusable="false"/g)||[]).length,9);
   assert.ok(renderToStaticMarkup(React.createElement(AppShell,{...shellProps,access:{authenticated:true,resident:false,staff:true}})).includes('Sistem Yönetim Merkezi'));
   const managerNav = renderToStaticMarkup(React.createElement(SectionNav,{route:{page:'building'},manager:true}));
   const residentNav = renderToStaticMarkup(React.createElement(SectionNav,{route:{page:'building'},manager:false}));
@@ -244,6 +244,18 @@ try {
   assert.doesNotMatch(social,/NEVER_SHOW|7654321|staff_roles|MFA/);
   assert.ok(renderToStaticMarkup(React.createElement(Avatar,{userId:'../invalid',name:'Ayşe'})).includes('aria-label="Ayşe avatarı"'));
   assert.ok(renderToStaticMarkup(React.createElement(ResidentFullProfile,{own:false,blocked:false,busy:false,back:'#/komsular/sakinler',onBlock:()=>{}})).includes('Bu profile erişilemiyor'));
+  const { SettingsScreen } = await vite.ssrLoadModule('/src/components/AccountScreens.tsx');
+  const { appearanceDefaults } = await vite.ssrLoadModule('/src/appearance.ts');
+  const settingsProps={theme:'system',onTheme:()=>{},appearance:appearanceDefaults,onAppearance:()=>{},canPersist:true,view:'gorunum',blocked:[],resident:true,loading:false,busy:false,onUnblock:()=>{}};
+  const appearanceMarkup=renderToStaticMarkup(React.createElement(SettingsScreen,settingsProps));
+  for(const text of ['Yazı boyutu','Ekran yoğunluğu','Hareketi azalt','Görünüm tercihlerini sıfırla','Hesap güvenliği']) assert.ok(appearanceMarkup.includes(text));
+  assert.ok(!appearanceMarkup.includes('type="password"') && !appearanceMarkup.includes('avatar_id'));
+  const privacyMarkup=renderToStaticMarkup(React.createElement(SettingsScreen,{...settingsProps,view:'gizlilik',blocked:[{userId:'a',resident:publicInfo},{userId:'former'}]}));
+  assert.ok(privacyMarkup.includes('Bilgisine erişilemeyen komşu') && privacyMarkup.includes('Engeli kaldır'));
+  assert.ok(privacyMarkup.includes('karşılıklı profil erişimini engellemez'));
+  assert.doesNotMatch(privacyMarkup,/NEVER_SHOW|7654321/);
+  assert.ok(renderToStaticMarkup(React.createElement(SettingsScreen,{...settingsProps,canPersist:false})).includes('Tarayıcı saklamaya izin vermiyor'));
+  assert.ok(renderToStaticMarkup(React.createElement(SettingsScreen,{...settingsProps,view:'gizlilik',loading:true})).includes('Komşu bilgileri yükleniyor'));
   console.log(
     "PASS static React: wallet/job/dues/payment states, election permissions, poll voting, native disclosures, account security, semantic financial summary and audit labels. Browser/mobile/Realtime NOT tested.",
   );

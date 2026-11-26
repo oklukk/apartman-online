@@ -31,6 +31,9 @@ import { Avatar } from './components/Avatar';
 import { ResidentDirectory } from './components/BuildingWorld';
 import { ResidentFullProfile, ResidentQuickProfile } from './components/ResidentProfiles';
 import './styles/social-world.css';
+import './styles/account-settings.css';
+import { useAppearance } from './useAppearance';
+import { AccountLayout } from './components/AccountLayout';
 export function App() {
   const [session, setSession] = useState<Session | null>(null);
   const quick = useQuickProfile(session?.user.id);
@@ -47,9 +50,7 @@ export function App() {
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [live, setLive] = useState("Bağlanıyor");
-  const [theme, setTheme] = useState(
-    () => localStorage.getItem("apartman-theme") || "system",
-  );
+  const {theme,setTheme,appearance,setAppearance,canPersist} = useAppearance();
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [older, setOlder] = useState<Message[]>([]);
   const [hasOlder, setHasOlder] = useState(true);
@@ -113,10 +114,6 @@ export function App() {
       if (activeUser.current === session.user.id) setNotice(errorText(e));
     }
   }, [session?.user.id]);
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    localStorage.setItem("apartman-theme", theme);
-  }, [theme]);
   useEffect(() => {
     if (!client) {
       setStarting(false);
@@ -286,8 +283,8 @@ export function App() {
     void act(() => client!.rpc(rpc, args), success);
   };
   const toggleResidentBlock = (id: string) => {
-    if (!session || id === session.user.id || !residents.some(r => r.userId === id)) return;
     const blocked = data?.blocks.some(b => b.blocked_id === id);
+    if (!session || id === session.user.id || (!blocked && !residents.some(r => r.userId === id))) return;
     setOlder([]);
     void act(() => blocked
       ? client!.from("blocks").delete().eq("user_id",session.user.id).eq("blocked_id",id)
@@ -450,17 +447,14 @@ export function App() {
         ) : tab === "Profilim" ? (
           <MyProfile name={myProfile?.username || 'Hesabım'} userId={session.user.id} resident={residents.find(r => r.userId === session.user.id)} />
         ) : tab === "Ayarlar" ? (
-          <SettingsScreen theme={theme} onTheme={setTheme} />
+          <SettingsScreen theme={theme} onTheme={setTheme} appearance={appearance} onAppearance={setAppearance} canPersist={canPersist} view={section==='gizlilik'?'gizlilik':'gorunum'} blocked={(data?.blocks || []).map(b=>({userId:b.blocked_id,resident:residents.find(r=>r.userId===b.blocked_id)}))} resident={!!me} loading={!data} busy={busy} onUnblock={toggleResidentBlock}/>
         ) : route.page === 'security' ? (
-          <section className="staff-panel">
-            <div className="eyebrow">HESAP GÜVENLİĞİ</div>
-            <h1>Hesap güvenliği</h1>
-            <p className="subtle">
-              İki aşamalı doğrulama her kullanıcı tarafından kurulabilir.
-              Doğrulamayı etkinleştirmek yönetim yetkisi vermez.
-            </p>
-            <StaffMfa />
-          </section>
+          <AccountLayout view="security" title="Hesap güvenliği" intro="Hesabını koru; doğrulama işlemlerine güvenli bir yerden ulaş.">
+            <div className="settings-columns"><div className="security-content">
+              <p className="subtle">İki aşamalı doğrulama her kullanıcı tarafından kurulabilir. Doğrulamayı etkinleştirmek yönetim yetkisi vermez.</p>
+              <StaffMfa />
+            </div><aside className="card settings-note"><h2>Kurulum ve doğrulama</h2><p>Mevcut kurulumun, işlemi başlattığında kontrol edilir. Bu ekran tek başına doğrulamanın açık veya kapalı olduğunu göstermez.</p><p>Doğrulama uygulamasının oluşturduğu kodları ve kurulum QR kodunu başkalarıyla paylaşma.</p><a className="route-link" href={routeHref({page:'profile'})}>Profilime dön</a></aside></div>
+          </AccountLayout>
         ) : route.page === 'staff' && staff.roles.length > 0 ? (
           <StaffPanel identity={staff} />
         ) : allowed === 'forbidden' ? (

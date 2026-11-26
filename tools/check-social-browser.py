@@ -1,7 +1,10 @@
 """D-stage real Chromium QA against the existing offline, synthetic API fixture only."""
 from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
-import json
+import json,argparse
+parser=argparse.ArgumentParser()
+parser.add_argument('--verify-only',action='store_true')
+args=parser.parse_args()
 root=Path(__file__).resolve().parents[1]
 origin='http://127.0.0.1:5178'
 base=origin+'/apartman-online/'
@@ -30,7 +33,7 @@ with sync_playwright() as p:
  def no_overflow():assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),page.url
  def target(n):return page.locator('#daire-'+str(n).zfill(2))
  def screenshot(name,width,theme,full=False):
-  if width in [390,1440]:page.screenshot(path=str(out/f'{name}-{theme}-{width}.png'),full_page=full)
+  if width in [390,1440] and not args.verify_only:page.screenshot(path=str(out/f'{name}-{theme}-{width}.png'),full_page=full)
  # Geometry is measured from the rendered image, including inside the horizontal viewport.
  for width in [320,390,768,1440]:
   page.set_viewport_size({'width':width,'height':844 if width<900 else 1000})
@@ -158,4 +161,4 @@ with sync_playwright() as p:
  assert not errors,errors
  assert not remote,remote
  browser.close()
-print('PASS D Chromium: 12 aligned 44px+ targets and entrance, occupancy/own/manager+expiry, keyboard alternatives; 16-portrait integration/fallback; modal/back/Escape/outside/focus/inert; private/foreign/deleted profiles; block/unblock; chat draft+scroll; Pages links/reload/back/forward; 320/390/768/1440 light/dark, 32 screenshots, no overflow/errors/external traffic. Synthetic data only; hosted Auth/MFA/Realtime not tested.')
+print('PASS D Chromium: 12 aligned 44px+ targets and entrance, occupancy/own/manager+expiry, keyboard alternatives; 16-portrait integration/fallback; modal/back/Escape/outside/focus/inert; private/foreign/deleted profiles; block/unblock; chat draft+scroll; Pages links/reload/back/forward; 320/390/768/1440 light/dark, 32 screenshots, no overflow/errors/external traffic. Synthetic data only; hosted Auth/MFA/Realtime not tested.'.replace('32 screenshots', 'historical screenshots unchanged (verify-only)' if args.verify_only else '32 screenshots'))
