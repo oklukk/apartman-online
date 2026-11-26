@@ -32,8 +32,10 @@ test("sensitive server operations check privilege and record audit", () => {
   assert.ok(sql.includes("Çok faktörlü doğrulama gerekli."));
 });
 test("staff UI uses RPC and is gated by server role discovery", () => {
-  assert.ok(app.includes("staff.roles.length > 0"));
-  assert.ok(app.includes("<StaffPanel identity={staff} />"));
+  assert.ok(app.includes("currentStaff.roles.length > 0"));
+  assert.ok(app.includes("identity={currentStaff}"));
+  assert.ok(app.includes("staffSubject.current === session?.user.id"));
+  assert.ok(app.includes("key={session.user.id+staffIdentityKey(currentStaff)}"));
   for (const rpc of [
     "staff_me",
     "staff_grant",
@@ -58,5 +60,5 @@ test("account security permits MFA onboarding before staff bootstrap", () => {
   assert.ok(app.includes('<StaffMfa />'));
   assert.ok(app.includes('Hesap güvenliği'));
   assert.ok(app.includes('Doğrulamayı etkinleştirmek yönetim yetkisi vermez.'));
-  assert.ok(app.includes("route.page === 'staff' && staff.roles.length > 0"));
+  assert.ok(app.includes("route.page === 'staff' && currentStaff.roles.length > 0"));
 });

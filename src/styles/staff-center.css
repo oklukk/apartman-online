@@ -1,0 +1,61 @@
+/* F: staff workspace only; approved art, player screens and server rules stay intact. */
+.staff-shell main { max-width:1500px; }
+.staff-shell .staff-panel { max-width:1140px; margin:24px auto; }
+.staff-shell .staff-panel > .page-heading { margin:0 0 24px; align-items:start; }
+.staff-shell .page-heading .subtle { max-width:62ch; }
+.staff-world-return { margin-top:28px; justify-content:center; }
+.staff-module-nav { display:flex; flex-wrap:wrap; gap:8px; padding:0 0 20px; margin-bottom:24px; border-bottom:1px solid var(--line); }
+.staff-module-nav a { display:inline-flex; align-items:center; padding:12px 16px; min-height:48px; border:1px solid var(--control-line); background:var(--panel); border-radius:12px; font-size:.9375rem; font-weight:600; }
+.staff-center .card { border-radius:var(--art-radius-card); margin:0 0 20px; padding:24px; }
+.staff-center .role-overview { border-top:4px solid var(--art-sage); }
+.staff-center .role-overview p { white-space:normal; overflow-wrap:anywhere; }
+.staff-center .staff-security-link { display:flex; gap:16px; align-items:center; flex-wrap:wrap; margin:20px 0; }
+.staff-center .staff-security-link p { flex:1 1 240px; margin:0; }
+.staff-center .staff-task { border:1px solid var(--line); }
+.staff-task > summary { font-weight:700; font-size:1.1rem; padding:10px 0; min-height:44px; }
+.staff-task > div { margin-top:20px; }
+.staff-task > .security-card { margin-top:18px; padding:0; border:0; }
+.staff-center :is(input,select,textarea) { min-width:0; max-width:100%; }
+.staff-center label { font-size:.9375rem; }
+.staff-center button { min-height:44px; }
+.staff-center .staff-permissions { gap:12px; }
+.staff-center .staff-check { min-height:44px; }
+.staff-overview-data { padding:24px; background:var(--panel); border:1px solid var(--line); border-radius:24px; margin:20px 0; }
+.staff-overview-data dl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.staff-overview-data dl > div { background:var(--soft); padding:16px; border-radius:14px; }
+.staff-overview-data dt { color:var(--muted); font-size:.875rem; }
+.staff-overview-data dd { font-size:1.75rem; font-weight:700; margin:0; }
+.staff-feedback { padding:16px; background:var(--soft); color:var(--ink); border:1px solid var(--line); border-radius:12px; overflow-wrap:anywhere; }
+.staff-feedback.staff-error { border-color:var(--danger); background:var(--danger-soft); color:var(--danger); }
+.staff-center .staff-operations > .staff-feedback { margin:16px 0; }
+.staff-center .staff-history > section { padding:20px 0; }
+.staff-center .staff-json { font-size:.8125rem; overflow:auto; white-space:pre-wrap; word-break:break-word; }
+.staff-center .staff-operations > div > .card > form { border-top:1px solid var(--line); padding-top:20px; margin-top:20px; }
+.staff-review { position:fixed; inset:0; width:min(620px,calc(100% - 24px)); max-width:calc(100% - 24px); max-height:calc(100dvh - 24px); margin:auto; padding:28px; border:2px solid var(--warning); border-radius:24px; background:var(--panel); color:var(--ink); overflow:auto; font:inherit; }
+.staff-review::backdrop { background:#102b2880; }
+.staff-review h2 { font-size:1.4rem; margin:10px 0 18px; }
+.staff-review dl { margin:20px 0; }
+.staff-review dl > div { padding:12px 0; border-top:1px solid var(--line); }
+.staff-review dt { color:var(--muted); font-size:.875rem; }
+.staff-review dd { margin:4px 0; font-weight:600; overflow-wrap:anywhere; white-space:pre-wrap; }
+.staff-review-actions { display:flex; gap:12px; justify-content:flex-end; flex-wrap:wrap; }
+.staff-review button { min-height:44px; }
+.staff-review [role="status"] { padding:12px; border:1px solid var(--warning); border-radius:12px; }
+:root[data-density="compact"] .staff-center .card, :root[data-density="compact"] .staff-overview-data { padding:18px; margin-bottom:14px; }
+:root[data-density="compact"] .staff-module-nav { gap:6px; margin-bottom:16px; }
+:root[data-density="compact"] .staff-center .staff-assignment { padding:12px 0; }
+@media(max-width:900px) {
+ .navigation-v2.staff-shell { padding-bottom:24px; }
+ .staff-shell .sidebar { flex-wrap:wrap; }
+ .staff-shell .staff-world-return { margin:0 0 0 auto; padding:8px 10px; font-size:.875rem; }
+ .staff-shell .staff-panel { margin:18px 0; }
+ .staff-module-nav { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+ .staff-module-nav a { padding:10px 12px; font-size:.875rem; overflow-wrap:anywhere; }
+ .staff-center .card { padding:18px; }
+ .staff-center .staff-operations :is(button,select,input,textarea) { max-width:100%; }
+ .staff-review { padding:20px; border-radius:20px; }
+ .staff-review-actions { flex-direction:column; }
+ .staff-review-actions button { width:100%; }
+ .staff-center :is(input,select,button,a) { scroll-margin-block:20px; }
+}
+.staff-review h2:focus-visible { outline:none; text-decoration:underline; text-decoration-color:var(--gold); text-underline-offset:.2em; }

@@ -36,18 +36,19 @@ export function AppShell({ route, access, name, userId, building, live, busy, th
     document.addEventListener('pointerdown', dismissOutside, true);
     return () => document.removeEventListener('pointerdown', dismissOutside, true);
   }, []);
-  return <div className={'shell art-v2 navigation-v2'+((access.resident && mainPages.some(p=>p.page===route.page)) || (access.authenticated && ['profile','settings','security'].includes(route.page)) ? ' player-shell' : '')}>
+  return <div className={'shell art-v2 navigation-v2'+((access.resident && mainPages.some(p=>p.page===route.page)) || (access.authenticated && ['profile','settings','security'].includes(route.page)) || (route.page==='staff' && access.staff) ? ' player-shell' : '')+(route.page==='staff' && access.staff?' staff-shell':'')}>
     <a className="skip-link" href="#main-content" onClick={e => { e.preventDefault(); document.getElementById('main-content')?.focus(); }}>İçeriğe geç</a>
     <aside className="sidebar">
       <a href={routeHref({ page: 'today' })} className="brand"><img src={import.meta.env.BASE_URL+'art/v2/logo-mark.svg'} width="40" height="44" alt="" /><span>APARTMAN<small>Birlikte yaşanan bir dünya.</small></span></a>
-      <div className="building-label">{building}</div>
-      {access.resident && <nav className="primary-nav" aria-label="Ana bölümler">
+      <div className="building-label">{route.page==='staff' && access.staff?'Personel çalışma alanı':building}</div>
+      {access.resident && !(route.page==='staff' && access.staff) && <nav className="primary-nav" aria-label="Ana bölümler">
         {mainPages.map(p => <a key={p.page} href={routeHref({ page: p.page })} aria-current={route.page === p.page ? 'page' : undefined}><NavigationIcon page={p.page} /><span>{p.label}</span></a>)}
       </nav>}
-      <div className="sidebar-bottom">{live}<small>Gelişmeler düzenli olarak yenilenir.</small></div>
+      {route.page==='staff' && access.staff && <a className="route-link staff-world-return" href={routeHref({page:'today'})}>← Oyuna dön</a>}
+      <div className="sidebar-bottom">{route.page==='staff' && access.staff?'Sunucu denetimli işlemler':live}<small>{route.page==='staff' && access.staff?'Her işlem yetki ve kapsam kontrolünden geçer.':'Gelişmeler düzenli olarak yenilenir.'}</small></div>
     </aside>
     <main id="main-content" tabIndex={-1}>
-      <header className="topbar"><span>{building}<span className="subtle"> / {access.authenticated ? routeLabel(route) : 'Hoş geldiniz'}</span></span>
+      <header className="topbar"><span>{route.page==='staff' && access.staff?'APARTMAN':building}<span className="subtle"> / {access.authenticated ? routeLabel(route) : 'Hoş geldiniz'}</span></span>
         {access.authenticated ? <details className="account-menu" ref={menu} onKeyDown={e => {
           if (e.key === 'Escape') { close(); menu.current?.querySelector('summary')?.focus(); }
         }}><summary><Avatar userId={userId} name={name} size={36}/><span className="account-name">{name}</span><AccountIcon name="chevron"/></summary>

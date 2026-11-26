@@ -1,0 +1,925 @@
+{
+  "chromium": "156.0.8078.79",
+  "playwright": "1.62.0",
+  "capture": "CDP Page.captureScreenshot fromSurface=true captureBeyondViewport=false without clip",
+  "measurements": [
+    {
+      "factor": 1,
+      "theme": "light",
+      "width": 1440,
+      "height": 913,
+      "outer": 1440,
+      "dpr": 1,
+      "scale": 1
+    },
+    {
+      "factor": 1,
+      "theme": "dark",
+      "width": 1440,
+      "height": 913,
+      "outer": 1440,
+      "dpr": 1,
+      "scale": 1
+    },
+    {
+      "factor": 2,
+      "theme": "light",
+      "width": 720,
+      "height": 456,
+      "outer": 1440,
+      "dpr": 2,
+      "scale": 1
+    },
+    {
+      "factor": 2,
+      "theme": "dark",
+      "width": 720,
+      "height": 456,
+      "outer": 1440,
+      "dpr": 2,
+      "scale": 1
+    }
+  ],
+  "legacy_capture_diagnosis": [
+    {
+      "theme": "light",
+      "playwright_capture": "viewport: blank or insufficient rendered content (1 colors, non-dominant fraction 0.0000)"
+    },
+    {
+      "theme": "dark",
+      "playwright_capture": "viewport: blank or insufficient rendered content (1 colors, non-dominant fraction 0.0000)"
+    }
+  ],
+  "evidence": [
+    {
+      "name": "zoom-100-light-genel",
+      "zoom": 1,
+      "theme": "light",
+      "target": "Yetkilerim",
+      "metrics": {
+        "width": 1440,
+        "height": 913,
+        "outer": 1440,
+        "dpr": 1,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 1773,
+        "non_dominant_fraction": 0.4636
+      },
+      "regions": {
+        "visible target": {
+          "colors": 176,
+          "non_dominant_fraction": 0.0268
+        }
+      },
+      "sha256": "be23b2cc0979343f6efa9011dfe4af7f6e04b7aec51ce2e28f4bfeb3facc207b",
+      "saved": false
+    },
+    {
+      "name": "zoom-100-light-oyuncular",
+      "zoom": 1,
+      "theme": "light",
+      "target": "Oyuncu işlemleri",
+      "metrics": {
+        "width": 1440,
+        "height": 913,
+        "outer": 1440,
+        "dpr": 1,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 742,
+        "non_dominant_fraction": 0.1524
+      },
+      "regions": {
+        "visible target": {
+          "colors": 204,
+          "non_dominant_fraction": 0.0402
+        }
+      },
+      "sha256": "1867181224903148c35be7d9e73771152cc203438e46faaa24c89b966f3ccc4b",
+      "saved": false
+    },
+    {
+      "name": "zoom-100-light-ekonomi",
+      "zoom": 1,
+      "theme": "light",
+      "target": "Kişisel cüzdan",
+      "metrics": {
+        "width": 1440,
+        "height": 913,
+        "outer": 1440,
+        "dpr": 1,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 956,
+        "non_dominant_fraction": 0.2486
+      },
+      "regions": {
+        "visible target": {
+          "colors": 200,
+          "non_dominant_fraction": 0.0343
+        }
+      },
+      "sha256": "a1be055e29ec9bd6249398b547a196750a2859edaa2695a21f7562e9e1c7b819",
+      "saved": false
+    },
+    {
+      "name": "zoom-100-light",
+      "zoom": 1,
+      "theme": "light",
+      "target": "Değişikliği onayla",
+      "metrics": {
+        "width": 1440,
+        "height": 913,
+        "outer": 1440,
+        "dpr": 1,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 1560,
+        "non_dominant_fraction": 0.4638
+      },
+      "regions": {
+        "visible target": {
+          "colors": 225,
+          "non_dominant_fraction": 0.0997
+        }
+      },
+      "sha256": "86d34742a228db3df55aa9eed1a5650c69b7b47564a3bc80621acba78c00e9d8",
+      "saved": true
+    },
+    {
+      "name": "zoom-100-light-secimler",
+      "zoom": 1,
+      "theme": "light",
+      "target": "Seçimler, görevler ve ortak kararlar",
+      "metrics": {
+        "width": 1440,
+        "height": 913,
+        "outer": 1440,
+        "dpr": 1,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 1322,
+        "non_dominant_fraction": 0.2299
+      },
+      "regions": {
+        "visible target": {
+          "colors": 243,
+          "non_dominant_fraction": 0.077
+        }
+      },
+      "sha256": "e91e74056af53f4b277a052995324ae69a89f789cfd544f40d94d6d7edccb4c6",
+      "saved": false
+    },
+    {
+      "name": "zoom-100-light-roller",
+      "zoom": 1,
+      "theme": "light",
+      "target": "Rol kataloğu",
+      "metrics": {
+        "width": 1440,
+        "height": 913,
+        "outer": 1440,
+        "dpr": 1,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 704,
+        "non_dominant_fraction": 0.192
+      },
+      "regions": {
+        "visible target": {
+          "colors": 194,
+          "non_dominant_fraction": 0.0348
+        }
+      },
+      "sha256": "244b022097431d448e2b942cb010226989686cdbeb615bd1238b9d2ebbffeb2c",
+      "saved": false
+    },
+    {
+      "name": "zoom-100-light-gecmis",
+      "zoom": 1,
+      "theme": "light",
+      "target": "İşlem geçmişi ve telafi",
+      "metrics": {
+        "width": 1440,
+        "height": 913,
+        "outer": 1440,
+        "dpr": 1,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 896,
+        "non_dominant_fraction": 0.2017
+      },
+      "regions": {
+        "visible target": {
+          "colors": 232,
+          "non_dominant_fraction": 0.0572
+        }
+      },
+      "sha256": "202836249c070ffa08acc675998af695efab4d3249db15d1f1a84f151d7ecf91",
+      "saved": false
+    },
+    {
+      "name": "zoom-100-dark-genel",
+      "zoom": 1,
+      "theme": "dark",
+      "target": "Yetkilerim",
+      "metrics": {
+        "width": 1440,
+        "height": 913,
+        "outer": 1440,
+        "dpr": 1,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 1721,
+        "non_dominant_fraction": 0.4636
+      },
+      "regions": {
+        "visible target": {
+          "colors": 171,
+          "non_dominant_fraction": 0.0268
+        }
+      },
+      "sha256": "7be20f2e8261e86182ecf9882db1c5d416cce19c15fd61163495afd4d6df24be",
+      "saved": false
+    },
+    {
+      "name": "zoom-100-dark-oyuncular",
+      "zoom": 1,
+      "theme": "dark",
+      "target": "Oyuncu işlemleri",
+      "metrics": {
+        "width": 1440,
+        "height": 913,
+        "outer": 1440,
+        "dpr": 1,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 737,
+        "non_dominant_fraction": 0.1523
+      },
+      "regions": {
+        "visible target": {
+          "colors": 196,
+          "non_dominant_fraction": 0.0402
+        }
+      },
+      "sha256": "c20a71c368b06f313c0b8aff1dceed54ba5b5f6e883c4860fb1357ab6ecdc938",
+      "saved": false
+    },
+    {
+      "name": "zoom-100-dark-ekonomi",
+      "zoom": 1,
+      "theme": "dark",
+      "target": "Kişisel cüzdan",
+      "metrics": {
+        "width": 1440,
+        "height": 913,
+        "outer": 1440,
+        "dpr": 1,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 936,
+        "non_dominant_fraction": 0.2485
+      },
+      "regions": {
+        "visible target": {
+          "colors": 194,
+          "non_dominant_fraction": 0.0343
+        }
+      },
+      "sha256": "f7b73be371766520c85865e681dfa1af76a7b5c9dcc160290012cc78a628d1de",
+      "saved": false
+    },
+    {
+      "name": "zoom-100-dark",
+      "zoom": 1,
+      "theme": "dark",
+      "target": "Değişikliği onayla",
+      "metrics": {
+        "width": 1440,
+        "height": 913,
+        "outer": 1440,
+        "dpr": 1,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 1471,
+        "non_dominant_fraction": 0.4638
+      },
+      "regions": {
+        "visible target": {
+          "colors": 216,
+          "non_dominant_fraction": 0.0997
+        }
+      },
+      "sha256": "f68b554e50f5193fbac2b6f7185d97ae810b794cb8fd5cf661b7fa0ffe37eb54",
+      "saved": true
+    },
+    {
+      "name": "zoom-100-dark-secimler",
+      "zoom": 1,
+      "theme": "dark",
+      "target": "Seçimler, görevler ve ortak kararlar",
+      "metrics": {
+        "width": 1440,
+        "height": 913,
+        "outer": 1440,
+        "dpr": 1,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 1312,
+        "non_dominant_fraction": 0.2298
+      },
+      "regions": {
+        "visible target": {
+          "colors": 230,
+          "non_dominant_fraction": 0.077
+        }
+      },
+      "sha256": "581f15fea98037644cbf951df1577510eca71a135cf52cfc4469e4636803d4e6",
+      "saved": false
+    },
+    {
+      "name": "zoom-100-dark-roller",
+      "zoom": 1,
+      "theme": "dark",
+      "target": "Rol kataloğu",
+      "metrics": {
+        "width": 1440,
+        "height": 913,
+        "outer": 1440,
+        "dpr": 1,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 706,
+        "non_dominant_fraction": 0.192
+      },
+      "regions": {
+        "visible target": {
+          "colors": 184,
+          "non_dominant_fraction": 0.0348
+        }
+      },
+      "sha256": "92120b0452e14f294325251635ddde0371dea37b642aa9857d8b094d3d25d8c4",
+      "saved": false
+    },
+    {
+      "name": "zoom-100-dark-gecmis",
+      "zoom": 1,
+      "theme": "dark",
+      "target": "İşlem geçmişi ve telafi",
+      "metrics": {
+        "width": 1440,
+        "height": 913,
+        "outer": 1440,
+        "dpr": 1,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 879,
+        "non_dominant_fraction": 0.2017
+      },
+      "regions": {
+        "visible target": {
+          "colors": 223,
+          "non_dominant_fraction": 0.0572
+        }
+      },
+      "sha256": "c4f6885a054e948ce47955bed63493164a6ac54a61e26f18df4360be543ccaf2",
+      "saved": false
+    },
+    {
+      "name": "zoom-200-light-genel",
+      "zoom": 2,
+      "theme": "light",
+      "target": "Yetkilerim",
+      "metrics": {
+        "width": 720,
+        "height": 456,
+        "outer": 1440,
+        "dpr": 2,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 1252,
+        "non_dominant_fraction": 0.3938
+      },
+      "regions": {
+        "visible target": {
+          "colors": 216,
+          "non_dominant_fraction": 0.0341
+        }
+      },
+      "sha256": "ba64198a7c342ea60add536d7b616a6dfcad918b307807dc76c1a194edd18976",
+      "saved": true
+    },
+    {
+      "name": "zoom-200-light-oyuncular",
+      "zoom": 2,
+      "theme": "light",
+      "target": "Oyuncu işlemleri",
+      "metrics": {
+        "width": 720,
+        "height": 456,
+        "outer": 1440,
+        "dpr": 2,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 766,
+        "non_dominant_fraction": 0.1353
+      },
+      "regions": {
+        "visible target": {
+          "colors": 242,
+          "non_dominant_fraction": 0.0531
+        }
+      },
+      "sha256": "590cb3145d4019d442b703705b3ff8844e524ab6b936ec6b7645b482a14baabd",
+      "saved": true
+    },
+    {
+      "name": "zoom-200-light-ekonomi",
+      "zoom": 2,
+      "theme": "light",
+      "target": "Kişisel cüzdan",
+      "metrics": {
+        "width": 720,
+        "height": 456,
+        "outer": 1440,
+        "dpr": 2,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 703,
+        "non_dominant_fraction": 0.1758
+      },
+      "regions": {
+        "visible target": {
+          "colors": 242,
+          "non_dominant_fraction": 0.046
+        }
+      },
+      "sha256": "577e332a680024730f140f301598484fe133af7cb66689c26d89d40605e921b5",
+      "saved": true
+    },
+    {
+      "name": "zoom-200-light",
+      "zoom": 2,
+      "theme": "light",
+      "target": "Değişikliği onayla",
+      "metrics": {
+        "width": 720,
+        "height": 456,
+        "outer": 1440,
+        "dpr": 2,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 1224,
+        "non_dominant_fraction": 0.2246
+      },
+      "regions": {
+        "visible target": {
+          "colors": 249,
+          "non_dominant_fraction": 0.0841
+        }
+      },
+      "sha256": "d00f4f8a654ae06b00d1c74d193b20e27ab2b6e5feb66319fa67ae5744d51564",
+      "saved": true
+    },
+    {
+      "name": "zoom-200-light-actions",
+      "zoom": 2,
+      "theme": "light",
+      "target": "Onayla ve uygula",
+      "metrics": {
+        "width": 720,
+        "height": 456,
+        "outer": 1440,
+        "dpr": 2,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 1589,
+        "non_dominant_fraction": 0.304
+      },
+      "regions": {
+        "visible target": {
+          "colors": 288,
+          "non_dominant_fraction": 0.0452
+        }
+      },
+      "sha256": "5c836dd18b711331f1d2203c5a38475d6473e593edfaf8422c3f87343fd5fc96",
+      "saved": true
+    },
+    {
+      "name": "zoom-200-light-secimler",
+      "zoom": 2,
+      "theme": "light",
+      "target": "Seçimler, görevler ve ortak kararlar",
+      "metrics": {
+        "width": 720,
+        "height": 456,
+        "outer": 1440,
+        "dpr": 2,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 788,
+        "non_dominant_fraction": 0.1144
+      },
+      "regions": {
+        "visible target": {
+          "colors": 251,
+          "non_dominant_fraction": 0.108
+        }
+      },
+      "sha256": "95188bf814cff332289fe9818882298513a63900edceef68ff122658ed394a45",
+      "saved": true
+    },
+    {
+      "name": "zoom-200-light-roller",
+      "zoom": 2,
+      "theme": "light",
+      "target": "Rol kataloğu",
+      "metrics": {
+        "width": 720,
+        "height": 456,
+        "outer": 1440,
+        "dpr": 2,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 442,
+        "non_dominant_fraction": 0.167
+      },
+      "regions": {
+        "visible target": {
+          "colors": 237,
+          "non_dominant_fraction": 0.0431
+        }
+      },
+      "sha256": "fe9fc112022d077689140a1d2f0420368295f954e14f763ba88be6a75de4615c",
+      "saved": true
+    },
+    {
+      "name": "zoom-200-light-gecmis",
+      "zoom": 2,
+      "theme": "light",
+      "target": "İşlem geçmişi ve telafi",
+      "metrics": {
+        "width": 720,
+        "height": 456,
+        "outer": 1440,
+        "dpr": 2,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 598,
+        "non_dominant_fraction": 0.1089
+      },
+      "regions": {
+        "visible target": {
+          "colors": 252,
+          "non_dominant_fraction": 0.0732
+        }
+      },
+      "sha256": "b9e2b6da4dee7c5205b810c6839953808826cddc826c8ec354202c3135eeedde",
+      "saved": true
+    },
+    {
+      "name": "zoom-200-dark-genel",
+      "zoom": 2,
+      "theme": "dark",
+      "target": "Yetkilerim",
+      "metrics": {
+        "width": 720,
+        "height": 456,
+        "outer": 1440,
+        "dpr": 2,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 1243,
+        "non_dominant_fraction": 0.3938
+      },
+      "regions": {
+        "visible target": {
+          "colors": 206,
+          "non_dominant_fraction": 0.0341
+        }
+      },
+      "sha256": "1f255ac5c04bf65d2468ab951864834bb5142456ac55a5f16071c8af85dd97b6",
+      "saved": true
+    },
+    {
+      "name": "zoom-200-dark-oyuncular",
+      "zoom": 2,
+      "theme": "dark",
+      "target": "Oyuncu işlemleri",
+      "metrics": {
+        "width": 720,
+        "height": 456,
+        "outer": 1440,
+        "dpr": 2,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 792,
+        "non_dominant_fraction": 0.1352
+      },
+      "regions": {
+        "visible target": {
+          "colors": 229,
+          "non_dominant_fraction": 0.0531
+        }
+      },
+      "sha256": "52a31fc16811d431d3135fb5d26268fb7d53c7000bada1ce7567d60d7bf593c8",
+      "saved": true
+    },
+    {
+      "name": "zoom-200-dark-ekonomi",
+      "zoom": 2,
+      "theme": "dark",
+      "target": "Kişisel cüzdan",
+      "metrics": {
+        "width": 720,
+        "height": 456,
+        "outer": 1440,
+        "dpr": 2,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 728,
+        "non_dominant_fraction": 0.1758
+      },
+      "regions": {
+        "visible target": {
+          "colors": 230,
+          "non_dominant_fraction": 0.046
+        }
+      },
+      "sha256": "c21edf763aba9a2c46c12ee7239712a9e6a83142dfcd6af29ea05d23ece59abd",
+      "saved": true
+    },
+    {
+      "name": "zoom-200-dark",
+      "zoom": 2,
+      "theme": "dark",
+      "target": "Değişikliği onayla",
+      "metrics": {
+        "width": 720,
+        "height": 456,
+        "outer": 1440,
+        "dpr": 2,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 1144,
+        "non_dominant_fraction": 0.2246
+      },
+      "regions": {
+        "visible target": {
+          "colors": 235,
+          "non_dominant_fraction": 0.0841
+        }
+      },
+      "sha256": "217fc1badb5f9c0d75c77e9885c592950454e85c3764d2894efe70e80cd9cbc7",
+      "saved": true
+    },
+    {
+      "name": "zoom-200-dark-actions",
+      "zoom": 2,
+      "theme": "dark",
+      "target": "Onayla ve uygula",
+      "metrics": {
+        "width": 720,
+        "height": 456,
+        "outer": 1440,
+        "dpr": 2,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 1508,
+        "non_dominant_fraction": 0.3039
+      },
+      "regions": {
+        "visible target": {
+          "colors": 296,
+          "non_dominant_fraction": 0.0452
+        }
+      },
+      "sha256": "ec9d80efce4f7beb321a6e84f151e40d3368482173c6e614225264b07ae640eb",
+      "saved": true
+    },
+    {
+      "name": "zoom-200-dark-secimler",
+      "zoom": 2,
+      "theme": "dark",
+      "target": "Seçimler, görevler ve ortak kararlar",
+      "metrics": {
+        "width": 720,
+        "height": 456,
+        "outer": 1440,
+        "dpr": 2,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 808,
+        "non_dominant_fraction": 0.1143
+      },
+      "regions": {
+        "visible target": {
+          "colors": 238,
+          "non_dominant_fraction": 0.108
+        }
+      },
+      "sha256": "89e5c9f29b65596ed994678b3fda4c8ba82d5bfa6cc174d000438fe0ffadc692",
+      "saved": true
+    },
+    {
+      "name": "zoom-200-dark-roller",
+      "zoom": 2,
+      "theme": "dark",
+      "target": "Rol kataloğu",
+      "metrics": {
+        "width": 720,
+        "height": 456,
+        "outer": 1440,
+        "dpr": 2,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 467,
+        "non_dominant_fraction": 0.167
+      },
+      "regions": {
+        "visible target": {
+          "colors": 225,
+          "non_dominant_fraction": 0.0431
+        }
+      },
+      "sha256": "34822dfc21f466ef800fba990b0852f8d20e810c1a2fc6b628595682b1261a6b",
+      "saved": true
+    },
+    {
+      "name": "zoom-200-dark-gecmis",
+      "zoom": 2,
+      "theme": "dark",
+      "target": "İşlem geçmişi ve telafi",
+      "metrics": {
+        "width": 720,
+        "height": 456,
+        "outer": 1440,
+        "dpr": 2,
+        "scale": 1
+      },
+      "pixels": [
+        1440,
+        913
+      ],
+      "viewport": {
+        "colors": 593,
+        "non_dominant_fraction": 0.1089
+      },
+      "regions": {
+        "visible target": {
+          "colors": 238,
+          "non_dominant_fraction": 0.0732
+        }
+      },
+      "sha256": "9491648e7cd002578c2fd44b736ab2f19263480ea73c32a087821dbf6a3adda2",
+      "saved": true
+    }
+  ]
+}

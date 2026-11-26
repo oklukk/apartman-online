@@ -1,4 +1,6 @@
-import { PanelGroup } from "./PanelGroup";
+import { staffFailure, staffReadError, type StaffView } from '../staffAccess';
+import { useStaffConfirmation } from './StaffConfirmation';
+import { StaffFeedback } from './StaffFeedback';
 import { useCallback, useEffect, useState, useRef } from "react";
 import { errorText, supabase } from "../api";
 import { StaffControlCenter } from "./StaffControlCenter";
@@ -32,7 +34,11 @@ const settingNames: Record<string, string> = {
   maintenance_per_resident: "Kişi başı bakım gideri",
 };
 
-export function StaffOperations({ identity }: { identity: StaffIdentity }) {
+export function StaffOperations({ identity, view='genel' }: { identity: StaffIdentity;view?:StaffView }) {
+  const confirmationUI=useStaffConfirmation(view);
+  const [loading,setLoading]=useState(true);
+  const [overviewLoaded,setOverviewLoaded]=useState(false);
+  const [search,setSearch]=useState('');
   const superAdmin = identity.roles.some(
     (r) => r.code === "super_admin" && r.scope_kind === "global",
   );
@@ -66,6 +72,7 @@ export function StaffOperations({ identity }: { identity: StaffIdentity }) {
   );
   const request = useRef<{ key: string; id: string } | null>(null);
   const mutex = useRef(false);
+  const overviewSequence=useRef(0);
   const [overview, setOverview] = useState<Overview>(empty);
   const [playerId, setPlayerId] = useState("");
   const [buildingId, setBuildingId] = useState("");
@@ -80,15 +87,22 @@ export function StaffOperations({ identity }: { identity: StaffIdentity }) {
 
   const refresh = useCallback(async () => {
     if (!supabase || !hasAny) return;
-    const result = await supabase.rpc("staff_game_overview");
-    if (result.error) throw result.error;
-    setOverview(result.data as Overview);
+    const sequence=++overviewSequence.current;
+    setLoading(true);
+    try {
+      const result = await supabase.rpc("staff_game_overview");
+      if(sequence!==overviewSequence.current)return;
+      if(result.error)throw result.error;
+      setOverview(result.data as Overview);setOverviewLoaded(true);
+    } catch(e) {if(sequence!==overviewSequence.current)return;setOverviewLoaded(false);throw e;}
+    finally {if(sequence===overviewSequence.current)setLoading(false);}
+
   }, [hasAny, identity]);
 
   useEffect(() => {
-    setOverview(empty);
+    setOverview(empty);setOverviewLoaded(false);
     void refresh().catch((e: unknown) =>
-      setStatus("Bilgiler yüklenemedi: " + errorText(e)),
+      setStatus(staffReadError(errorText(e))),
     );
   }, [refresh]);
 
@@ -101,8 +115,14 @@ export function StaffOperations({ identity }: { identity: StaffIdentity }) {
     args: Record<string, unknown>,
     confirmation: string,
   ) {
-    if (!supabase || mutex.current || !reasonValid) return;
-    if (!window.confirm(confirmation)) return;
+    if (!supabase || mutex.current || !reasonValid || !overviewLoaded) return;
+    if (!await confirmationUI.ask({title:'Değişikliği onayla',summary:confirmation,details:{
+      'Oyuncu':overview.players.find(p=>p.user_id===args.target_user)?.username || '—',
+      'Apartman':overview.buildings.find(b=>b.id===(args.target_building || chosenPlayer?.building_id))?.name || '—',
+      ...(args.amount!==undefined?{'Değişim miktarı':String(args.amount)+' OP'}:{}),
+      ...(args.setting_key?{'Mevcut değer':String(chosenBuilding?.settings?.[args.setting_key==='weekly_dues'?'weekly_dues_next_week':String(args.setting_key)] ?? '—'),'Yeni değer':String(args.new_value)+' OP'}:{}),
+      'Gerekçe':reason.trim(),
+    }})) return;
     const clean = { ...args };
     delete clean.operation_id;
     const key = JSON.stringify({ action, args: clean, reason: reason.trim() });
@@ -118,15 +138,15 @@ export function StaffOperations({ identity }: { identity: StaffIdentity }) {
         reason: reason.trim(),
       });
       if (res.error) throw res.error;
-      await refresh();
       request.current = null;
       setStatus(
         "Yönetim işlemi kaydedildi. İşlem geçmişinden kontrol edebilirsiniz.",
       );
       setMoneyAmount("");
       setTreasuryAmount("");
+      try {await refresh();} catch {setStatus("İşlem sunucuda kaydedildi; görünüm yenilenemedi. Geçmişi kontrol edip verileri tekrar yükleyin.");}
     } catch (e) {
-      setStatus("İşlem uygulanamadı: " + errorText(e));
+      setStatus(staffFailure(e,true) || "İşlem uygulanamadı: " + errorText(e));
     } finally {
       mutex.current = false;
       setBusy(false);
@@ -138,9 +158,9 @@ export function StaffOperations({ identity }: { identity: StaffIdentity }) {
     chosenPlayer && permitted("players.profile.edit", chosenPlayer.building_id);
   const userCanMoney =
     chosenPlayer &&
-    permitted("economy.wallet.adjust", chosenPlayer.building_id);
+    permitted("economy.wallet.adjust", chosenPlayer.building_id) && chosenPlayer.can_read_balance && Number.isSafeInteger(chosenPlayer.balance);
   const buildingCanMoney =
-    chosenBuilding && permitted("economy.treasury.adjust", chosenBuilding.id);
+    chosenBuilding && permitted("economy.treasury.adjust", chosenBuilding.id) && Number.isSafeInteger(chosenBuilding.treasury);
   const buildingCanSettings =
     chosenBuilding && permitted("economy.settings.manage", chosenBuilding.id);
 
@@ -149,18 +169,16 @@ export function StaffOperations({ identity }: { identity: StaffIdentity }) {
       className="staff-operations"
       aria-label="Gelişmiş yönetim işlemleri"
     >
-      <PanelGroup
-        title="Oyuncular ve ekonomi"
-        description="Kullanıcı adları, kişisel bakiye, ortak kasa ve gelir-gider ayarları."
-      >
+      <div hidden={view!=='genel'} className="staff-overview-data"><h2>Erişilebilir kayıtlar</h2><p className="footnote">Bu oturum için mevcut API'nin döndürdüğü kapsamdır; oyunun genel toplamı değildir.</p>{loading?<p role="status">Yönetim bilgileri yükleniyor…</p>:!overviewLoaded?<p>Veriler alınamadı. Yeniden yükleyebilirsiniz.</p>:<dl><div><dt>Oyuncu kaydı</dt><dd>{overview.players.length}</dd></div><div><dt>Apartman kaydı</dt><dd>{overview.buildings.length}</dd></div></dl>}<button className="secondary" disabled={busy || loading} onClick={()=>void refresh().catch(e=>setStatus(staffReadError(errorText(e))))}>Bilgileri yenile</button></div>
+      <div hidden={view!=='oyuncular' && view!=='ekonomi'}>
         <article className="card">
           <div className="eyebrow">GELİŞMİŞ YÖNETİM</div>
-          <h2>Oyuncular ve ekonomi</h2>
+          <h2>{view==='ekonomi'?'Ekonomi işlemleri':'Oyuncu işlemleri'}</h2>
           <p className="subtle">
             Yalnızca yetkili olduğunuz oyuncu ve apartmanlarda işlem yapabilirsiniz.
             Bakiye düzeltmeleri para hareketlerine kalıcı olarak kaydedilir.
           </p>
-          {status && <p role="status">{status}</p>}
+          {loading && <p role="status">Yönetim bilgileri yükleniyor…</p>}
           <label>
             İşlem gerekçesi
             <textarea
@@ -173,11 +191,14 @@ export function StaffOperations({ identity }: { identity: StaffIdentity }) {
               placeholder="Değişikliğin nedenini yazın"
             />
           </label>
+          <button type="button" className="secondary" disabled={busy || loading} onClick={()=>void refresh().catch(e=>setStatus(staffReadError(errorText(e))))}>Bilgileri yenile</button>
         </article>
 
+        {overviewLoaded && !loading && !overview.players.length && <p className="empty-state">Bu oturum için erişilebilir oyuncu kaydı yok.</p>}
         {overview.players.length > 0 && (
           <article className="card">
-            <h2>Oyuncu işlemleri</h2>
+            <h2>{view==='ekonomi'?'Kişisel cüzdan':'Oyuncu seçimi'}</h2>
+            <label>Oyuncu ara<input type="search" value={search} onChange={e=>{setSearch(e.target.value);setPlayerId('');}} placeholder="Kullanıcı adıyla ara"/></label>
             <label>
               Oyuncu
               <select
@@ -191,20 +212,21 @@ export function StaffOperations({ identity }: { identity: StaffIdentity }) {
                 }}
               >
                 <option value="">Oyuncu seçin</option>
-                {overview.players.map((p) => (
+                {overview.players.filter(p=>p.username.toLocaleLowerCase('tr-TR').includes(search.toLocaleLowerCase('tr-TR'))).map((p) => (
                   <option key={p.user_id} value={p.user_id}>
                     {p.username} · {p.user_id.slice(0, 8)}
                   </option>
                 ))}
               </select>
             </label>
-            {chosenPlayer && (
+            {view==='ekonomi' && chosenPlayer && (
               <p className="subtle">
                 {chosenPlayer.can_read_balance
                   ? "Cüzdan: " + chosenPlayer.balance + " OP"
                   : "Cüzdan bilgisi erişime kapalı."}
               </p>
             )}
+            <div hidden={view!=='oyuncular'}>
             {userCanEdit && (
               <form
                 onSubmit={(e) => {
@@ -229,9 +251,11 @@ export function StaffOperations({ identity }: { identity: StaffIdentity }) {
                     onChange={(e) => setUsername(e.target.value)}
                   />
                 </label>
-                <button disabled={busy || !reasonValid}>Adı kaydet</button>
+                <button disabled={busy || !overviewLoaded || !reasonValid}>Adı kaydet</button>
               </form>
             )}
+            </div>
+            <div hidden={view!=='ekonomi'}>
             {userCanMoney && (
               <form
                 onSubmit={(e) => {
@@ -274,7 +298,7 @@ export function StaffOperations({ identity }: { identity: StaffIdentity }) {
                 <button
                   disabled={
                     busy ||
-                    !reasonValid ||
+                    !overviewLoaded || !reasonValid ||
                     !moneyAmount ||
                     Number(moneyAmount) === 0
                   }
@@ -283,9 +307,11 @@ export function StaffOperations({ identity }: { identity: StaffIdentity }) {
                 </button>
               </form>
             )}
+            </div>
           </article>
         )}
 
+        <div hidden={view!=='ekonomi'}>
         {overview.buildings.length > 0 && (
           <article className="card">
             <h2>Apartman ekonomisi</h2>
@@ -343,7 +369,7 @@ export function StaffOperations({ identity }: { identity: StaffIdentity }) {
                 <button
                   disabled={
                     busy ||
-                    !reasonValid ||
+                    !overviewLoaded || !reasonValid ||
                     !treasuryAmount ||
                     Number(treasuryAmount) === 0
                   }
@@ -421,7 +447,7 @@ export function StaffOperations({ identity }: { identity: StaffIdentity }) {
                     required
                   />
                 </label>
-                <button disabled={busy || !reasonValid || settingAmount === ""}>
+                <button disabled={busy || !overviewLoaded || !reasonValid || settingAmount === ""}>
                   Ayarı güncelle
                 </button>
                 <p className="subtle">
@@ -432,9 +458,13 @@ export function StaffOperations({ identity }: { identity: StaffIdentity }) {
             )}
           </article>
         )}
-      </PanelGroup>
+        </div>
+      </div>
+      <StaffFeedback message={status}/>
+      {confirmationUI.dialog}
       <StaffControlCenter
         identity={identity}
+        view={view}
         players={overview.players}
         buildings={overview.buildings}
       />
