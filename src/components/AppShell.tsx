@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
+import { AccountIcon } from './AccountIcon';
 import { Avatar } from './Avatar';
 import { NavigationIcon } from './NavigationIcon';
 import { accountPages, mainPages, routeHref, routeLabel, type Route, type Access } from '../navigation';
@@ -12,7 +13,16 @@ export function AppShell({ route, access, name, userId, building, live, busy, th
   theme: string; onTheme: (theme: string) => void; onSignOut: () => void; children: ReactNode;
 }) {
   const menu = useRef<HTMLDetailsElement>(null);
-  const close = () => { if (menu.current) menu.current.open = false; };
+  const close = (restoreFocus = false) => {
+    const element = menu.current;
+    if (!element) return;
+    element.open = false;
+    if (restoreFocus) element.querySelector('summary')?.focus({preventScroll:true});
+  };
+  useEffect(() => {
+    if (!menu.current?.open) return;
+    close(menu.current.contains(document.activeElement));
+  }, [route]);
   useEffect(() => {
     const dismissOutside = (event: PointerEvent) => {
       const element = menu.current;
@@ -26,7 +36,7 @@ export function AppShell({ route, access, name, userId, building, live, busy, th
     document.addEventListener('pointerdown', dismissOutside, true);
     return () => document.removeEventListener('pointerdown', dismissOutside, true);
   }, []);
-  return <div className={'shell art-v2 navigation-v2'+(access.resident && mainPages.some(p=>p.page===route.page) ? ' player-shell' : '')}>
+  return <div className={'shell art-v2 navigation-v2'+((access.resident && mainPages.some(p=>p.page===route.page)) || (access.authenticated && ['profile','settings','security'].includes(route.page)) ? ' player-shell' : '')}>
     <a className="skip-link" href="#main-content" onClick={e => { e.preventDefault(); document.getElementById('main-content')?.focus(); }}>İçeriğe geç</a>
     <aside className="sidebar">
       <a href={routeHref({ page: 'today' })} className="brand"><img src={import.meta.env.BASE_URL+'art/v2/logo-mark.svg'} width="40" height="44" alt="" /><span>APARTMAN<small>Birlikte yaşanan bir dünya.</small></span></a>
@@ -40,9 +50,9 @@ export function AppShell({ route, access, name, userId, building, live, busy, th
       <header className="topbar"><span>{building}<span className="subtle"> / {access.authenticated ? routeLabel(route) : 'Hoş geldiniz'}</span></span>
         {access.authenticated ? <details className="account-menu" ref={menu} onKeyDown={e => {
           if (e.key === 'Escape') { close(); menu.current?.querySelector('summary')?.focus(); }
-        }}><summary><Avatar userId={userId} name={name} size={36}/><span>{name}</span></summary>
-          <nav aria-label="Hesap menüsü">{accountPages.filter(p => p.page !== 'staff' || access.staff).map(p => <a key={p.page} href={routeHref({ page:p.page })} onClick={close} aria-current={route.page === p.page ? 'page' : undefined}>{p.label}</a>)}
-            <button type="button" className="secondary" disabled={busy} onClick={() => { close(); onSignOut(); }}>Çıkış yap</button>
+        }}><summary><Avatar userId={userId} name={name} size={36}/><span className="account-name">{name}</span><AccountIcon name="chevron"/></summary>
+          <nav aria-label="Hesap menüsü">{accountPages.filter(p => p.page !== 'staff' || access.staff).map(p => <a key={p.page} href={routeHref({ page:p.page })} onClick={() => close(true)} aria-current={route.page === p.page ? 'page' : undefined}><AccountIcon name={p.page}/><span>{p.label}</span></a>)}
+            <button type="button" className="secondary" disabled={busy} onClick={() => { close(true); onSignOut(); }}><AccountIcon name="logout"/>Çıkış yap</button>
           </nav>
         </details> : <ThemeControl theme={theme} onTheme={onTheme} />}
       </header>

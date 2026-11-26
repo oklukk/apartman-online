@@ -13,6 +13,7 @@ export const accountPages = [
 export type Page = (typeof mainPages)[number]['page'] | (typeof accountPages)[number]['page'] | 'resident';
 export type Route = { page: Page; section?: string; target?: string; userId?: string; from?: string };
 export const sections: Partial<Record<Page, readonly { key: string; label: string }[]>> = {
+  settings: [{key:'gorunum',label:'Görünüm'},{key:'gizlilik',label:'Gizlilik'}],
   home: [{ key: 'daire', label: 'Daire' }, { key: 'isler', label: 'İşler' }, { key: 'cuzdan', label: 'Cüzdan' }],
   building: [{ key: 'kesfet', label: 'Binayı Keşfet' }, { key: 'kararlar', label: 'Kararlar' }, { key: 'kasa-pano', label: 'Kasa ve Pano' }, { key: 'yonetici', label: 'Yönetici Masası' }],
   neighbors: [{ key: 'sakinler', label: 'Sakinler' }, { key: 'sohbet', label: 'Sohbet' }],
@@ -59,6 +60,6 @@ export function routeAccess(route: Route, access: Access): 'allowed' | 'login' |
 }
 
 export function safeProfileBack(href?: string): boolean {
-  if (!href || !/^#\/(bugun|dairem|apartman|komsular|profilim)(\/[a-zA-Z0-9_-]+){0,2}$/.test(href)) return false;
+  if (!href || !/^#\/(bugun|dairem|apartman|komsular|profilim|ayarlar)(\/[a-zA-Z0-9_-]+){0,2}$/.test(href)) return false;
   return routeHref(parseRoute(href)) === href;
 }
