@@ -1,3 +1,5 @@
+import { staffIdentityKey } from './staffAccess';
+import './styles/staff-center.css';
 import { StaffPanel, getStaffIdentity } from "./components/StaffPanel";
 import { StaffMfa } from "./components/StaffMfa";
 import type { StaffIdentity } from "./components/StaffPanel";
@@ -43,6 +45,7 @@ export function App() {
     roles: [],
     permissions: [],
   });
+  const staffSubject = useRef<string | undefined>(undefined);
   const [data, setData] = useState<Data | null>(null);
   const route = useNavigation();
   const tab = routeLabel(route);
@@ -144,16 +147,19 @@ export function App() {
       return;
     }
     let cancelled = false;
+    let refreshSequence = 0;
     setStaff({ roles: [], permissions: [] });
     const refresh = () => {
+      const sequence = ++refreshSequence;
       void getStaffIdentity()
         .then((value) => {
-          if (!cancelled) {
+          if (!cancelled && sequence === refreshSequence) {
+            staffSubject.current = session.user.id;
             setStaff(value);
           }
         })
         .catch((err: unknown) => {
-          if (!cancelled) {
+          if (!cancelled && sequence === refreshSequence) {
             setStaff({ roles: [], permissions: [] });
             setNotice(errorText(err));
           }
@@ -257,7 +263,8 @@ export function App() {
       window.removeEventListener("focus", focus);
     };
   }, [me?.building_id, load]);
-  const access = { authenticated: !!session, resident: !!me, staff: staff.roles.length > 0 };
+  const currentStaff = staffSubject.current === session?.user.id ? staff : {roles:[],permissions:[]};
+  const access = { authenticated: !!session, resident: !!me, staff: currentStaff.roles.length > 0 };
   const allowed = routeAccess(route, access);
   const isManager = !!session && currentTerm(data?.manager_terms || [])?.user_id === session.user.id;
   useRouteFocus(route, !starting && !!session && !!data && allowed === 'allowed' && !quick.userId, data, session?.user.id, setNotice);
@@ -455,8 +462,8 @@ export function App() {
               <StaffMfa />
             </div><aside className="card settings-note"><h2>Kurulum ve doğrulama</h2><p>Mevcut kurulumun, işlemi başlattığında kontrol edilir. Bu ekran tek başına doğrulamanın açık veya kapalı olduğunu göstermez.</p><p>Doğrulama uygulamasının oluşturduğu kodları ve kurulum QR kodunu başkalarıyla paylaşma.</p><a className="route-link" href={routeHref({page:'profile'})}>Profilime dön</a></aside></div>
           </AccountLayout>
-        ) : route.page === 'staff' && staff.roles.length > 0 ? (
-          <StaffPanel identity={staff} />
+        ) : route.page === 'staff' && currentStaff.roles.length > 0 ? (
+          <StaffPanel key={session.user.id+staffIdentityKey(currentStaff)} identity={currentStaff} view={section} />
         ) : allowed === 'forbidden' ? (
           <section className="card"><h1>Sistem Yönetim Merkezi</h1><p>Bu alana erişim yetkin yok.</p><a className="route-link" href={routeHref({page:'today'})}>Oyuna dön</a></section>
         ) : !data ? (

@@ -40,7 +40,7 @@ test("operational read masks balances outside authorized scope", () => {
 });
 
 test("UI uses RPC with confirmation and reason", () => {
-  assert.ok(staff.includes("<StaffOperations identity={identity} />"));
+  assert.ok(staff.includes("<StaffOperations identity={identity} view={view} />"));
   for (const rpc of [
     "staff_adjust_wallet",
     "staff_adjust_treasury",
@@ -49,7 +49,8 @@ test("UI uses RPC with confirmation and reason", () => {
   ]) {
     assert.ok(ui.includes(rpc));
   }
-  assert.match(ui, /window\.confirm/);
+  assert.match(ui, /confirmationUI\.ask/);
+  assert.match(readFileSync("src/components/StaffConfirmation.tsx","utf8"), /showModal/);
   assert.match(ui, /reason\.trim\(\)/);
   assert.doesNotMatch(ui, /sb_secret_|service_role/);
 });
@@ -64,5 +65,6 @@ test("staging is the reviewed stage-1 migration and later stages remain isolated
   );
   const center = readFileSync("src/components/StaffControlCenter.tsx", "utf8");
   assert.ok(center.includes("expected_revision"));
-  assert.ok(center.includes("Onayla ve uygula"));
+  assert.ok(center.includes("StaffConfirmation"));
+  assert.ok(readFileSync("src/components/StaffConfirmation.tsx","utf8").includes("Onayla ve uygula"));
 });

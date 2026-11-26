@@ -1,8 +1,11 @@
+import { staffCan, staffModules, staffModuleVisible, staffIdentityKey, staffFailure, type StaffView } from '../staffAccess';
+import { routeHref } from '../navigation';
+import { useStaffConfirmation } from './StaffConfirmation';
+import { StaffMfa } from './StaffMfa';
+import { StaffFeedback } from './StaffFeedback';
 import { uiText } from "../uiText";
-import { PanelGroup } from "./PanelGroup";
-import { useCallback, useEffect, useState, lazy, Suspense } from "react";
+import { useCallback, useEffect, useState, useMemo, useRef, lazy, Suspense } from "react";
 import { supabase, errorText } from "../api";
-import { StaffMfa } from "./StaffMfa";
 const StaffOperations = lazy(() =>
   import("./StaffOperations").then((m) => ({ default: m.StaffOperations })),
 );
@@ -70,7 +73,17 @@ export async function getStaffIdentity(): Promise<StaffIdentity> {
   };
 }
 
-export function StaffPanel({ identity }: { identity: StaffIdentity }) {
+export function StaffPanel({identity,view='genel'}:{identity:StaffIdentity;view?:string}) {
+  const signature=staffIdentityKey(identity);
+  const stable=useMemo(()=>identity,[signature]);
+  const selected=staffModules.some(m=>m.key===view)?view as StaffView:'genel';
+  return <StaffWorkspace key={signature} identity={stable} view={selected}/>;
+}
+function StaffWorkspace({ identity,view }: { identity: StaffIdentity;view:StaffView }) {
+  const confirmation=useStaffConfirmation(view);
+  const runMutex=useRef(false);
+  const directorySequence=useRef(0);
+  const [loading,setLoading]=useState(true);
   const [directory, setDirectory] = useState<Directory | null>(null);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -107,22 +120,41 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
 
   const reload = useCallback(async () => {
     if (!canRead || !supabase) return;
-    const { data, error } = await supabase.rpc("staff_directory");
-    if (error) {
-      setDirectory(null);
-      throw error;
-    }
-    setDirectory(data as Directory);
+    const sequence=++directorySequence.current;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.rpc("staff_directory");
+      if(sequence!==directorySequence.current)return;
+      if(error)throw error;
+      setDirectory(data as Directory);
+    } catch(e) {if(sequence!==directorySequence.current)return;setDirectory(null);throw e;}
+    finally {if(sequence===directorySequence.current)setLoading(false);}
+
   }, [canRead, identity]);
   useEffect(() => {
     setDirectory(null);
+    if(!canRead)setLoading(false);
     void reload().catch((e: unknown) =>
       setStatus("Dizin yüklenemedi: " + errorText(e)),
     );
   }, [reload]);
 
   async function run(action: string, args: Record<string, unknown>) {
-    if (!supabase || busy || !reasonValid) return;
+    if (!supabase || runMutex.current || !reasonValid) return;
+    const descriptions:Record<string,string>={staff_grant:'Rol ata',staff_revoke:'Rol atamasını kaldır',staff_create_role:'Özel rol oluştur',staff_set_role_permissions:'Rol izinlerini değiştir',staff_rename_building:'Apartman adını değiştir'};
+    const targetName=directory?.users.find(u=>u.user_id===args.target_user)?.username;
+    const assignment=directory?.assignments.find(a=>a.id===args.assignment_id);
+    const scopeKind=args.target_scope || assignment?.scope_kind;
+    const scopeId=args.scope || args.target_building || assignment?.scope_id;
+    const review={title:descriptions[action] || 'Yönetim işlemi',summary:'Seçili hedef ve gerekçe ile değişiklik uygulanacak. Geçmiş kayıtlar silinmez.',details:{
+      'Hedef':targetName || (assignment?directory?.users.find(u=>u.user_id===assignment.user_id)?.username:undefined) || directory?.buildings.find(b=>b.id===args.target_building)?.name || String(args.role_title || args.role_code || 'Seçili kayıt'),
+      'Rol / yeni değer':String(args.new_name || args.role_code || assignment?.role || ''),
+      'Kapsam':scopeKind==='global' || !scopeId?'Tüm oyun':directory?.buildings.find(b=>b.id===scopeId)?.name || String(scopeId),
+      ...(Array.isArray(args.permission_codes)?{'Seçilen izinler':args.permission_codes.map(code=>directory?.permissions.find(p=>p.code===code)?.title || String(code)).join(', ') || 'İzin seçilmedi'}:{}),
+      'Gerekçe':reason.trim(),
+    }};
+    if(!await confirmation.ask(review))return;
+    runMutex.current=true;
     setBusy(true);
     setStatus("");
     try {
@@ -131,11 +163,12 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
         reason: reason.trim(),
       });
       if (error) throw error;
-      await reload();
-      setStatus("İşlem kaydedildi.");
+      setStatus("İşlem sunucuda kaydedildi.");
+      try {await reload();} catch {setStatus("İşlem sunucuda kaydedildi; dizin yenilenemedi. Yeni işlemden önce güncel kayıtları kontrol edin.");}
     } catch (e) {
-      setStatus("İşlem başarısız: " + errorText(e));
+      setStatus(staffFailure(e) || "İşlem başarısız: " + errorText(e));
     } finally {
+      runMutex.current=false;
       setBusy(false);
     }
   }
@@ -177,7 +210,7 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
   );
 
   return (
-    <section className="staff-panel">
+    <section className="staff-panel staff-center">
       <header className="page-heading">
         <div>
           <div className="eyebrow">SİSTEM YÖNETİM MERKEZİ</div>
@@ -188,38 +221,30 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
           </p>
         </div>
       </header>
-      {!!status && (
-        <div className="notice" role="status">
-          {status}
-        </div>
-      )}
+      <nav className="staff-module-nav" aria-label="Yönetim modülleri">{staffModules.filter(m=>staffModuleVisible(identity,m.key)).map(m=><a key={m.key} href={routeHref({page:'staff',section:m.key})} aria-current={view===m.key?'page':undefined}>{m.label}</a>)}</nav>
+      {!staffModuleVisible(identity,view) && <p className="empty-state" role="alert">Bu modüle erişim yetkiniz yok. Yetkili olduğunuz bölümler menüde görünür.</p>}
+      <div hidden={view!=='genel'}>
       <article className="card role-overview">
         <h2>Yetkilerim</h2>
         {identity.roles.map((r, i) => (
           <p key={i}>
             {r.title} —{" "}
-            {r.scope_kind === "global" ? "Tüm oyun" : "Apartman kapsamı"}
+            {r.scope_kind === "global" ? "Tüm oyun" : "Apartman kapsamı · "+(directory?.buildings.find(b=>b.id===r.scope_id)?.name || r.scope_id.slice(0,8))}
           </p>
         ))}
         {!identity.roles.length && <p>Tanımlı rol yok.</p>}
       </article>
-      {!canRead && (
-        <p>Yetki dizinini görüntülemek için ayrıca izin gereklidir.</p>
-      )}
-      <PanelGroup
-        title="Hesap güvenliği"
-        description="İki aşamalı doğrulama kurulumu ve güvenli oturum."
-      >
-        <StaffMfa />
-      </PanelGroup>
+      </div>
+      <div hidden={view!=='genel'}>{canRead && <p className="subtle">Dizin bilgileri yalnız sunucunun bu oturuma açtığı kayıtlardan oluşur.</p>}</div>
+      <div hidden={view!=='genel'}><details className="staff-task card"><summary>Oturumu burada doğrula</summary><p>Diğer modüllerdeki form bilgilerini kaybetmeden iki aşamalı doğrulama yapabilirsin.</p><StaffMfa/></details></div>
+      <div hidden={view!=='genel'} className="staff-security-link"><a className="route-link" href={routeHref({page:'security'})}>Hesap güvenliği ve MFA</a><p className="footnote">Kritik işlemler iki aşamalı doğrulanmış oturum ister. Bu ekran doğrulama durumu varsaymaz.</p></div>
       <Suspense fallback={<p>Yönetim işlemleri yükleniyor…</p>}>
-        <StaffOperations identity={identity} />
+        <StaffOperations identity={identity} view={view} />
       </Suspense>
+      <div hidden={view!=='roller' && view!=='gecmis'}><StaffFeedback message={status}/>{loading && canRead && <p role="status">Yetki dizini yükleniyor…</p>}{canRead && <button className="secondary" disabled={busy || loading} onClick={()=>void reload().catch(e=>setStatus('Dizin yüklenemedi: '+errorText(e)))}>Dizini yenile</button>}</div>
       {directory && (
-        <PanelGroup
-          title="Roller ve apartman ayarları"
-          description="Rol atamaları, özel izinler, apartman adı ve yetki geçmişi."
-        >
+        <div className="staff-role-content">
+          {(isSuper || identity.permissions.includes('staff.roles.read')) && <div hidden={view!=='roller'}>
           <article className="card">
             <h2>Rol kataloğu</h2>
             {directory.roles.map((r) => (
@@ -231,6 +256,10 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
               </p>
             ))}
           </article>
+          </div>}
+          <div hidden={view!=='roller'}>
+          {!isSuper && <p className="empty-state">Rol atama ve izin düzenleme yetkiniz yok. Yalnız sunucunun size açtığı kayıtları ve işlemleri kullanabilirsiniz.</p>}
+          {!!directory.buildings.length && <article className="card"><h2>Erişilebilir apartmanlar</h2>{directory.buildings.map(b=><p key={b.id}>{b.name}</p>)}</article>}
           {(isSuper || canRename) && (
             <article className="card">
               <h2>İşlem gerekçesi</h2>
@@ -249,8 +278,7 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
             </article>
           )}
           {isSuper && (
-            <article className="card">
-              <h2>Kullanıcıya yetki ver</h2>
+            <details className="card staff-task" open><summary>Kullanıcıya yetki ver</summary><div>
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -334,9 +362,9 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
                   gerekir.
                 </p>
               )}
-            </article>
+            </div></details>
           )}
-          <article className="card">
+          {(isSuper || identity.permissions.includes("staff.roles.read")) && <article className="card">
             <h2>Mevcut rol atamaları</h2>
             {directory.assignments.map((a) => (
               <div key={a.id} className="staff-assignment">
@@ -354,20 +382,16 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
                   <button
                     className="text-button danger"
                     disabled={busy || !reasonValid}
-                    onClick={() => {
-                      if (window.confirm("Rol ataması kaldırılsın mı?"))
-                        void run("staff_revoke", { assignment_id: a.id });
-                    }}
+                    onClick={() => void run("staff_revoke", { assignment_id: a.id })}
                   >
                     Kaldır
                   </button>
                 )}
               </div>
             ))}
-          </article>
+          </article>}
           {isSuper && (
-            <article className="card">
-              <h2>Yeni özel rol</h2>
+            <details className="card staff-task"><summary>Yeni özel rol</summary><div>
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -404,11 +428,10 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
                   Özel rolü oluştur
                 </button>
               </form>
-            </article>
+            </div></details>
           )}
           {isSuper && (
-            <article className="card">
-              <h2>Rol izinlerini düzenle</h2>
+            <details className="card staff-task"><summary>Rol izinlerini düzenle</summary><div>
               <label>
                 Rol
                 <select
@@ -447,11 +470,10 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
                   </button>
                 </>
               )}
-            </article>
+            </div></details>
           )}
           {canRename && (
-            <article className="card">
-              <h2>Apartman adını düzenle</h2>
+            <details className="card staff-task"><summary>Apartman adını düzenle</summary><div>
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -475,7 +497,7 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
                     required
                   >
                     <option value="">Seçiniz</option>
-                    {directory.buildings.map((b) => (
+                    {directory.buildings.filter(b=>staffCan(identity,'world.buildings.rename',b.id)).map((b) => (
                       <option key={b.id} value={b.id}>
                         {b.name}
                       </option>
@@ -496,8 +518,10 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
                   Kaydet
                 </button>
               </form>
-            </article>
+            </div></details>
           )}
+          </div>
+          <div hidden={view!=='gecmis'}>
           {(isSuper || identity.permissions.includes("staff.audit.read")) && (
             <article className="card">
               <h2>İşlem geçmişi</h2>
@@ -524,8 +548,10 @@ export function StaffPanel({ identity }: { identity: StaffIdentity }) {
               {!directory.audit.length && <p className="empty-state">Henüz yönetim işlemi kaydedilmedi.</p>}
             </article>
           )}
-        </PanelGroup>
+          </div>
+        </div>
       )}
+      {confirmation.dialog}
     </section>
   );
 }

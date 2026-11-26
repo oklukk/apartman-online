@@ -1,6 +1,8 @@
 """E stage: real Chromium, local API fixture, no live service or real Auth/MFA claim."""
 from pathlib import Path
+import argparse
 from playwright.sync_api import sync_playwright,expect
+parser=argparse.ArgumentParser();parser.add_argument('--verify-only',action='store_true');args=parser.parse_args()
 root=Path(__file__).resolve().parents[1]
 origin='http://127.0.0.1:5178';base=origin+'/apartman-online/'
 out=root/'docs/design/settings';out.mkdir(parents=True,exist_ok=True)
@@ -21,7 +23,7 @@ with sync_playwright() as p:
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),page.url
   for link in page.locator('.primary-nav a').all():assert link.evaluate('el=>el.scrollWidth<=el.clientWidth'),link.inner_text()
  def capture(name,width,theme):
-  if width in [390,1440]:page.screenshot(path=str(out/f'{name}-{theme}-{width}.png'))
+  if width in [390,1440] and not args.verify_only:page.screenshot(path=str(out/f'{name}-{theme}-{width}.png'))
  def reset():
   page.get_by_role('button',name='Görünüm tercihlerini sıfırla',exact=True).click()
   expect(page.get_by_label('Tema',exact=True)).to_have_value('system')
@@ -119,4 +121,4 @@ with sync_playwright() as p:
  dp.get_by_label('Yazı boyutu').select_option('large');expect(dp.get_by_label('Yazı boyutu')).to_have_value('large');dp.reload();expect(dp.get_by_label('Yazı boyutu')).to_have_value('normal')
  dp.goto(base+'?scenario=visitor#/bugun');expect(dp.get_by_role('button',name='Apartmana giriş yap',exact=True)).to_be_visible();assert not errors,errors
  denied.close();context.close();browser.close()
-print('PASS E Chromium: appearance persistence/reset/denied storage/cross-tab/OS; account menu keyboard/touch/focus; existing privacy unblock/former residents/profile context; role-free security and synthetic MFA form continuity; session UI/hash boundaries; 320/390/768/1440 light/dark + large/compact game regression, 36 screenshots. Hosted Auth/MFA/Realtime NOT tested.')
+print('PASS E Chromium: appearance persistence/reset/denied storage/cross-tab/OS; account menu keyboard/touch/focus; existing privacy unblock/former residents/profile context; role-free security and synthetic MFA form continuity; session UI/hash boundaries; 320/390/768/1440 light/dark + large/compact game regression, 36 screenshots. Hosted Auth/MFA/Realtime NOT tested.'.replace('36 screenshots','historical screenshots unchanged (verify-only)' if args.verify_only else '36 screenshots'))

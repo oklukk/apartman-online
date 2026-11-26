@@ -256,6 +256,12 @@ try {
   assert.doesNotMatch(privacyMarkup,/NEVER_SHOW|7654321/);
   assert.ok(renderToStaticMarkup(React.createElement(SettingsScreen,{...settingsProps,canPersist:false})).includes('Tarayıcı saklamaya izin vermiyor'));
   assert.ok(renderToStaticMarkup(React.createElement(SettingsScreen,{...settingsProps,view:'gizlilik',loading:true})).includes('Komşu bilgileri yükleniyor'));
+  const {StaffConfirmation}=await vite.ssrLoadModule('/src/components/StaffConfirmation.tsx');
+  const reviewMarkup=renderToStaticMarkup(React.createElement(StaffConfirmation,{review:{title:'Son onay',summary:'325 → 350 OP',details:{Oyuncu:'Ece',Apartman:'Çınar',Gerekçe:'Kontrol nedeni'}},onConfirm:()=>{},onCancel:()=>{}}));
+  assert.ok(reviewMarkup.includes('aria-labelledby="staff-review-title"') && reviewMarkup.includes('325 → 350 OP') && reviewMarkup.includes('Vazgeç') && reviewMarkup.includes('Onayla ve uygula'));
+  const staffMarkup=renderToStaticMarkup(React.createElement(StaffPanel,{identity:{roles:[{code:'moderator',title:'Moderatör',scope_kind:'global',scope_id:''}],permissions:['players.read','players.moderate','governance.read']},view:'genel'}));
+  assert.ok(staffMarkup.includes('Oyuncular ve Denetim') && staffMarkup.includes('Seçimler ve Yönetim'));
+  assert.ok(!staffMarkup.includes('href="#/sistem/ekonomi"') && !staffMarkup.includes('href="#/sistem/roller"'));
   console.log(
     "PASS static React: wallet/job/dues/payment states, election permissions, poll voting, native disclosures, account security, semantic financial summary and audit labels. Browser/mobile/Realtime NOT tested.",
   );

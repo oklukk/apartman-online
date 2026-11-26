@@ -1,3 +1,4 @@
+import {createStaffFixture} from './staff';
 // Browser fixture: synthetic data; not an Auth/Realtime implementation or production client.
 const scenario = new URLSearchParams(location.search).get('scenario') || 'resident';
 const delay = new URLSearchParams(location.search).get('delay');
@@ -7,8 +8,9 @@ let targetAvailable = delay !== 'target';
 let publish: () => void = () => {};
 Object.assign(window,{fixtureReleaseInitial:()=>releaseInitial?.(),fixturePublishTarget:()=>{targetAvailable=true;publish();}});
 const now = Date.now(), iso = (offset = 0) => new Date(now + offset).toISOString();
-const unjoined = ['unjoined','staff-unjoined'].includes(scenario);
-const staff = ['staff','staff-unjoined'].includes(scenario);
+const unjoined = ['unjoined','staff-unjoined'].includes(scenario) || scenario.endsWith('-unjoined');
+const staff = scenario.startsWith('staff');
+const staffFixture = staff ? createStaffFixture(scenario) : null;
 const user = 'fixture-player', building = 'fixture-building';
 const economy = {
   wallets: [{user_id:user,balance:300,job:'office',job_changed_at:null,employment_started_on:'2026-11-01',side_job_started_at:null}],
@@ -59,12 +61,12 @@ if(scenario==='low-balance') tables.wallets=[{...economy.wallets[0],balance:20}]
 let session: unknown = scenario==='visitor'?null:{user:{id:user}};
 let authChanged: (event: string, value: unknown) => void = () => {};
 const calls: string[] = [];
-Object.assign(window,{fixtureCalls:calls});
+Object.assign(window,{fixtureCalls:calls,fixtureSwitchSession:(id:string)=>{session={user:{id}};authChanged('SIGNED_IN',session);}});
 const result=(data:unknown)=>Promise.resolve({data,error:null});
 export const supabase = {
   auth:{mfa:{
     listFactors:()=>{calls.push('fixture.mfa.listFactors');return result({totp:[{id:'fixture-factor',status:'verified'}],all:[{id:'fixture-factor',status:'verified',factor_type:'totp'}]});},
-    challengeAndVerify:()=>{calls.push('fixture.mfa.verify');return result({});},
+    challengeAndVerify:()=>{staffFixture?.verify();calls.push('fixture.mfa.verify');return result({});},
   },getSession:()=>result({session}),onAuthStateChange:(callback:typeof authChanged)=>{authChanged=callback;return {data:{subscription:{unsubscribe(){}}}}},signOut:()=>{session=null;authChanged('SIGNED_OUT',null);return result(null)}},
   from:(name:string)=>{
     let mutation: 'insert' | 'delete' | undefined; let payload:any; const filters:Record<string,unknown>={};
@@ -82,6 +84,7 @@ export const supabase = {
   },
   rpc:(name:string,args?:Record<string,unknown>)=>{
     calls.push(name);
+    if(staffFixture && name.startsWith('staff_'))return staffFixture.handle(name,args);
     if(name==='staff_me') return result({roles:staff?[{code:'super_admin',title:'Süper Yönetici',scope_kind:'global',scope_id:''}]:[],permissions:[],scoped_permissions:[]});
     if(name==='settle_polls' || (name==='player_action' && args?.action==='heartbeat')) return result(null); // fixture-only no-op, no state mutation
     if(name==='dues_overview') return result([]);
@@ -94,4 +97,4 @@ export const supabase = {
 };
 export const money=(value:number)=>new Intl.NumberFormat('tr-TR').format(value);
 export const time=(value:string)=>new Intl.DateTimeFormat('tr-TR',{dateStyle:'short',timeStyle:'short'}).format(new Date(value));
-export const errorText=(error:unknown)=>String(error);
+export const errorText=(error:unknown)=>error && typeof error==='object' && 'message' in error?String(error.message):String(error);

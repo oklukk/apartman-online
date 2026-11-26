@@ -13,6 +13,7 @@ export const accountPages = [
 export type Page = (typeof mainPages)[number]['page'] | (typeof accountPages)[number]['page'] | 'resident';
 export type Route = { page: Page; section?: string; target?: string; userId?: string; from?: string };
 export const sections: Partial<Record<Page, readonly { key: string; label: string }[]>> = {
+  staff: [{key:'genel',label:'Genel Bakış'},{key:'oyuncular',label:'Oyuncular ve Denetim'},{key:'ekonomi',label:'Ekonomi'},{key:'secimler',label:'Seçimler ve Yönetim'},{key:'roller',label:'Roller ve Yetkiler'},{key:'gecmis',label:'İşlem Geçmişi ve Telafi'}],
   settings: [{key:'gorunum',label:'Görünüm'},{key:'gizlilik',label:'Gizlilik'}],
   home: [{ key: 'daire', label: 'Daire' }, { key: 'isler', label: 'İşler' }, { key: 'cuzdan', label: 'Cüzdan' }],
   building: [{ key: 'kesfet', label: 'Binayı Keşfet' }, { key: 'kararlar', label: 'Kararlar' }, { key: 'kasa-pano', label: 'Kasa ve Pano' }, { key: 'yonetici', label: 'Yönetici Masası' }],

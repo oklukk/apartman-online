@@ -1,5 +1,7 @@
+import { staffCan, staffHasAny, staffFailure, type StaffView } from '../staffAccess';
+import { StaffConfirmation } from './StaffConfirmation';
+import { StaffFeedback } from './StaffFeedback';
 import { uiText } from "../uiText";
-import { PanelGroup } from "./PanelGroup";
 import { useState, useRef, useEffect } from "react";
 import { supabase, errorText, time } from "../api";
 import type { StaffIdentity } from "./StaffPanel";
@@ -15,6 +17,7 @@ type State = {
 type Preview = { state: State; revision: string };
 type Props = {
   identity: StaffIdentity;
+  view?: StaffView;
   players: { user_id: string; username: string; building_id: string | null }[];
   buildings: { id: string; name: string }[];
 };
@@ -48,7 +51,7 @@ const labels: Record<string, string> = {
   "poll.force_accept": "Ortak kararı zorunlu kabul et (bütçe korunur)",
   "poll.force_reject": "Ortak kararı zorunlu reddet",
 };
-export function StaffControlCenter({ identity, players, buildings }: Props) {
+export function StaffControlCenter({ identity, players, buildings,view='genel' }: Props) {
   const [building, setBuilding] = useState(""),
     [user, setUser] = useState(""),
     [reason, setReason] = useState(""),
@@ -73,12 +76,18 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
     [voteEnd, setVoteEnd] = useState(""),
     [termEnd, setTermEnd] = useState("");
   const mutex = useRef(false);
+  const readSequence=useRef(0);
+  const sanctionContext=useRef('');sanctionContext.current=building+'|'+user;
+  const [loading,setLoading]=useState(false);
+  const [historyLoaded,setHistoryLoaded]=useState(false);
+  const [sanctionsLoaded,setSanctionsLoaded]=useState(false);
   useEffect(() => {
     setPreview(null);
-    setHistory([]);
-    setSanctions([]);
+    setHistory([]);setHistoryLoaded(false);
+    setSanctions([]);setSanctionsLoaded(false);
     setPending(null);
   }, [identity]);
+  useEffect(()=>{++readSequence.current;setLoading(false);if(!mutex.current)setPending(null);},[view]);
   const allowed = (p: string) =>
     identity.permissions.includes(p) ||
     identity.roles.some(
@@ -87,6 +96,14 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
     !!identity.scoped_permissions?.some(
       (s) => s.building_id === building && s.permissions.includes(p),
     );
+  const modulePermissions=view==='oyuncular'?['players.moderate','players.ban']:view==='secimler'?['governance.read',...Object.values(actionPermissions)]:view==='gecmis'?['staff.audit.read']:[];
+  const scopedTargets=(identity.scoped_permissions||[]).filter(s=>s.permissions.some(p=>modulePermissions.includes(p))).map(s=>({id:s.building_id,name:buildings.find(b=>b.id===s.building_id)?.name || 'Apartman kapsamı · '+s.building_id.slice(0,8)}));
+  const options=[...new Map([...buildings,...scopedTargets].map(b=>[b.id,b])).values()].filter(b=>modulePermissions.some(p=>staffCan(identity,p,b.id)));
+  const scopeAllowed=options.some(b=>b.id===building);
+  const actions=Object.keys(labels).filter(key=>allowed(actionPermissions[key]));
+  const selectedAction=actions.includes(action)?action:actions[0] || '';
+  const sanctionKeys=['warning','mute','unmute','ban','unban'].filter(key=>allowed(['ban','unban'].includes(key)?'players.ban':'players.moderate'));
+  const selectedSanction=sanctionKeys.includes(sanction)?sanction:sanctionKeys[0] || '';
   const validReason = reason.trim().length >= 5 && reason.trim().length <= 500;
   async function read(rpc: string, args: Record<string, unknown>) {
     if (!supabase) throw Error("Bağlantı yok.");
@@ -95,32 +112,37 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
     return r.data;
   }
   async function load() {
+    const sequence=++readSequence.current;
+    const rememberPreview=(value:Preview)=>{if(sequence===readSequence.current)setPreview(value);};
+    const rememberHistory=(value:RecordRow[])=>{if(sequence===readSequence.current){setHistory(value);setHistoryLoaded(true);}};
     setStatus("");
+    setLoading(true);
     setPending(null);
     setPreview(null);
-    setHistory([]);
+    setHistory([]);setHistoryLoaded(false);
     try {
       if (
-        Object.values(actionPermissions).some(allowed) ||
-        allowed("governance.read")
+        view==='secimler' && (Object.values(actionPermissions).some(allowed) ||
+        allowed("governance.read"))
       )
-        setPreview(
+        rememberPreview(
           (await read("staff_governance_state", {
             target_building: building,
           })) as Preview,
         );
-      if (allowed("staff.audit.read"))
-        setHistory(
+      if (view==='gecmis' && allowed("staff.audit.read"))
+        rememberHistory(
           (await read("staff_operations_history", {
             target_building: building,
           })) as RecordRow[],
         );
     } catch (e) {
-      setStatus(errorText(e));
-    }
+      if(sequence===readSequence.current)setStatus(errorText(e));
+    } finally {if(sequence===readSequence.current)setLoading(false);}
   }
   function stage(rpc: string, args: Record<string, unknown>, label: string) {
     if (!validReason) return;
+    setStatus('');
     setPending({
       rpc,
       args: { ...args, reason: reason.trim() },
@@ -132,6 +154,7 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
     if (!pending || mutex.current) return;
     mutex.current = true;
     setBusy(true);
+    setStatus('');
     try {
       await read(pending.rpc, { ...pending.args, operation_id: pending.id });
       setStatus(
@@ -140,7 +163,7 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
       setPending(null);
       setPreview(null);
     } catch (e) {
-      setStatus(errorText(e));
+      setStatus(staffFailure(e,true) || errorText(e));
     } finally {
       mutex.current = false;
       setBusy(false);
@@ -148,23 +171,21 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
   }
   const inputChanged = () => setPending(null);
   return (
-    <section aria-label="Oyuncu denetimi ve seçim müdahaleleri">
-      <PanelGroup
-        title="Denetim ve apartman yönetimi"
-        description="Oyuncu yaptırımları, seçimler, yönetici görevleri ve işlem geçmişi."
-      >
+    <section hidden={!['oyuncular','secimler','gecmis'].includes(view) || !staffHasAny(identity,modulePermissions)} aria-label="Oyuncu denetimi ve seçim müdahaleleri">
+      <div className="staff-module-content">
         <article className="card">
-          <h2>Denetim ve yönetim müdahaleleri</h2>
+          <h2>{view==='oyuncular'?'Yaptırımlar ve disiplin':view==='secimler'?'Seçimler ve yönetici görevleri':'Apartman işlem geçmişi'}</h2>
           <label>
             Apartman
             <select
-              value={building}
+              value={scopeAllowed?building:''}
               onChange={(e) => {
+                ++readSequence.current;setLoading(false);setStatus('');
                 setBuilding(e.target.value);
                 setPreview(null);
                 setPending(null);
-                setHistory([]);
-                setSanctions([]);
+                setHistory([]);setHistoryLoaded(false);
+                setSanctions([]);setSanctionsLoaded(false);
                 setUser("");
                 setElection("");
                 setTerm("");
@@ -172,16 +193,15 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
               }}
             >
               <option value="">Seçin</option>
-              {buildings.map((b) => (
+              {options.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.name}
                 </option>
               ))}
             </select>
           </label>
-          <button disabled={!building || busy} onClick={() => void load()}>
-            Güncel durumu / geçmişi yükle
-          </button>
+          {view!=='oyuncular' && <button disabled={!scopeAllowed || busy || loading} onClick={() => void load()}>{loading?'Yükleniyor…':view==='gecmis'?'İşlem geçmişini yükle':'Güncel durumu yükle'}</button>}
+          {!options.length && <p className="empty-state">Mevcut API bu bölüm için erişilebilir apartman döndürmedi.</p>}
           <label>
             İşlem gerekçesi
             <textarea
@@ -194,11 +214,12 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
               }}
             />
           </label>
-          {status && <p role="status">{status}</p>}
+          {loading && <p role="status">Güncel kayıtlar yükleniyor…</p>}
+          <StaffFeedback message={status}/>
         </article>
-        {building && (
+        {building && scopeAllowed && (
           <>
-            <article className="card">
+            <article className="card" hidden={view!=='oyuncular'}>
               <h2>Oyuncu denetimi</h2>
               <label>
                 Oyuncu
@@ -206,7 +227,7 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
                   value={user}
                   onChange={(e) => {
                     setUser(e.target.value);
-                    setSanctions([]);
+                    setSanctions([]);setSanctionsLoaded(false);
                     inputChanged();
                   }}
                 >
@@ -225,7 +246,7 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
                   <label>
                     Yaptırım
                     <select
-                      value={sanction}
+                      value={selectedSanction}
                       onChange={(e) => {
                         setSanction(e.target.value);
                         inputChanged();
@@ -252,7 +273,7 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
                         ))}
                     </select>
                   </label>
-                  <label>
+                  <label hidden={!['ban','mute'].includes(selectedSanction)}>
                     Bitiş (boş: süresiz)
                     <input
                       type="datetime-local"
@@ -270,13 +291,13 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
                         "staff_sanction",
                         {
                           target_user: user,
-                          action: sanction,
+                          action: selectedSanction,
                           until_at:
-                            ["ban", "mute"].includes(sanction) && until
+                            ["ban", "mute"].includes(selectedSanction) && until
                               ? new Date(until).toISOString()
                               : null,
                         },
-                        `${uiText(sanction)} · ${players.find((p) => p.user_id === user)?.username} · ${until || "Süresiz"}`,
+                        `${uiText(selectedSanction)} · ${players.find((p) => p.user_id === user)?.username} · ${until || "Süresiz"}`,
                       )
                     }
                   >
@@ -285,16 +306,18 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
                   <button
                     className="secondary"
                     disabled={!user || busy}
-                    onClick={() =>
+                    onClick={() => {
+                      const context=sanctionContext.current;
                       void read("staff_sanction_history", { target_user: user })
-                        .then((d) => setSanctions(d as RecordRow[]))
-                        .catch((e) => setStatus(errorText(e)))
-                    }
+                        .then((d) => {if(context===sanctionContext.current){setSanctions(d as RecordRow[]);setSanctionsLoaded(true);}})
+                        .catch((e) => {if(context===sanctionContext.current)setStatus(errorText(e));});
+                    }}
                   >
                     Yaptırım geçmişini görüntüle
                   </button>
                 </>
               )}
+              {sanctionsLoaded && !sanctions.length && <p className="empty-state">Bu oyuncu için yaptırım kaydı bulunamadı.</p>}
               {sanctions.map((s) => (
                 <p key={String(s.id)}>
                   {uiText(String(s.kind))} · {String(s.reason)} ·{" "}
@@ -306,7 +329,7 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
                 </p>
               ))}
             </article>
-            {preview && (
+            {preview && view==='secimler' && (
               <article className="card">
                 <h2>Seçimler, görevler ve ortak kararlar</h2>
                 <p>
@@ -320,7 +343,7 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
                     <label>
                       İşlem
                       <select
-                        value={action}
+                        value={selectedAction}
                         onChange={(e) => {
                           setAction(e.target.value);
                           inputChanged();
@@ -335,7 +358,7 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
                           ))}
                       </select>
                     </label>
-                    <label>
+                    <label hidden={!selectedAction.startsWith('election.') || selectedAction==='election.start'}>
                       Seçim
                       <select
                         value={election}
@@ -356,12 +379,13 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
                           ))}
                       </select>
                     </label>
-                    <label>
+                    <label hidden={!['election.force','manager.appoint'].includes(selectedAction)}>
                       Aday / atanacak sakin
                       <select
                         value={user}
                         onChange={(e) => {
                           setUser(e.target.value);
+                          setSanctions([]);setSanctionsLoaded(false);
                           inputChanged();
                         }}
                       >
@@ -375,7 +399,7 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
                           ))}
                       </select>
                     </label>
-                    <label>
+                    <label hidden={selectedAction!=='manager.term'}>
                       Görev
                       <select
                         value={term}
@@ -395,7 +419,7 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
                           ))}
                       </select>
                     </label>
-                    <label>
+                    <label hidden={!selectedAction.startsWith('poll.')}>
                       Ortak karar
                       <select
                         value={poll}
@@ -414,7 +438,7 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
                           ))}
                       </select>
                     </label>
-                    <label>
+                    <label hidden={!['election.start','election.restart','election.schedule'].includes(selectedAction)}>
                       Adaylık bitişi
                       <input
                         type="datetime-local"
@@ -425,7 +449,7 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
                         }}
                       />
                     </label>
-                    <label>
+                    <label hidden={!['election.start','election.restart','election.schedule'].includes(selectedAction)}>
                       Oy bitişi
                       <input
                         type="datetime-local"
@@ -436,7 +460,7 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
                         }}
                       />
                     </label>
-                    <label>
+                    <label hidden={selectedAction!=='manager.term'}>
                       Görev bitişi
                       <input
                         type="datetime-local"
@@ -451,14 +475,14 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
                       disabled={
                         !validReason ||
                         busy ||
-                        !allowed(actionPermissions[action])
+                        !allowed(actionPermissions[selectedAction])
                       }
                       onClick={() =>
                         stage(
                           "staff_governance_action",
                           {
                             target_building: building,
-                            action,
+                            action: selectedAction,
                             expected_revision: preview.revision,
                             args: {
                               election_id: election || null,
@@ -476,7 +500,7 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
                                 : null,
                             },
                           },
-                          labels[action],
+                          labels[selectedAction],
                         )
                       }
                     >
@@ -498,9 +522,9 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
                 </p>
               </article>
             )}
-            <article className="card staff-history">
+            <article className="card staff-history" hidden={view!=='gecmis'}>
               <h2>İşlem geçmişi ve telafi</h2>
-              {!history.length && <p className="empty-state">Bu apartman için henüz işlem geçmişi yüklenmedi veya kayıt bulunmuyor.</p>}
+              {!history.length && <p className="empty-state">{historyLoaded?'Bu apartman için kayıt bulunamadı.':'Kayıtları görmek için işlem geçmişini yükleyin.'}</p>}
               {history.map((h) => (
                 <section key={String(h.id)}>
                   <h3>{uiText(String(h.action))}</h3>
@@ -518,7 +542,7 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
                   </details>
                   {["wallet.adjust", "treasury.adjust"].includes(
                     String(h.action),
-                  ) && (
+                  ) && allowed(h.action==='wallet.adjust'?'economy.wallet.adjust':'economy.treasury.adjust') && (
                     <button
                       disabled={!validReason || busy}
                       onClick={() =>
@@ -537,30 +561,16 @@ export function StaffControlCenter({ identity, players, buildings }: Props) {
             </article>
           </>
         )}
-      </PanelGroup>
-      {pending && (
-        <article className="card confirmation" role="region" aria-label="İşlem onayı">
-          <h2>Son onay</h2>
-          <p>{pending.label}</p>
-          <pre className="staff-json">
-            {JSON.stringify(pending.args, null, 2)}
-          </pre>
-          <p>
-            Bu işlem gerekçesiyle denetim geçmişine kaydedilir. Bağlantı
-            kesilirse aynı işlemi yeniden deneyebilirsiniz; ikinci kez uygulanmaz.
-          </p>
-          <button disabled={busy} onClick={() => void confirm()}>
-            Onayla ve uygula
-          </button>
-          <button
-            className="secondary"
-            disabled={busy}
-            onClick={() => setPending(null)}
-          >
-            Vazgeç
-          </button>
-        </article>
-      )}
+      </div>
+      {pending && <StaffConfirmation review={{title:'Son onay',summary:pending.label,details:{
+        'Apartman':options.find(b=>b.id===pending.args.target_building)?.name || options.find(b=>b.id===building)?.name || building,
+        'Oyuncu':players.find(p=>p.user_id===(pending.args.target_user || (pending.args.args as Record<string,unknown>|undefined)?.user_id || history.find(h=>h.id===pending.args.original_audit_id)?.target_id))?.username || '—',
+        'Gerekçe':String(pending.args.reason || ''),
+        ...Object.fromEntries(Object.entries((pending.args.args as Record<string,unknown>) || {}).filter(([key,value])=>value && key!=='user_id').map(([key,value])=>[{election_id:'Seçim',term_id:'Görev',poll_id:'Ortak karar',nominations_end:'Adaylık bitişi',voting_end:'Oy bitişi',ends_at:'Görev bitişi'}[key] || key,/_end$|ends_at/.test(key)?time(String(value)):String(value)])),
+        ...(pending.args.original_audit_id?{'Kaynak kayıt':String(pending.args.original_audit_id)}:{}),
+        'İşlem kimliği':pending.id,
+      }}} busy={busy} message={status} onConfirm={()=>void confirm()} onCancel={()=>setPending(null)}/>}
+
     </section>
   );
 }
