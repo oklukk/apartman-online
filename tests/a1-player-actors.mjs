@@ -48,7 +48,7 @@ try {
     create schema cron;create table cron.job(jobid bigint generated always as identity,jobname text unique,schedule text,command text);
     create function cron.schedule(n text,s text,c text) returns bigint language sql as $$insert into cron.job(jobname,schedule,command) values(n,s,c) returning jobid$$;`);
   const files=(await readdir('supabase/migrations')).filter(f=>f.endsWith('.sql')).sort();
-  assert.equal(files.length,9);assert.match(files[8],/_a1_player_actor_provisioning\.sql$/);
+  assert.ok(files.length>=9);assert.match(files[8],/_a1_player_actor_provisioning\.sql$/); // historical nine-migration suite
   for (const file of files.slice(0,8)) {
     const sql=(await readFile('supabase/migrations/'+file,'utf8')).replace(/create extension if not exists pg_cron with schema pg_catalog;/g,'');
     await db.query('begin');await db.query(sql);await db.query('commit');

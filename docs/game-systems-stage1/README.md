@@ -63,3 +63,10 @@ PR #19 `main/8ed8d47` üzerinde birleşti. [Kapalı oyuncu aktörü oluşturucu]
 ayrı bir eklemeli migration ve disposable test dilimidir: yalnız DB sahibi çağırabilir;
 replay/yarışta tek actor ve dört0/XP0 korunur. Gerçek backfill/entegrasyon yapılmaz. Teknik not
 ayrılma/silme, A2 ENUM–katalog seçimi ve çoklu pilot planlarının ortak nüfus sınırı riskini de değerlendirir.
+
+## A1 kontrollü NPC oluşturma altyapısı
+
+PR #20 `main/22286a3` üzerinde birleşti. [NPC dünya/onay/oluşturma teknik notu](A1_NPC_PROVISIONING.md)
+tek pilot, dünya bazlı toplam nüfus bütçesi, değişmez onay snapshot'ı, kalıcı anahtarlar ve
+eğitmen kapsaması için kapalı PostgreSQL altyapısını açıklar. Migration boş tanımdır; gerçek
+NPC/konut veya canlı manifest üretilmez. Onay, seed, entegrasyon ve yayın ayrı adımlardır.
