@@ -101,9 +101,13 @@ function bot(v: unknown, path: string, issues: Issue[]): v is FixedBot {
           fixedLevels.advanced_teaching !== (taughtFields.includes('advanced_teaching') ? 6 : 3))
         issue(issues, path, 'fixed-profile', 'Bot öğretim görevlisinin alan6 ve Temel5/İleri3 sabitleri, alan istisnasıyla gerekli.');
     } else if (v.role === 'worker' || v.role === 'operator') {
+      // The current model declares one professional field; operators also need business.
+      // Absent skills are not zero-level declarations. Do not permit unrelated extras.
+      const requiredFields = v.role === 'worker' ? [v.field] : [v.field, 'business'];
       if (taughtFields.length || fixedLevels[v.field] !== (v.role === 'worker' ? 3 : 4) ||
-          (v.role === 'operator' && fixedLevels.business !== 4))
-        issue(issues, path, 'fixed-profile', 'Bot çalışan alan3, işletmeci ilgili alan4/İşletmecilik4 olmalı.');
+          (v.role === 'operator' && fixedLevels.business !== 4) ||
+          Object.keys(fixedLevels).some(key => !requiredFields.includes(key)))
+        issue(issues, path, 'fixed-profile', 'Bot çalışan yalnız alan3, işletmeci yalnız ilgili alan4/İşletmecilik4 yeteneklerine sahip olmalı.');
     }
   }
   return issues.length === start;

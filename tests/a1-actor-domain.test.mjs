@@ -104,6 +104,59 @@ test('generic ordinary bot worker3 and operator4 standards do not change the pre
   const badWorker = copy(p); badWorker.bots[0].levels.plumbing = 4; rejected(badWorker, 'fixed-profile');
   const badOperator = copy(p); badOperator.bots[1].levels.business = 5; rejected(badOperator, 'fixed-profile');
 });
+function ordinaryBotPlan(role, field) {
+  const p = fixture(); p.activeTeachingFields = []; p.zeroLevelLearningPaths = [];
+  p.bots = [{ ...p.bots[0], role, field, teachingFields: [],
+    levels: role === 'worker' ? { [field]: 3 } : { business: 4, [field]: 4 } }];
+  return p;
+}
+test('workers accept only their professional field3; operators accept only business4 and field4', () => {
+  for (const role of ['worker', 'operator']) for (const field of SKILLS) {
+    const p = ordinaryBotPlan(role, field);
+    assert.deepEqual(validate(freeze(p)), { ok: true, issues: [] });
+    assert.deepEqual(change(p.bots[0], copy(p.bots[0])), { ok: true, issues: [] });
+    const reordered = copy(p.bots[0]);
+    reordered.levels = Object.fromEntries(Object.entries(reordered.levels).reverse());
+    assert.equal(change(p.bots[0], reordered).ok, true);
+  }
+});
+test('workers and operators reject every unrelated known skill, even a zero-level declaration', () => {
+  for (const role of ['worker', 'operator']) for (const field of SKILLS) {
+    const p = ordinaryBotPlan(role, field);
+    for (const extra of SKILLS.filter(s => !Object.hasOwn(p.bots[0].levels, s))) {
+      for (const level of [0, 3, 4, 10]) {
+        const bad = copy(p); bad.bots[0].levels[extra] = level;
+        rejected(freeze(bad), 'fixed-profile');
+        // An already-invalid snapshot cannot legitimize itself by remaining unchanged.
+        rejected(bad.bots[0], 'fixed-profile', bot => change(bot, copy(bot)));
+      }
+    }
+  }
+});
+test('ordinary bot required skills cannot be omitted or replaced by other levels or teaching claims', () => {
+  for (const role of ['worker', 'operator']) for (const field of SKILLS) {
+    const p = ordinaryBotPlan(role, field);
+    for (const key of Object.keys(p.bots[0].levels)) {
+      const missing = copy(p); delete missing.bots[0].levels[key]; rejected(missing, 'fixed-profile');
+      for (const level of [0, 3, 4, 10].filter(n => n !== p.bots[0].levels[key])) {
+        const bad = copy(p); bad.bots[0].levels[key] = level; rejected(bad, 'fixed-profile');
+      }
+    }
+    const unknown = copy(p); unknown.bots[0].levels.unregistered = 10; rejected(unknown, 'range');
+    const teaching = copy(p); teaching.bots[0].teachingFields = [field]; rejected(teaching, 'fixed-profile');
+  }
+});
+test('multi-field lecturers retain all declared field6 skills including pedagogy field overrides', () => {
+  const p = fixture(); p.scope = 'world'; p.bots = [p.bots[0]];
+  p.activeTeachingFields = [...SKILLS];
+  p.zeroLevelLearningPaths = SKILLS.map(field => ({ field, entryLevel: 0 }));
+  p.bots[0].teachingFields = [...SKILLS];
+  p.bots[0].levels = Object.fromEntries(SKILLS.map(field => [field, 6]));
+  assert.deepEqual(validate(freeze(p)), { ok: true, issues: [] });
+  for (const field of SKILLS) assert.equal(teaches(p.bots[0].levels, 'lecturer', field), true);
+  const reordered = copy(p.bots[0]); reordered.teachingFields.reverse();
+  assert.equal(change(p.bots[0], reordered).ok, true);
+});
 test('teaching pedagogy itself uses area6 priority, without turning NPCs into professors', () => {
   const p = fixture(); p.activeTeachingFields = ['basic_teaching', 'advanced_teaching'];
   p.zeroLevelLearningPaths = p.activeTeachingFields.map(field => ({ field, entryLevel: 0 }));
