@@ -148,6 +148,8 @@ Sözleşme, kabul anındaki ücret/grup/çalışma birimi/süre/tazminat politik
 
 `wallets` ve `buildings.treasury` mevcut kanonik bakiyelerdir. Bunların kopyası yeni bir “genel hesap bakiyesi” tablosuna alınmaz. Yeni business/escrow hesapları için kendi append-only defteri ve `economic_operations/operation_legs` ilişkisi önerilir; her operation mevcut wallet/treasury hareket ID'leriyle yeni defter hareketlerini bağlar. Aynı transferi iki ayrı tarihçe satırıymış gibi çoğaltan görünüm oluşturulmaz.
 
+Kendi çalışan işletme için sermaye ve kazancın kişiye dönüş yolu da gerekir: önerilen `fund_business` kendi cüzdanından kendi işletmesine, `withdraw_owner_income` yalnız işletmenin **serbest** parasından sahibinin cüzdanına iç transfer yapar. Başka oyuncuya serbest para gönderme modülü değildir. Ücret/tazminat/iş escrow'u veya ayrılmış teminat çekilemez; mevcut bakiyenin kopyası/ilave para yaratılmaz. Bot işletmesinin sistem hesabından oyuncu “owner çekimi” yapılamaz. Kuruluşta asgari sermaye, çekim koşulları ve sahip çalışma kazancının bordro mu işletme geliri mi sayılacağı D05/D09 onayına bağlıdır.
+
 - Para normal akışta yoktan oluşmaz: oyuncu/bina → escrow → işletme → çalışan; iade ters yoldur. Bot maaşı gibi kasıtlı faucet ve NPC kaynak satın alması gibi sink ayrı hesap/kaynak/limit kaydı ister. Her transaction'da bacak toplamı, açık faucet/sink dâhil sıfırdır.
 - Escrow önerisi: rezervasyonda para mevcut cüzdan/kasadan **gerçek defter hareketiyle** ayrılır. Yalnız ayrı bir hold satırı yazıp eski `pay_dues`/admin/harcama yolunun bakiyenin tamamını harcamasına izin verilmez. Bu tercih, bütün legacy okuyucuları “balance-held” hesabına çevirmeyi gerektirmeden çift harcamayı önler.
 - Gerekli yeni wallet/treasury `kind` değerleri ve bağlayıcı referanslar gelecekte additive migration ile eklenir. İç helper'lar kullanıcıya açılmaz; yeni checked işlem building kilidi ve mevcut helper'ları aynı transaction'da kullanır. Integer sütunlara yazmadan önce bigint hesap + sınır kontrolü yapılır.
@@ -193,6 +195,7 @@ FK ve RLS filtreleri için actor/user/business/building/role indeksleri; açık 
 | `get_my_character`, `list_available_courses`, `get_my_enrollments` | Yalnız kendi özel skills/XP, katılabilir katalog; bot public kimliği ayrı dar model |
 | `enroll_course`, `start_learning`, `complete_learning`, `cancel_enrollment` | Auth/yaptırım, prerequisite, koltuk/zaman/kota, escrow/XP tekillik, sürüm |
 | `open_business`, `get_my_business`, `assign_owner_work` | Sahip UID, Business≥5, iş türü, finansman/lisans kararı, owner da görev şartlarına tabi |
+| `fund_business`, `withdraw_owner_income` | Yalnız kendi işletmesi/kendi cüzdanı; serbest fon ve korunmuş ücret/iş teminatı, atomik ledger köprüsü; NPC sistem hesabına owner erişimi yok |
 | `buy_inputs`, `publish_offer`, `accept_offer`, `cancel_offer` | Yalnız açık manuel tedarik; stok/depo/TTL/slot/kota/paranın atomik rezervasyonu; fiyat server'dan |
 | `start_work`, `complete_work`, `cancel_order` | Doğru görevli/cron, server süresi, kaynak tüketimi, kalite/etki, bir kez settlement ve XP |
 | `publish_vacancy`, `apply_for_job`, `end_contract`, `get_my_contracts` | Güncel ücret bandı/sürümü, insan-bot swap, funding, kazanç limiti, tazminat, private sözleşme okuması |
