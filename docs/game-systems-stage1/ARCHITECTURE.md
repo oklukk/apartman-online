@@ -20,6 +20,12 @@ flowchart TD
   OLD --> NEED[Bina bakım ve onarım ihtiyacı]
   NEED --> GOV[Mevcut yönetim + yeni hizmet onay süreci]
   GOV --> ORD
+  POP[Planlı ve sınırlı bot nüfusu] --> ACT
+  BUY[Bot müşteri / bot apartmanı: sınırlı talep bütçesi] --> GOV
+  BUY --> ORD
+  AUTO[Kayıtlı otomatik teklif kuralı] --> WIN[Son 10 dakika: gerçek teklif denemesi]
+  WIN --> CAP
+  WIN --> GOV
   BIZ --> EMP[İlan / başvuru / sözleşme / ücret]
   EMP --> FIN
   WORKER[Yetkili, tekrar güvenli cron worker] --> EDU
@@ -29,7 +35,7 @@ flowchart TD
   PRIV -.-> WORKER
 ```
 
-UI yalnız izin verilen alanları alır. İstek, oyuncunun kimliğini `auth.uid()` üzerinden bulur; istemciden fiyat, sahiplik, seviye, bot türü, maaş grubu veya rol kabul etmez. Modüller React'te ayrı tip/API/bileşenlere ayrılır; oyun sonucu PostgreSQL transaction'ında üretilir. RPC adları bu belgede **önerilen yeni sözleşmelerdir**, mevcut 27 RPC değiştirilmiş sayılmaz.
+UI yalnız izin verilen alanları alır. İstek, oyuncunun kimliğini `auth.uid()` üzerinden bulur; istemcinin gönderdiği fiyat, sahiplik, seviye, bot türü, maaş grubu veya rolü otorite olarak kabul etmez. Sahipçe seçilen fiyat/otomatik teklif sınırı server yetkisi ve geçerli politika sınırlarıyla doğrulanıp snapshot alınır. Modüller React'te ayrı tip/API/bileşenlere ayrılır; oyun sonucu PostgreSQL transaction'ında üretilir. RPC adları bu belgede **önerilen yeni sözleşmelerdir**, mevcut 27 RPC değiştirilmiş sayılmaz.
 
 ## 2. Aktör, konut ve yetenek modeli
 
@@ -38,6 +44,14 @@ UI yalnız izin verilen alanları alır. İstek, oyuncunun kimliğini `auth.uid(
 Öneri: `actors` türü `player|bot`; player için benzersiz `profile_id → public.profiles`, bot için bu alan NULL ve ayrı bot profili. Oyuncunun mevcut profil/üyelik/daire/wallet ID'leri değiştirilmez. Bot için Auth hesabı, `profiles` veya `memberships` kaydı açılmaz: aksi hâlde Auth trigger'ı/başlangıç parası/nüfus/oy/aidat tetiklenebilir.
 
 Bot konutları `npc_buildings` + `npc_homes` kataloğundadır; ayrı bina/daire envanteridir, oyuncu davetiyesi/daire atama yoluna girmez. Tek botun tek kalıcı konutu vardır. İş atamaları bu konutu veya mesleği değiştirmez. Oyuncu/bot sakin sayıları UI'da ve bina giderlerinde birleştirilmez. Bot evlerine gerçek oyuncu taşınamaz; botlar insan seçimlerine oy vermez.
+
+### 2.1 Planlı bot nüfusu ve eğitmen kapsaması
+
+**Kesin karar:** Botlar sınırlı ve önceden planlanmış nüfus olarak oluşturulur. Her kalıcı botun tek kimliği, profili, mesleği ve bot konutu vardır. Yeni işletme, iş ilişkisi, müşteri talebi veya ihale için yeni bot/konut üretilmez. Bir actor'ın çok sayıda işletmede görev alması yalnız atama satırlarını artırır; nüfus sayısını veya müşteri bütçesini artırmaz.
+
+Önerilen nüfus planı; sürüm, toplam bot tavanı, NPC bina/konut kapasitesi, sabit bot kimlik listesi ve alan→öğretim görevlisi kapsama matrisinden oluşur. Nüfus sayısı henüz seçilmedi. Provisioning, nüfus/konut limiti ve kimlik tekilliğini birlikte doğrular; keyfî runtime bot üretimi yoktur. Plan değişikliği ayrı incelenir, var olan actor/konut/iş ve finans geçmişi silinmez.
+
+**Aktif her öğretilebilir alan için gerekli nitelikli bot öğretim görevlisi ve konut kapasitesi birlikte planlanır.** Bir bot birden fazla alanı kapsıyorsa her alan için sabit alan yeteneği ≥6 ve görev yeterliği doğrulanır; bunun kaç alana/derse yeteceği ayrıca kapasite konusudur. Yeterli atanabilir eğitmen/konut/kurum kapasitesi olmayan yeni alan, otomatik bot klonlayarak aktifleştirilemez. Bot öğreticinin işletmeler arası atama esnekliği korunur; öğrenci/ders kotası ayrı ölçülür.
 
 İlk skill kataloğu Tesisatçılık, İşletmecilik, Temel Öğreticilik ve İleri Öğreticilik alanlarını ayırır; ilk kurs Tesisatçılık olsa da İşletmecilik ayrı yetenektir. İşletmecilik 5'e erişim için aynı eğitim altyapısında onaylı bir kurs/uygulama yolu B2'den önce açılmalı veya başlangıç dağılımında açıkça onaylanmalıdır; test fixture'ında 5 vermek gerçek oyuncu gelişim yolunun yerine geçmez.
 
@@ -56,15 +70,31 @@ XP her zaman tamamlanmış ve doğrulanmış eğitim/iş kaynağına bağlıdır
 | İleri Öğreticilik öğreten bot | Öğrettiği alan için 6 zorunlu | Sabit İleri=6, Temel=5; İleri'yi hem 3 hem 6 kaydetme |
 | Bot işletmesi | Genel seviye sabit 5 | Hizmet kalitesi veya işleticinin İşletmecilik seviyesi 5 varsayılmaz |
 
-Son iki satırdaki sabit profil oluşturma yöntemi, kullanıcının “öğretilen alan 6” önceliğinin mimari yorumudur; onaylanmalıdır. Bir NPC'nin farklı işletmede çalışması ona farklı yetenek değerleri vermez. Çelişen işletmeci/öğretici sabitleri tek NPC'ye yüklenmez; farklı kalıcı NPC'ler kullanılır. Bot profili rolleri ve override önceliği test fixture'ıyla sabitlenmeden seed/provisioning yapılmaz.
+Temel/İleri Öğreticilik öğreten bot satırlarındaki sabit profil oluşturma yöntemi, kullanıcının “öğretilen alan 6” önceliğinin mimari yorumudur; onaylanmalıdır. Bir NPC'nin farklı işletmede çalışması ona farklı yetenek değerleri vermez. Çelişen işletmeci/öğretici sabitleri tek NPC'ye yüklenmez; farklı kalıcı NPC'ler kullanılır. Bot profili rolleri ve override önceliği test fixture'ıyla sabitlenmeden seed/provisioning yapılmaz.
 
 ## 3. Eğitim, üniversite ve mesleki uygulama
+
+### 3.1 Ayrı öğretmenlik yeterlikleri
+
+Öğretmenlik görevi, personel RBAC rolü değildir. Yeterlik kontrolleri verilen **alan/görev** ve güncel beceriler üzerinden server'da yapılır; yalnız unvan metni veya client rolü yeterli değildir.
+
+| Görev | Kesinleşen yeterlik | Durum / ayrım |
+| --- | --- | --- |
+| Özel öğretmen | Üniversite öğretim görevlisi veya profesörle aynı koşullar varsayılmaz; kendine ait ayrı yeterlik politikası gerekir | Bu revizyonda onaylanan sayılar öğretim görevlisi ve profesör içindir; özel öğretmen için ayrı Temel/İleri/alan alt sınırı belirtilmedi. D03'te açık bırakılır; ayrı politika seçilmeden özel ders kabulü fail-closed, diğer unvanların eşikleri otomatik kopyalanmaz. |
+| Üniversite öğretim görevlisi | Temel Öğreticilik **≥5**, İleri Öğreticilik **≥3**, öğretilen alan **≥6** | İnsan yeterlik alt sınırıdır. Bot alan öğreticisinin sabit 6/5/3 profili bunu karşılar; öğreticilik alanı için önceki alan=6 istisnası korunur. |
+| Profesör | Temel Öğreticilik **10**, İleri Öğreticilik **≥5**, öğretilen alan **≥6** | 0–10 ölçeğinde Temel=10 gerekir. Ders verebilme koşuludur; kendiliğinden staff yetkisi veya kurum ataması vermez. |
+
+**Kesin ilke:** Özel öğretmen, profesörden daha yüksek eğitim verimliliğine ulaşamaz. Alan/hedef öğrenci seviyesi karşılaştırılabilir koşullarda; özel ders, az öğrenci, donanım ve diğer çarpanlar uygulandıktan sonra da bu sıralama korunmalıdır. Verimlilik, alan seviyesinden ve toplam öğrenci sayısından ayrıdır; özel öğretmenin alan yeteneğinin yüksek olması bu ilkeyi aşamaz. Karşılaştırma/normalizasyon ve katsayı formülü D03'te açıktır; örnek Q katsayıları eğitim verimi formülü değildir.
+
+Öğretmenin eşzamanlı öğrenci sayısı, bir dersin grup büyüklüğü, aktif ders/alan sayısı, dönem başına ders ve öğretim süresi **açık tasarım konularıdır**. Kurum koltuğu, öğretmen hizmet kotası ve öğrencinin aktif öğrenim slotu ayrı kaydedilmelidir. Botların kapasitesi işletmeye özgü kalır; sayısal öğrenci/ders sınırları veya her alana otomatik sınırsız öğretim hakkı atanmaz. Profesör unvanından otomatik sayısal kapasite bonusu türetilmez. Sabit 6/5/3 bot öğretim görevlisi profesör değildir; yeni profesör bot seed'i kararlaştırılmış sayılmaz.
+
+### 3.2 Eğitim prototipi ve server süreci
 
 Küçük ilk dikey dilim: Tesisatçılık + Temel/İleri Öğreticilik katalogları, bir alan kursu ve öğretici yeterlilik okuması. Gerçek üniversite kurumu bir bot işletme türü ve eğitmen ataması kullanır; prototipte tam işletme yönetimini taklit eden butonlar yoktur. Owner/staff olarak kurs yayınlama sonraki işletme dilimine kalabilir; ilk katalog sistemce yönetilir.
 
 Önerilen akış: `available → enrolled/reserved → in_progress → completed | cancelled | expired`. Eğitim koltuğu, eğitmen hizmet kotası ve gerekiyorsa ücret aynı başvuruda rezervasyona alınır. İlerleme, süre ve görev tamamlama server saatinde doğrulanır. Kurs tamamlanmadan seviye yazılmaz; eğitmen seviyesi ve geçerli müfredat sürümü snapshot'lanır. Eğitmen yoksa/uygunsuzsa kurs satılamaz.
 
-Öğreticilik, öğretilen alandan ayrıdır. Öneri olarak alan seviyesi öğrenci hedefini karşılamalı; Temel/İleri Öğreticilik hangi seviyeye kadar eğitim verilebileceğini ve eğitim verimini sınırlamalıdır. Katsayılar, eğitmen olma eşiği, üniversiteye giriş/mezuniyet/sertifika ve oyuncu öğreticinin geliri **kararlaştırılmamıştır**. İlk prototipin kazanım üst sınırı eğitmenin alanını aşmaz; 7–10 gelişim yolu açılmadan o seviyelere eğitim ürünü gösterilmez.
+Öğreticilik, öğretilen alandan ayrıdır. Öneri olarak alan seviyesi öğrenci hedefini karşılamalı; Temel/İleri Öğreticilik hangi seviyeye kadar eğitim verilebileceğini ve eğitim verimini sınırlamalıdır. Öğretim görevlisi/profesör eşikleri yukarıda kesinleştirilmiştir; özel öğretmen eşikleri, eğitim katsayıları/kapasiteleri, üniversiteye giriş/mezuniyet/sertifika ve oyuncu öğreticinin geliri **açık karardır**. İlk prototipin kazanım üst sınırı eğitmenin alanını aşmaz; 7–10 gelişim yolu açılmadan o seviyelere eğitim ürünü gösterilmez.
 
 Mesleki uygulama XP'si gerçek tamamlanmış işten gelir; eğitim XP'si ayrı kaynak türüdür ama ortak günlük skill kazanım sınırını paylaşması önerilir. Eğitim ve çalışma için çakışan zaman/aktif iş kontrolü gerekir; botun işletmeler arası esnekliği gerçek oyuncunun sınırsız eşzamanlı görev hakkı olduğu anlamına gelmez.
 
@@ -92,11 +122,19 @@ Depoda 100 parça olması 100 eşzamanlı iş veya günlük 100 hizmet hakkı ve
 
 Bot işletmesinde gerçek çalışan sayısı sınırsız kuralı korunur; bu kurala toplam “çalışan slotu” üst sınırı konulmaz. Her gerçek kişinin gelir/XP ve günlük iş üretimi sınırlandırılır. Dış müşteriye satılan ortak hizmet kotası ile çalışanın gelir/deneyim üretimi ayrı ölçülür; gerekiyorsa eğitim/standart görev birimleri ticari stok üretmeyen sistem işi olarak ayrı kataloglanır. Sisteme gerçek kişi başına sınırlı yeni para girişi olabilir; her ek bot ataması yeni sınırsız faucet değildir.
 
-## 5. Çevrimdışı teklifler ve tesisat iş emri
+### Bot hizmetinde hızlı kota ve teslimat kuyruğu
+
+**Kesin karar:** Botlar belirli sayıdaki işi hızlı tamamlar; hızlı hizmet kotası dolunca sonraki işler gecikmeli teslimata veya ileri tarihli randevu sırasına alınır. Hızlı kota, “anında bitir” sınırsızlığı değildir; sayısal kota, hızlı işlem süresi, gecikme ve randevu ufku henüz seçilmedi.
+
+Öneri: `(business,assignment,service,period)` hızlı hizmet sayacı ve ayrı gelecek tarihli `capacity_buckets`/randevu rezervasyonu. Hızlı kota bitince yeni istek yalnız uygun, **sınırlı** bir gelecek slotu varsa kabul edilir; `ready_at/promised_at` server'da kaydedilir ve satın almadan önce müşteriye gösterilir. Kuyruk depo stokunun veya eşzamanlı aktif iş sınırının yerine geçmez. Uygun gelecek slotu yoksa talep karşılanamaz; gizlice anlık hizmet veya kaynak satın alma yapılmaz.
+
+Gün değişince hızlı kota yenilense bile mevcut ileri randevu silinmez veya ikinci hizmet hakkına dönüşmez. Aynı NPC'nin farklı işletmelerde sayaçları ayrıdır; her yeni iş ilişkisi için NPC/konut yaratılmaz. Sıra adaleti, erteleme/iptalde kota iadesi, gecikme telafisi ve hangi hizmetin gecikmeli teslimat/randevu kullandığı D07/D17'de açıktır. Öğretmen öğrenci/ders sınırları bunun ayrıca tanımlanan alt türüdür.
+
+## 5. Çevrimdışı teklifler, ihaleler, bot talebi ve tesisat iş emri
 
 **Kural:** Teklif rezervasyonludur; kaynak otomatik satın alınmaz.
 
-Öneri: işletme sahibi yayımlarken adet/zaman/TTL belirler; gereken mevcut stok ve aktif iş/hizmet kapasitesi **teklif yayımlanırken** tutulur. Henüz müşteri yokken müşteriden para tutulamaz. Kabulde müşteri parası escrow'a alınır; mevcut rezervasyon aynı transaction'da tekliften iş emrine devredilir, yeniden sayılmaz. Stok yetmiyorsa teklif açılmaz; otomatik dış satın alma/borçlandırma yapılmaz. İlk prototipin manuel tedarik katalog/fiyat/kaynak sınırı ayrı onay konusudur.
+Doğrudan rezervasyonlu hizmet teklifi için öneri: işletme sahibi yayımlarken adet/zaman/TTL belirler; gereken mevcut stok ve aktif iş/hizmet kapasitesi **teklif yayımlanırken** tutulur. Henüz müşteri yokken müşteriden para tutulamaz. Kabulde müşteri parası escrow'a alınır; mevcut rezervasyon aynı transaction'da tekliften iş emrine devredilir, yeniden sayılmaz. Stok yetmiyorsa teklif açılmaz; otomatik dış satın alma/borçlandırma yapılmaz. İlk prototipin manuel tedarik katalog/fiyat/kaynak sınırı ayrı onay konusudur.
 
 `draft → reserved/open → accepted → in_progress → completed`; `open → expired/cancelled`, diğer iptal/hata yolları sürümlü politikanın izin verdiği ölçüde. Sonuçsuz/ağ belirsiz istekte aynı operation_id aynı sonucu verir; farklı payload reddedilir.
 
@@ -107,6 +145,44 @@ Bot işletmesinde gerçek çalışan sayısı sınırsız kuralı korunur; bu ku
 5. TTL/iptal kullanılmamış kaynak ve kapasiteyi serbest bırakır; tüketilmiş kaynak “kullanılmamış” gibi otomatik iade edilmez. Para iadesi ters kayıtla yapılır. İade/ücret kesintisi politikası açık karardır.
 
 Tesisat prototipinde bir açıkça tanımlanmış küçük onarım yeterlidir. Müşteri bina ise bakım etkisi bina iş kaydına bağlanır; tek bir kişisel ek iş kartı apartman kasasını veya binanın gerçek durumunu gizlice değiştiremez. Başarı/başarısızlık, tekrar arıza ve garanti koşulları henüz sayılandırılmadı; ilk dilimde deterministik, denetlenebilir sonuç önerilir.
+
+### 5.1 Kayıtlı otomatik kural gerçek teklif değildir
+
+| Nesne / olay | Anlamı | Kaynak ve kapasite |
+| --- | --- | --- |
+| Kayıtlı otomatik ihale kuralı | İşletme sahibinin önceden verdiği sınırlandırılmış talimat: alan/iş türü, fiyat ve teslimat sınırları, açık/kapalı, sürüm | **Rezervasyon başlatmaz**, gerçek teklif veya kazanma taahhüdü değildir. İşletmenin gelecekte kaynak bulacağını garanti etmez. |
+| Doğrudan rezervasyonlu hizmet teklifinin yayını | Müşteriye kabul edilebilir gerçek teklif | Mevcut stok, aktif iş/zaman ve hizmet kapasitesi yayın transaction'ında tutulur. |
+| İhaleye gerçek teklifin sunulması | Manuel veya zamanlanmış worker tarafından geçerli bir ihale için oluşturulmuş bağlayıcı teklif | **Gerçek teklif oluşurken** stok ve aktif iş/hizmet kapasitesi tutulur; kural kaydı aşamasında veya yalnız kazanımda başlatılmaz. |
+
+### 5.2 Son 10 dakika ve ihale rezervasyon yaşamı
+
+**Kesin tasarım kararı:** Önceden kayıtlı kurallarla otomatik gerçek teklif verme denemesi, ihalenin **son 10 dakikalık** penceresinde yapılır. Server kapanışına göre pencere `[closes_at−10 dakika, closes_at)` olarak önerilir; pencere dışı veya kapanıştan sonra geçmişe tarihli teklif oluşturulmaz. Cron'un her dakika uyanması tam saniyesinde teklif garantisi değildir; geciken worker kapanıştan sonra teklifi varmış gibi yazamaz. Kısa ihaleler, uzatılan kapanış/sürüm, son teklif değiştirme/iptal ve eşit teklif kuralı D08'de açıktır.
+
+Worker; talimatın güncel sürümünü, gerçek sahibin hâlâ yetkili olduğunu/yaptırımını, ilan koşullarını, fiyat/teslimat limitlerini ve eldeki stok/kotaları yeniden denetler. Pencere/ihale durumu kilitler alındıktan sonra gerçek teklif yazılmadan hemen önce server saatinde yeniden doğrulanır. Yetersiz kaynak/kapasitede gerçek teklif oluşmaz; otomatik tedarik yoktur. Yeniden deneme varsa yalnız açık pencere içinde, sınırlı ve idempotent olmalıdır. Öneri: ihale+işletme başına tek etkin teklif; rule/worker tekrarları yeni rezervasyon çoğaltmaz. Kaydedilmiş kuralı değiştirmek zaten verilmiş gerçek teklifi gizlice değiştirmez veya iade etmez.
+
+1. **Talep/ihale açılışı:** Alıcının yetkili harcama tavanı ve fon kaynağı onaylanır; öneri olarak azami satın alma bütçesi bu talep için bir kez ayrılır. Her tedarikçi teklifi için tekrar müşteri parası ayrılmaz. İnsan apartmanında mevcut oylama ikinci kez debit edilmez; yeni satın alma onay köprüsü gerekir.
+2. **Gerçek teklif:** Stok + iş/zaman slotu + hizmet kotası aynı transaction'da tutulur. Zaten ileri tarihli bot randevusu öneriliyorsa teslimat zamanı bu rezervasyona bağlıdır. Teklifte fiyat, Q/politika, teslimat, geçerlilik/revision snapshot'ı saklanır.
+3. **Kayıp/ret/iptal/geçersizlik:** İzin verilen terminal sonuçla rezervasyon `released` olur; tutulmuş stok ve kapasite **bir kez** serbest kalır. Teklif aşamasında stok tüketilmediğinden tüketim veya gelir/XP üretilmez. Hiç kazanamayan teklif müşteriden tahsilat yapamaz. İhale sonuçsuz veya iptal ise alıcının talep için ayrılmış bütçesi de bir kez serbest kalır; kaynak yeni para/XP üretmeden kendi hesabına döner.
+4. **Kazanım:** Kazanan ve bütçe/revision tekrar denetlenir. Aynı rezervasyon kimlikleri iş emrine `transferred` olarak bağlanır; yeni rezervasyon eklenmez, arada serbest bırakılıp başka işe kaptırılmaz. Alıcı fonunun gerçek bedeli iş escrow'una geçer, azami bütçeyle farkı serbest bırakılır. Karar, sipariş, fon ve rezervasyon devri atomiktir; biri hata verirse kazanım uygulanmış sayılmaz.
+5. **İş sonucu:** Kaynak tüketimi ve tek settlement/XP/onarım etkisi normal iş emri kurallarını izler. İptal/worker crash/reservation TTL tekrarında aynı kaynak ikinci kez iade veya serbest bırakılamaz. İhale kaydı/satırları silinmez.
+
+Kazanan ve kaybedenleri kapatan işlemler, mevcut lock grafiğine göre ilgili business/bütçe/ihale/rezervasyonları sıralı kilitlemeli; körlemesine ihale kilidinden sonra yeni bina kilidi alınmamalıdır. Bir ihaledeki kapanış işinin atomik kapsamı ve batch/bidder sınırları D08'de performans kararıdır. Her terminal teklif için kaynak serbest bırakma ve kazananda devir kendi transaction'ında tekildir; yarıda kalan worker bu terminal işleri indeksli tekrar tarayarak tamamlamalıdır. Kazanan değiştirilemez; geç çalışan temizleme görevi ikinci kazanan yaratamaz.
+
+### 5.3 Bot müşteriler ve bot apartmanı onarım talebi
+
+**Kesin karar:** Kalıcı bot karakterler oyuncu işletmelerinden ürün/hizmet alabilir; ayrı bot apartmanları onarım talep edebilir. Bu müşteri yönü, bot işletmelerinin oyuncuya sağladığı sınırlı hizmet veya oyuncu çalıştırma yönünden ayrıdır. Bot konutu sahibi olmak, insan apartmanına ait treasury/oy/yönetici yetkisi vermez.
+
+Önerilen satın alma hattı: geçerli ihtiyaç → fiyat-performans ve teslimat karşılaştırması → bütçe/sıklık kontrolü → rezervasyonlu doğrudan sipariş **veya** ihale → doğrulanmış teslim/onarım → tek ödeme. Fiyat-performans yalnız işletmenin Genel Seviye'si değildir: ihtiyacı karşılayan gerçek hizmet etkisi/Q, fiyat, stok, gecikmeli teslimat/randevu ve süre birlikte değerlendirilir. Asgari kalite/fiyat tavanı/son teslimi sağlamayan teklif uygun değildir. Ağırlıklar, skor/eşitlik/dağıtım politikası onaylı formül değildir. Uygun teklif yoksa para harcanmaz; boş kapasite varmış gibi sipariş yaratılmaz.
+
+Ürün alımı için satılabilir bitmiş ürün kataloğu/stoğu ve teslim kaydı gerekir; ham tesisat girdisi müşteri ürünü sayılmaz. Hizmet/onarımla aynı bütçe/rezervasyon/ödeme çekirdeği kullanılır, fakat ürünün stoğu ve hizmetin zaman/kotası ayrı doğrulanır. İlk D1 dilimi mevcut/onaylı servis ve onarım tipleriyle başlayabilir; ürün alım kolu ancak tanımlı bitmiş ürün kaynağıyla açılır. Bu, B5b öncesine üretim fabrikası veya geniş ürün pazarı ekleme gerekçesi değildir.
+
+Bot başına alım sıklığı/cooldown ve dönem bütçesi; bot binası başına gerçek onarım ihtiyacı, tekrar onarım aralığı ve ayrı bütçe; bütün dünya için dönemsel talep/OP tavanı gerekir. Sayısal değerler henüz seçilmedi. Aynı ihtiyaca unique kaynak, tüketici/kategori/dönem kotaları ve yeniden oynatmaya dayanıklı worker gerekir. Kaçırılmış dönemler sonradan sınırsız alım dalgası yaratamaz. NPC iş ataması artınca nüfus, ihtiyaç veya bütçe artmaz. Ürün/hizmet alımı otomasyonu işletmenin **eksik girdisini otomatik satın alma** yasağını kaldırmaz.
+
+**Para kaynağı ve önerilen sınır:** İlk model için sürümlü, merkezi **NPC talep bütçesi** önerilir; bu, miktarı/onayı gereken açık sistem para kaynağıdır. Dönem başına toplam G, tüketici/bina bütçesi ve kategori/alım tavanı aşılmaz; G için sayı belirlenmedi. Fonun bot hesabına ayrılması bir kez kaynak kaydıdır; müşteri→escrow→oyuncu işletmesi satışı mevcut paranın transferidir, ikinci para yaratma değildir. Bot ücretlerinden beslenen kapalı havuz alternatif bir tasarımdır; bu kaynak seçimi D11'de açıktır, iki kaynak aynı para için birlikte sayılmaz.
+
+Alıcı bütçe hesabı insan cüzdanına veya mevcut apartman kasasına bağlanmaz. Talep bütçesi reserve → spend/refund/release olarak izlenir; iptal geri ödemesi NPC bütçesine döner, yeni hibe veya oyuncu XP'si olmaz. Bot ücretleri, eğitim ödemeleri ve müşteri harcamaları farklı kaynak türleriyle raporlanır; oyuncu hesaplarına sınırsız gizli OP aktarımı yapılamaz. Satıcı/ilişkili hesaplara yığılma, sahte ihtiyaç ve iade-alım döngüsü için kaynak/işletme bazlı limit ve audit gereksinimi D11/D18'de planlanır. İstemci bot adına keyfî alım veya bütçe tahsisi başlatamaz.
+
+Bu talep otomasyonu **B5b sonrasına** planlanır. İlk ücretli apartman hizmeti için bot trafiği veya otomatik ihale şart değildir; B5b gerçek insan apartmanının dar onarım döngüsüyle tamamlanabilir.
 
 ## 6. İstihdam, bot değiştirme ve sözleşme
 
@@ -132,7 +208,16 @@ sequenceDiagram
 
 İnsan işletmesinde botlu zorunlu görev açılırken olası insan sözleşmesinin teminatını önceden ayırmak önerilir; bot işletmesinde ise onaylı sistem ücret kaynağı, kişi başına sınırlı sözleşme fonunu başvuruda atomik ayırmalıdır (sınırsız çalışan için sonsuz toplu depozito gerektirmez). Zorunlu ilanı parasız ve gerçekte işe alamaz hâlde sürekli açık göstermek çözüm değildir. Finansman kararı onaylanmadan bu özellik açılmaz. İlk başvurunun botu kaldırması sonra insan atamasının hata vermesi mümkün olmamalıdır. İki uygun eşzamanlı başvuruda görev kilidi, bir kabul kararı ve ilan sürümü belirleyicidir. Kazanan sunucu sırasıyla belirlenir; kaybeden kaynak/parası değişmeden anlaşılır sonuç alır. Yeni pozisyon gerekmiyorsa ikinci insan otomatik boş kadro varmış gibi alınmaz. Bot çıkarken devam eden işler durumu açık karardır: botu aktif tutup eski işleri bitirirken insanı da aynı görevde başlatmak yasaktır. Atomik görev devri veya açık iptal/iade politikası seçilmelidir; uygun başvuruyu keyfî geciktiren çözüm kabul edilmez. Bu karar çözülmeden çalışanlı pilot açılmaz.
 
-### Maaş ve sözleşme
+### 6.1 Dolu insan kadrosuna daha yüksek seviyeli başvuru
+
+Bot→insan zorunlu otomatik geçişinden ayrı senaryodur. **Kesin karar:** İşveren, dolu kadroya daha yüksek ilgili mesleki seviyeli oyuncu başvurduğunda izlenecek politikayı **önceden** belirlemiş olmalıdır. Politika ilan/sözleşme ve başvuru değerlendirme sürümünde görünür/snapshot olmalı; başvuru geldikten sonra eski çalışanın hakkını azaltmak için geriye dönük değiştirilemez.
+
+- **Tazminatlı değiştirme:** Mevcut çalışanın sözleşmesi işveren tarafından bitirilir; birikmiş hak ediş ve süreye bağlı tazminat korunup ödenir, yeni çalışanın sözleşmesi başlar. Eski çıkış+ödeme ve yeni giriş/fonlama aynı kontrollü atomik süreçte doğrulanır. Kaynak yetmiyorsa eski sözleşme sessizce silinmez veya yeni işe alım başarılı sayılmaz.
+- **Ek kadro:** Mevcut sözleşme, maaş ve kazanılmış hak aynen korunur; daha yüksek seviyeli başvuran ek kadroya alınır. Ek pozisyonun finansmanı, role/insan kadro kapasitesi ve çalışma zamanı sınırları ayrıca sağlanmalıdır. Bot işletmesindeki sınırsız gerçek istihdam kuralına keyfî toplam insan tavanı konulmaz.
+
+Hangi ilgili alanın seviyesiyle kıyaslandığı, seviye eşitliği, işverenin seçebileceği politika kapsamı ve ileri tarihli politika değişiklikleri D16'da ayrıntılandırılır. Daha düşük ücret verip eski kişiyi zorla çıkışa yöneltme veya “yer değiştirme” diye tazminatı atlama yoktur. **Maaş düşürme hâlâ açık karardır (D13); üçüncü kesin seçenek olarak eklenmez.** Bu politikalar yüksek seviyeli kişinin otomatik olarak her dolu işi ele geçireceği anlamına gelmez; önceden ilan edilen uygunluk, fon ve seçilen politika doğrulanır.
+
+### 6.2 Maaş ve sözleşme
 
 Kural: ücret bantları **1–3, 4–6, 7–8, 9–10**; bot işletmeleri ilgili grup referansı; gerçek işletme aynı gruba **daha yüksek** ücret sunar. OP tamsayı kalırsa “daha yüksek” matematiksel olarak referanstan en az 1 OP fazla olmalıdır; gerçek asgari fark/yüzde henüz seçilmedi. Yetenek 0'ın çırak/uygunsuz iş statüsü açık karardır.
 
@@ -146,7 +231,7 @@ Sözleşme, kabul anındaki ücret/grup/çalışma birimi/süre/tazminat politik
 
 ## 7. Muhasebe ve mevcut ekonomiyle köprü
 
-`wallets` ve `buildings.treasury` mevcut kanonik bakiyelerdir. Bunların kopyası yeni bir “genel hesap bakiyesi” tablosuna alınmaz. Yeni business/escrow hesapları için kendi append-only defteri ve `economic_operations/operation_legs` ilişkisi önerilir; her operation mevcut wallet/treasury hareket ID'leriyle yeni defter hareketlerini bağlar. Aynı transferi iki ayrı tarihçe satırıymış gibi çoğaltan görünüm oluşturulmaz.
+`wallets` ve `buildings.treasury` mevcut kanonik bakiyelerdir. Bunların kopyası yeni bir “genel hesap bakiyesi” tablosuna alınmaz. Yeni business/escrow ve daha sonraki NPC talep bütçesi hesapları için kendi append-only defteri ve `economic_operations/operation_legs` ilişkisi önerilir; her operation mevcut wallet/treasury hareket ID'leriyle yeni defter hareketlerini bağlar. Aynı transferi iki ayrı tarihçe satırıymış gibi çoğaltan görünüm oluşturulmaz.
 
 Kendi çalışan işletme için sermaye ve kazancın kişiye dönüş yolu da gerekir: önerilen `fund_business` kendi cüzdanından kendi işletmesine, `withdraw_owner_income` yalnız işletmenin **serbest** parasından sahibinin cüzdanına iç transfer yapar. Başka oyuncuya serbest para gönderme modülü değildir. Ücret/tazminat/iş escrow'u veya ayrılmış teminat çekilemez; mevcut bakiyenin kopyası/ilave para yaratılmaz. Bot işletmesinin sistem hesabından oyuncu “owner çekimi” yapılamaz. Kuruluşta asgari sermaye, çekim koşulları ve sahip çalışma kazancının bordro mu işletme geliri mi sayılacağı D05/D09 onayına bağlıdır.
 
@@ -169,17 +254,20 @@ Tabloların sayısı ilk migration'a topluca sığdırılacak bir hedef değildi
 | Taslak nesne | Ana ilişkiler / alanlar | Tekillik ve bütünlük |
 | --- | --- | --- |
 | `actors`, `bot_profiles` | Player profile FK veya bot kimliği; sabit meslek/etiket | Player profile unique; tür/NULL check; bot Auth FK'si yok |
-| `npc_buildings`, `npc_homes` | Bot konutu/binası, actor FK | Bot başına bir konut; ev başına bir sakin; oyuncu yerleşme yoluna kapalı |
+| `npc_population_plans`, `npc_buildings`, `npc_homes` | Sürümlü nüfus tavanı/kimlik listesi, bot konutu/binası; öğretilebilir alan/eğitmen kapsaması | Plan/konut kapasitesi aşılmaz; bot başına bir konut; her işe yeni NPC yok; oyuncu yerleşmesine kapalı |
 | `skill_catalog`, `actor_skills`, `skill_events` | Skill kodu, actor, level/XP, kaynak | `(actor,skill)` PK; 0–10; kaynak+skill unique; bot XP yasak |
 | `policy_versions`, `income_limits`, `actor_daily_usage` | Eğitim/kalite/ücret/cap sürümü; actor+TR günü | Sürüm değişmez; aktör/dönem tek; limit rezervasyon+tüketim sınırı |
-| `institutions`, `course_catalog`, `course_sessions`, `enrollments` | Üniversite işletme FK'si (işletme diliminde), alan/eğitmen, zaman/koltuk, öğrenci | Bir oturumda bir kayıt; prerequisite/çakışma; sonuç/XP tek; ders ücret snapshot'ı |
+| `teaching_qualification_policies`, `institutions`, `course_catalog`, `course_sessions`, `enrollments` | Özel/öğretim görevlisi/profesör görev eşiği, alan/eğitmen, ders/öğrenci kapasitesi; kurum işletme FK'si (işletme diliminde) | Bir oturumda bir kayıt; prerequisite/çakışma; sonuç/XP tek; ders ücret snapshot'ı |
 | `business_types`, `businesses`, `business_state` | Sabit tür, owner_actor, service_area/location; bakım/donanım/genel seviye | İnsan owner Business≥5; bot level=5; sürümlü Q girdileri; owner tekil yetkili ilişki |
 | `business_role_requirements`, `work_assignments` | Tür+görev, zorunluluk, actor/sözleşme, geçerlilik aralığı | Görevde en çok 1 aktif bot; gerçek+bot çakışması yok; owner çalışma kaydı da kapsanır |
 | `resource_catalog`, `business_inventory`, `inventory_movements` | Birim/depo ağırlığı; stok/rezerve, kaynaklı hareket | `(business,resource)` PK; negatif yok, rezervasyon≤stok; hareket kaynak anahtarı unique |
-| `capacity_buckets`, `capacity_reservations` | İşletme/atama/görev/period; kota, tüketim, tutulmuş birim/zaman | Bileşik period anahtarı; tüketim+tutulan≤limit; bot kota işletmeye özgü |
-| `service_offers`, `work_orders`, `order_events` | İşletme/servis/müşteri actor veya bina, fiyat/kalite/revision, TTL | Müşteri türü XOR; rezervasyondan tek dönüşüm; monoton revision; final sonuç tek |
+| `capacity_buckets`, `capacity_reservations` | İşletme/atama/görev/period; hızlı kota, gelecek randevu/teslimat, tutulmuş birim/zaman | Bileşik period anahtarı; tüketim+tutulan≤limit; bot kota işletmeye özgü |
+| `tenders`, `tender_bids`, `auto_bid_rules`, `auto_bid_attempts` | Kapanış/politika, gerçek teklif snapshot'ı, önceden talimat ve pencere içi deneme | Kural kaydı rezervasyon değildir; gerçek teklif kaynak tutar; tek etkin teklif/işletme, terminal release veya order devri bir kez |
+| Bitmiş ürün katalog/stoğu (D1 ürün kolu) | Satılabilir onaylı ürün, işletme/qty/etki/fiyat snapshot'ı | Ham girdiden kendiliğinden ürün yok; son ürün yarışında tek satış; kaynak/üretim kapsamı ayrı onay |
+| `npc_purchase_needs`, `npc_budget_accounts`, `npc_budget_allocations`, `npc_purchase_usage` | Bot veya bot binasına ait bütçe hesabı (tek sahip türü), ihtiyaç, sürümlü kaynak tahsisi, alım sıklığı/OP tüketimi | Nüfus/iş ataması para yaratmaz; toplam ve tüketici/bina dönem bütçesi aşılmaz; ihtiyaç→alım/onarım tek |
+| `service_offers`, `work_orders`, `order_events` | İşletme/ürün-servis; müşteri actor veya insan binası veya NPC binası, fiyat/kalite/revision, TTL | Müşteri türü ve ayrı actor/insan-bina/NPC-bina FK'leri XOR; NPC bina ID'si insan building alanı olarak kullanılamaz; rezervasyondan tek dönüşüm; monoton revision; final sonuç tek |
 | `maintenance_requests` | Gerçek bina/onarım ihtiyacı, onay, work_order | Aynı onaydan ikinci ödeme/sipariş yok; yeni bakım etkisi ayrı kaynağa bağlı |
-| `vacancies`, `applications` | İşletme/görev/ücret politikası, oyuncu/kabul koşulları | Başvuru tekrarı etkisiz; botlu zorunlu görevin ilanı kapatılamaz; pozisyon revision |
+| `vacancies`, `applications` | İşletme/görev/ücret politikası, önceden değiştirme/ek-kadro politikası, oyuncu/kabul koşulları | Başvuru tekrarı etkisiz; botlu zorunlu görevin ilanı kapatılamaz; pozisyon revision |
 | `employment_contracts`, `contract_events`, `payroll_accruals`, `severance_claims` | Taraflar, ücret/grup/süre/snapshot; görev FK; hak ediş/fesih | Sözleşme+dönem+ücret türü unique; fesih/tazminat bir kez; değişmez olay geçmişi |
 | `business_accounts`, `escrow_accounts`, `account_entries` | İşletme/rezervasyon/sözleşme fonu; bakiye ve signed hareket | Negatif yok; kaynak bacağı unique; geçmiş silinmez |
 | `economic_operations`, `operation_legs` | Aktör/action/payload/sürüm/sonuç; wallet/treasury/new-entry referansları | UUID tek; bacak eşlemesi tek; bir kaynak hareketi iki kez yansıtılmaz |
@@ -199,6 +287,8 @@ FK ve RLS filtreleri için actor/user/business/building/role indeksleri; açık 
 | `buy_inputs`, `publish_offer`, `accept_offer`, `cancel_offer` | Yalnız açık manuel tedarik; stok/depo/TTL/slot/kota/paranın atomik rezervasyonu; fiyat server'dan |
 | `start_work`, `complete_work`, `cancel_order` | Doğru görevli/cron, server süresi, kaynak tüketimi, kalite/etki, bir kez settlement ve XP |
 | `publish_vacancy`, `apply_for_job`, `end_contract`, `get_my_contracts` | Güncel ücret bandı/sürümü, insan-bot swap, funding, kazanç limiti, tazminat, private sözleşme okuması |
+| `set_auto_bid_rule`, ihale read/gerçek teklif/finalize işlemleri | Owner ve ihale yetkisi, kural≠teklif, son 10 dakika, gerçek teklif anında rezervasyon, kayıpta tek release/kazançta atomik devir; yeni öneridir |
+| NPC talep/bütçe worker işlemleri | Yalnız güvenilir worker; planlı bot kimliği, ihtiyaç/fiyat-performans, kaynak tahsis limiti, alım sıklığı, bütçe→escrow→ödeme; client bot harcaması başlatamaz |
 | Bina iş onayı / sipariş RPC'si | Üyelik/aktif yönetici/onay modelini doğrula; geçmiş oylamadan ikinci harcama yaratma; kasa bütçesi |
 | Yeni staff işlemleri (gerekirse) | Mevcut `staff_game_write_check`, özel katalog izni, kapsam, AAL2, gerekçe, request/audit; oyuncu ve personel fonksiyonları ayrı |
 
@@ -214,8 +304,9 @@ Yeni personel izinleri gerekiyorsa `businesses.read/manage`, `education.catalog.
 - Player mutasyonları mevcut `assert_player_allowed` düzeniyle uyumlu ban/mute kontrolü kullanır. Cron, istemci rolü veya sahte actor token'ı değil özel worker authority'siyle çalışır. Ban ile zaten hak edilmiş ücret politikası ayrıca sınanır.
 - Kilit önerisi: staff ise önce mevcut RBAC advisory lock; **ilgili tüm gerçek bina ID'leri sıralı → mevcut oyuncu yaptırım guard'ı/actor kilitleri sıralı → business+role → teklif/iş/sözleşme/kapasite → hesap/cüzdanlar sıralı**. Ledger helper'ı zaten tutulan bina kilidini tekrar alabilir; hesap kilidinden sonra yeni bina alınamaz. Eksik bina kümesi/revision bulunursa transaction yeniden önizleme ister.
 - Özellikle `assert_player_allowed` tek home binasını kendisi kilitler: onu çağırdıktan sonra keyfî ikinci bina kilitlemek güvenli değildir. İlk prototip tek insan binası sınırını kullanır; çok bina desteği lock graph ve gerçek PostgreSQL yarış testleriyle ayrı kapıdır. Mevcut 741029030/741032/741029021 lock alanları yeni worker için yeniden kullanılmaz.
-- Mevcut iki cron silinmez/yeniden oluşturulmaz. İleride bir `game-services-tick` benzeri **tek** sınırlı worker, advisory guard + indexed due işler + batch/cursor ile kurs/TTL/settlement/payroll'ı işleyebilir. Her bot/işletme için cron açılmaz. Tamamen çevrimdışı tamamlanma varsayımı bu worker'a bağlıdır; tarayıcı timer'ı ekonomik otorite değildir.
+- Mevcut iki cron silinmez/yeniden oluşturulmaz. İleride bir `game-services-tick` benzeri **tek** sınırlı worker, advisory guard + indexed due işler + batch/cursor ile kurs/TTL/settlement/payroll'ı işleyebilir. Bot talebi ve ihale penceresi otomasyonu B5b sonrası dilimlerde aynı bounded worker altyapısına ayrı idempotent fazlar olarak eklenebilir; kaçırılmış kapanışlar için geçmişe dönük teklif yoktur. Her bot/işletme için cron açılmaz. Tamamen çevrimdışı tamamlanma varsayımı bu worker'a bağlıdır; tarayıcı timer'ı ekonomik otorite değildir.
 - Her faz kendi kilit/yeniden çalışma/terminal durum tekilliğine sahiptir. Uzun backlog ücretsiz planı boğamaz; batch/time budget ve kalan iş checkpoint'i gerekir. Process crash öncesi/sonrası tekrar aynı defter/XP sonucuna gider. Mevcut cron'un bütün bina döngüsü ve poll kilit sırası karşısında deadlock/timeout testleri zorunludur; “yeni sıra yazıldı” demek testin yerine geçmez.
+- Nüfus planı ve NPC bütçesi yalnız güvenilir provisioning/worker veya açık yetkili staff yoluyladır; normal işletme sahibi NPC fonu tahsis edemez. Otomatik teklif sahibi/yetkisi pencere içinde yeniden denetlenir; kayıtlı talimat kalıcı bir izin devri değildir. Bot müşteri mali verisi kamu profiline açılmaz.
 - Realtime'a kişisel bordro/audit tablosu körlemesine eklenmez. Yetkili actor/business değişim read modelleri ve server filtreleri tasarlanır; UI gecikmiş veride revision ister. Sayfalı dar sorgular; tüm yeni tablolar App'in genel `select('*')` yüklemesine eklenmez.
 
 ## 11. Uyumluluk, yayın ve geri çekme yaklaşımı
