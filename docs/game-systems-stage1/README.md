@@ -35,3 +35,12 @@ Aynı dokümantasyon PR'ı güncellenir; yeni bir GitHub PR'ı, kod veya migrati
 | İlk oynanabilir ücretli döngü | `DECISIONS_AND_DELIVERY.md` §3 | A1–A4 **eğitim prototipi**, **B5b ilk tamamlanmış ücretli apartman hizmeti**. D1–D3 ve geniş unvan sistemleri bunun ön şartı değil. |
 
 Mevcut **D01–D20** kimlikleri korunarak içerikleri güncellendi. Yeni müşteri bütçesi, gerçek ihale ve son-10-dakika otomasyonu için üç ayrı risk sınırı bulunduğundan, B5b sonrasına D1/D2/D3 eklendi; 18 önerilen adım sayısı bir hedef değildir. İhtiyaç ve test kapsamı nedeniyle ayrıdır, sayı tutturmak için değil. Bu plan, uygulama veya canlı onay anlamına gelmez.
+
+## A1 hazırlık eki — PR #16 sonrası
+
+PR #16 `main/94ff023` ile birleşmiştir. A1'in ayrı hazırlık çalışması aşağıdaki belgelerde yürür; önceki revizyon açıklamaları tarihsel kayıttır.
+
+- [D01/D04 karar dosyası](A1_DECISIONS.md): oyuncu başlangıç politikası, planlı ilk nüfus ve konut/alan/eğitmen kapsaması. Sayısal öneriler uygulanmış veya onaylanmış değerler değildir.
+- [Küçük A1 geliştirme ve test planı](A1_IMPLEMENTATION_PLAN.md): ilk saf domain dilimi, sonraki boş şema/disposable test sınırı, mevcut oyuncu verilerinin korunması ve ayrı operasyon onayları.
+
+Bu ilk hazırlık PR'ında kod/migration, gerçek actor/NPC/konut veya seed yoktur. Yeni A1 testleri planlanmıştır; yalnız mevcut uygulamanın temel testleri çalıştırılır. Bot müşterilerin B5b'den sonra C istihdamını beklemeden gelebilmesi kaynak/bütçe modeline bağlı **alternatif sıra** olarak değerlendirilir; mevcut plan sessizce yeniden onaylanmış sayılmaz.
