@@ -48,3 +48,11 @@ Bu ilk hazırlık PR'ında kod/migration, gerçek actor/NPC/konut veya seed yokt
 ### PR #17 tercih düzeltmesi
 
 Özel öğretmen Temel≥5 ve alan≥5 ister; genel İleri şartı yoktur. D01 için mevcut/yeni sakinlere dört alanda0/XP0, otomatik eski deneyim aktarımı olmaması ve erişilebilir seviye0 eğitim yolu; D04 için bir NPC apartmanı/12 konut ve Tesisat6–İşletmecilik6 alanlarında iki ayrı öğretim görevlisi (her ikisi Temel5/İleri3), yalnız pilot için tavan2 tercih edildi. Verim/kapasite formülleri ve XP eğrisi kesinleştirilmedi. Hiçbiri gerçek kayıt oluşturma veya canlı uygulama onayı değildir. İlk saf doğrulayıcı ve otomatik testler ayrı **kod** taslak PR'ında teslim edilir; yeni hazırlık PR'ı oluşturulmaz.
+
+## A1 ikinci kod dilimi — boş kalıcılık ve güvenlik
+
+PR #17 ve #18 `main/b1750fc` üzerinde birleşti. Yukarıdaki hazırlık açıklamaları tarihsel kapsamı anlatır.
+[A1 kalıcılık teknik notu ve test raporu](A1_PERSISTENCE.md), tek yeni eklemeli migration'ı,
+altı boş özel tabloyu, kanonik yetenek saklamasını, kapalı yazma sınırını ve disposable PostgreSQL
+kanıtlarını açıklar. Canlı uygulama, backfill, NPC/konut seed'i veya oyun aktivasyonu yapılmaz;
+her biri ayrı onay ister. Saf domain kontrolü veritabanı yetkisi değildir.
