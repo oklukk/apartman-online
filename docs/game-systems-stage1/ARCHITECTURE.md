@@ -81,12 +81,12 @@ Temel/İleri Öğreticilik öğreten bot satırlarındaki sabit profil oluşturm
 | Görev | Kesinleşen yeterlik | Durum / ayrım |
 | --- | --- | --- |
 | Özel öğretmen | Üniversite öğretim görevlisi veya profesörle aynı koşullar varsayılmaz; kendine ait ayrı yeterlik politikası gerekir | Bu revizyonda onaylanan sayılar öğretim görevlisi ve profesör içindir; özel öğretmen için ayrı Temel/İleri/alan alt sınırı belirtilmedi. D03'te açık bırakılır; ayrı politika seçilmeden özel ders kabulü fail-closed, diğer unvanların eşikleri otomatik kopyalanmaz. |
-| Üniversite öğretim görevlisi | Temel Öğreticilik **≥5**, İleri Öğreticilik **≥3**, öğretilen alan **≥6** | İnsan yeterlik alt sınırıdır. Bot alan öğreticisinin sabit 6/5/3 profili bunu karşılar; öğreticilik alanı için önceki alan=6 istisnası korunur. |
+| Üniversite öğretim görevlisi | Temel Öğreticilik **≥5**, İleri Öğreticilik **≥3**, öğretilen alan **≥6** | İnsan yeterlik alt sınırıdır. Bot alan öğreticisinin sabit Temel=5 / İleri=3 / alan=6 profili bunu karşılar; öğreticilik alanı için önceki alan=6 istisnası korunur. |
 | Profesör | Temel Öğreticilik **10**, İleri Öğreticilik **≥5**, öğretilen alan **≥6** | 0–10 ölçeğinde Temel=10 gerekir. Ders verebilme koşuludur; kendiliğinden staff yetkisi veya kurum ataması vermez. |
 
 **Kesin ilke:** Özel öğretmen, profesörden daha yüksek eğitim verimliliğine ulaşamaz. Alan/hedef öğrenci seviyesi karşılaştırılabilir koşullarda; özel ders, az öğrenci, donanım ve diğer çarpanlar uygulandıktan sonra da bu sıralama korunmalıdır. Verimlilik, alan seviyesinden ve toplam öğrenci sayısından ayrıdır; özel öğretmenin alan yeteneğinin yüksek olması bu ilkeyi aşamaz. Karşılaştırma/normalizasyon ve katsayı formülü D03'te açıktır; örnek Q katsayıları eğitim verimi formülü değildir.
 
-Öğretmenin eşzamanlı öğrenci sayısı, bir dersin grup büyüklüğü, aktif ders/alan sayısı, dönem başına ders ve öğretim süresi **açık tasarım konularıdır**. Kurum koltuğu, öğretmen hizmet kotası ve öğrencinin aktif öğrenim slotu ayrı kaydedilmelidir. Botların kapasitesi işletmeye özgü kalır; sayısal öğrenci/ders sınırları veya her alana otomatik sınırsız öğretim hakkı atanmaz. Profesör unvanından otomatik sayısal kapasite bonusu türetilmez. Sabit 6/5/3 bot öğretim görevlisi profesör değildir; yeni profesör bot seed'i kararlaştırılmış sayılmaz.
+Öğretmenin eşzamanlı öğrenci sayısı, bir dersin grup büyüklüğü, aktif ders/alan sayısı, dönem başına ders ve öğretim süresi **açık tasarım konularıdır**. Kurum koltuğu, öğretmen hizmet kotası ve öğrencinin aktif öğrenim slotu ayrı kaydedilmelidir. Botların kapasitesi işletmeye özgü kalır; sayısal öğrenci/ders sınırları veya her alana otomatik sınırsız öğretim hakkı atanmaz. Profesör unvanından otomatik sayısal kapasite bonusu türetilmez. Sabit Temel=5 / İleri=3 / alan=6 bot öğretim görevlisi profesör değildir; yeni profesör bot seed'i kararlaştırılmış sayılmaz.
 
 ### 3.2 Eğitim prototipi ve server süreci
 
