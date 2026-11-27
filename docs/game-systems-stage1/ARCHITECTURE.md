@@ -49,13 +49,13 @@ Bot konutları `npc_buildings` + `npc_homes` kataloğundadır; ayrı bina/daire 
 
 **Kesin karar:** Botlar sınırlı ve önceden planlanmış nüfus olarak oluşturulur. Her kalıcı botun tek kimliği, profili, mesleği ve bot konutu vardır. Yeni işletme, iş ilişkisi, müşteri talebi veya ihale için yeni bot/konut üretilmez. Bir actor'ın çok sayıda işletmede görev alması yalnız atama satırlarını artırır; nüfus sayısını veya müşteri bütçesini artırmaz.
 
-Önerilen nüfus planı; sürüm, toplam bot tavanı, NPC bina/konut kapasitesi, sabit bot kimlik listesi ve alan→öğretim görevlisi kapsama matrisinden oluşur. Nüfus sayısı henüz seçilmedi. Provisioning, nüfus/konut limiti ve kimlik tekilliğini birlikte doğrular; keyfî runtime bot üretimi yoktur. Plan değişikliği ayrı incelenir, var olan actor/konut/iş ve finans geçmişi silinmez.
+Önerilen nüfus planı; sürüm, toplam bot tavanı, NPC bina/konut kapasitesi, sabit bot kimlik listesi ve alan→öğretim görevlisi kapsama matrisinden oluşur. Tercih edilen ilk pilot bir NPC apartmanı/12 konut ve iki ayrı alan öğretim görevlisidir; nüfus tavanı2 yalnız pilottur, canlı kurulum onayı değildir. Provisioning, nüfus/konut limiti ve kimlik tekilliğini birlikte doğrular; keyfî runtime bot üretimi yoktur. Plan değişikliği ayrı incelenir, var olan actor/konut/iş ve finans geçmişi silinmez.
 
 **Aktif her öğretilebilir alan için gerekli nitelikli bot öğretim görevlisi ve konut kapasitesi birlikte planlanır.** Bir bot birden fazla alanı kapsıyorsa her alan için sabit alan yeteneği ≥6 ve görev yeterliği doğrulanır; bunun kaç alana/derse yeteceği ayrıca kapasite konusudur. Yeterli atanabilir eğitmen/konut/kurum kapasitesi olmayan yeni alan, otomatik bot klonlayarak aktifleştirilemez. Bot öğreticinin işletmeler arası atama esnekliği korunur; öğrenci/ders kotası ayrı ölçülür.
 
 İlk skill kataloğu Tesisatçılık, İşletmecilik, Temel Öğreticilik ve İleri Öğreticilik alanlarını ayırır; ilk kurs Tesisatçılık olsa da İşletmecilik ayrı yetenektir. İşletmecilik 5'e erişim için aynı eğitim altyapısında onaylı bir kurs/uygulama yolu B2'den önce açılmalı veya başlangıç dağılımında açıkça onaylanmalıdır; test fixture'ında 5 vermek gerçek oyuncu gelişim yolunun yerine geçmez.
 
-`actor_skills` içinde her `(actor,skill)` bir satır; player için server XP defterinden türetilen seviye, bot için katalogdan sabit seviye. Seviye tamsayı 0–10; sonraki seviyeye ilerleme için ayrı integer XP önerilir. Eşik eğrisi ve başlangıç puanları açık karardır. `technical` legacy işi otomatik Tesisatçılık seviyesi sayılmaz.
+`actor_skills` içinde her `(actor,skill)` bir satır; player için server XP defterinden türetilen seviye, bot için katalogdan sabit seviye. Seviye tamsayı 0–10; sonraki seviyeye ilerleme için ayrı integer XP önerilir. Tercih edilen başlangıç mevcut/yeni sakin için dört alanda seviye0/XP0'dır; eşik eğrisi hâlâ açık karardır. Seviye0'dan erişilebilir başlangıç öğrenim yolu zorunludur; henüz yayınlanmayan eğitim varmış gibi gösterilmez. `technical` legacy işi otomatik Tesisatçılık seviyesi sayılmaz.
 
 XP her zaman tamamlanmış ve doğrulanmış eğitim/iş kaynağına bağlıdır; `(actor,skill,source_type,source_id)` unique. Başarısız/iptal/tekrarlanmış iş ikinci XP üretmez. Botlara XP yazımı sunucuda reddedilir. Günlük kazanım limiti, aynı işi döndürerek gelişim ve kendi işletmesinde kendine fatura kesme exploit'i engellenir. 7–10 gelişim yolu bot eğitmenin alan 6 sınırı yüzünden ayrıca tanımlanmalıdır; otomatik olarak herkese açılmaz.
 
@@ -80,7 +80,7 @@ Temel/İleri Öğreticilik öğreten bot satırlarındaki sabit profil oluşturm
 
 | Görev | Kesinleşen yeterlik | Durum / ayrım |
 | --- | --- | --- |
-| Özel öğretmen | Üniversite öğretim görevlisi veya profesörle aynı koşullar varsayılmaz; kendine ait ayrı yeterlik politikası gerekir | Bu revizyonda onaylanan sayılar öğretim görevlisi ve profesör içindir; özel öğretmen için ayrı Temel/İleri/alan alt sınırı belirtilmedi. D03'te açık bırakılır; ayrı politika seçilmeden özel ders kabulü fail-closed, diğer unvanların eşikleri otomatik kopyalanmaz. |
+| Özel öğretmen | **Temel Öğreticilik ≥5**, **öğretilen alan ≥5**; genel **İleri Öğreticilik şartı yok** | Ayrı kesin yeterliktir. Öğretilen alan İleri Öğreticilik ise alan≥5 koşulu uygulanır; bu, diğer alanlar için genel İleri şartı oluşturmaz. |
 | Üniversite öğretim görevlisi | Temel Öğreticilik **≥5**, İleri Öğreticilik **≥3**, öğretilen alan **≥6** | İnsan yeterlik alt sınırıdır. Bot alan öğreticisinin sabit Temel=5 / İleri=3 / alan=6 profili bunu karşılar; öğreticilik alanı için önceki alan=6 istisnası korunur. |
 | Profesör | Temel Öğreticilik **10**, İleri Öğreticilik **≥5**, öğretilen alan **≥6** | 0–10 ölçeğinde Temel=10 gerekir. Ders verebilme koşuludur; kendiliğinden staff yetkisi veya kurum ataması vermez. |
 
@@ -94,7 +94,7 @@ Küçük ilk dikey dilim: Tesisatçılık + Temel/İleri Öğreticilik katalogla
 
 Önerilen akış: `available → enrolled/reserved → in_progress → completed | cancelled | expired`. Eğitim koltuğu, eğitmen hizmet kotası ve gerekiyorsa ücret aynı başvuruda rezervasyona alınır. İlerleme, süre ve görev tamamlama server saatinde doğrulanır. Kurs tamamlanmadan seviye yazılmaz; eğitmen seviyesi ve geçerli müfredat sürümü snapshot'lanır. Eğitmen yoksa/uygunsuzsa kurs satılamaz.
 
-Öğreticilik, öğretilen alandan ayrıdır. Öneri olarak alan seviyesi öğrenci hedefini karşılamalı; Temel/İleri Öğreticilik hangi seviyeye kadar eğitim verilebileceğini ve eğitim verimini sınırlamalıdır. Öğretim görevlisi/profesör eşikleri yukarıda kesinleştirilmiştir; özel öğretmen eşikleri, eğitim katsayıları/kapasiteleri, üniversiteye giriş/mezuniyet/sertifika ve oyuncu öğreticinin geliri **açık karardır**. İlk prototipin kazanım üst sınırı eğitmenin alanını aşmaz; 7–10 gelişim yolu açılmadan o seviyelere eğitim ürünü gösterilmez.
+Öğreticilik, öğretilen alandan ayrıdır. Öneri olarak alan seviyesi öğrenci hedefini karşılamalı; Temel/İleri Öğreticilik hangi seviyeye kadar eğitim verilebileceğini ve eğitim verimini sınırlamalıdır. Üç öğretmenlik görevinin eşikleri yukarıda kesindir; eğitim katsayıları/kapasiteleri, üniversiteye giriş/mezuniyet/sertifika ve oyuncu öğreticinin geliri **açık karardır**. İlk prototipin kazanım üst sınırı eğitmenin alanını aşmaz; 7–10 gelişim yolu açılmadan o seviyelere eğitim ürünü gösterilmez.
 
 Mesleki uygulama XP'si gerçek tamamlanmış işten gelir; eğitim XP'si ayrı kaynak türüdür ama ortak günlük skill kazanım sınırını paylaşması önerilir. Eğitim ve çalışma için çakışan zaman/aktif iş kontrolü gerekir; botun işletmeler arası esnekliği gerçek oyuncunun sınırsız eşzamanlı görev hakkı olduğu anlamına gelmez.
 

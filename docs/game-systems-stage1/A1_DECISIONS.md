@@ -1,6 +1,6 @@
 # A1 hazırlığı — D01/D04 karar dosyası
 
-**27 Kasım 2026 · Karar ve sayı önerileri onay bekliyor.** Kaynak: birleşmiş PR #16, `main/94ff0230c6efb9bfb1f93c68d2e7c9b9637de315`. [Mimari](ARCHITECTURE.md) ve [D01–D20 kaydı](DECISIONS_AND_DELIVERY.md) geçerlidir. Bu dosya actor, profil, bot, konut veya skill kaydı **oluşturmaz**; gerçek hesap/UUID/ad listesi içermez. Canlı oyuncu sayısı/verisi sorgulanmadı.
+**27 Kasım 2026 · Tercih edilen D01/D04 sayıları kaydedildi; canlı kurulum/seed onayı değildir.** Kaynak: birleşmiş PR #16, `main/94ff0230c6efb9bfb1f93c68d2e7c9b9637de315`. [Mimari](ARCHITECTURE.md) ve [D01–D20 kaydı](DECISIONS_AND_DELIVERY.md) geçerlidir. Bu dosya actor, profil, bot, konut veya skill kaydı **oluşturmaz**; gerçek hesap/UUID/ad listesi içermez. Canlı oyuncu sayısı/verisi sorgulanmadı.
 
 ## 1. Kesin olanlar ve henüz seçilmemiş olanlar
 
@@ -8,33 +8,33 @@ Kesin: skill ölçeği 0–10; botun kimliği/profili/mesleği/konutu kalıcı v
 
 Bot alan öğretim görevlisi sabit **Temel Öğreticilik=5, İleri Öğreticilik=3, alan=6**; öğretilen alan öğreticilikse alan için 6 önceliklidir. Genel bot çalışanının mesleki3, bot işletmecinin ilgili4 standardı ayrıdır. Bu sabitler, ilk dünyada kaç NPC/kurum/konut oluşturulacağını belirlemez.
 
-**Aşağıdaki öneriler kesin kullanıcı kararı değildir.** Özellikle başlangıç skill vektörü, nüfus tavanı, konut sayısı ve alan listesi bugün seçilmedi. Yok/henüz başlatılmamış değer, onaylanmış seviye0 demek değildir; uygulama sessiz varsayılanla bu boşluğu doldurmamalıdır.
+**Kullanıcının tercih ettiği başlangıç politikası:** apartmana yerleşmiş mevcut ve yeni oyuncular dört alanda seviye0/XP0 ile başlar; eski meslek/aktivite otomatik deneyim üretmez. **Tercih edilen pilot:** bir NPC apartmanı, 12 konut, iki ayrı alan öğretim görevlisi; pilot nüfus tavanı2. Bunlar canlı migration, backfill, NPC/konut oluşturma veya seed onayı değildir. Gerçekte henüz başlatılmamış değer UI'da seviye0 varmış gibi sunulmaz.
 
 ## 2. D01 — mevcut ve yeni oyuncu için kararlar
 
 | Alt karar | Açıkça seçilecek değer/politika | Öneri ve gerekçe | Ne zaman gerekli? |
 | --- | --- | --- | --- |
-| D01.1 Oyuncu kapsamı | Mevcut sakinler mi, tüm Auth profilleri mi; dairesiz staff/hazır bekleyen hesap ne zaman actor olur? | İlk pilotta mevcut/yeni **sakinler**; dairesiz personelin yönetim erişimi actor'a bağlı olmasın. Scope onaysız seçilmez. | Kimlik backfill'i öncesi |
+| D01.1 Oyuncu kapsamı | Mevcut sakinler mi, tüm Auth profilleri mi; dairesiz staff/hazır bekleyen hesap ne zaman actor olur? | Tercih: apartmana yerleşmiş mevcut/yeni **sakinler**. Dairesiz personelin yönetim erişimi actor'a bağlı değildir; tüm Auth profilleri topluca dönüştürülmez. | Kimlik backfill'i öncesi |
 | D01.2 İlk skill kataloğu | Tesisatçılık, İşletmecilik, Temel Öğreticilik, İleri Öğreticilik kodlarının kararlı listesi | Dört ayrı kod; katalogda bulunmak kursa/işe aktif erişim değildir. Legacy `technical/shop/office` farklı kavramlardır. | Domain sözleşmesi / A2 katalog |
-| D01.3 Başlangıç seviyeleri | Her alan için 0–10 vektör; herkese eşit mi, sabit profil mi, dağıtılabilir puan mı? | Her mevcut/yeni sakine eşit **[0,0,0,0]** en küçük ve şeffaf başlangıç önerisidir. Alternatif sabit profil/puan havuzu daha fazla kural ister. Değerler **onaylanmadı**. | Skill ilk oluşturma öncesi |
-| D01.4 Başlangıç XP | XP0 mı, seçilen seviyenin eşiği mi; XP eğrisi/sürümü? | Seviyeler0 seçilirse XP0 önerilir. Daha yüksek başlangıç için A2 eğrisiyle tutarlı snapshot gerekir. Actor kimliği oluşturmak XP vermek değildir. | A2; kimlik iskeletini büyütmez |
-| D01.5 Eski meslek ve geçmiş emek | Önceki iş/aktivite mesleki skill'e çevrilecek mi? | Otomatik dönüşüm ve geçmişe XP yok; teknik iş sahibi olmak Tesisatçılık seviyesi veya sertifika sayılmaz. Aksi istenirse ayrı açık dönüşüm kuralı gerekir. | Başlangıç politikası öncesi |
+| D01.3 Başlangıç seviyeleri | Her alan için 0–10 vektör; herkese eşit mi, sabit profil mi, dağıtılabilir puan mı? | Tercih: Tesisatçılık/İşletmecilik/Temel Öğreticilik/İleri Öğreticilik için **[0,0,0,0]**. Puan havuzu veya meslek şablonu uygulanmaz; gerçek initialization ayrı onaydır. | Skill ilk oluşturma öncesi |
+| D01.4 Başlangıç XP | XP0 mı, seçilen seviyenin eşiği mi; XP eğrisi/sürümü? | Tercih: dört alanda **XP0**. XP eğrisi/kazanım formülü hâlâ A2 konusudur; actor kimliği oluşturmak XP/para vermek değildir. | A2; kimlik iskeletini büyütmez |
+| D01.5 Eski meslek ve geçmiş emek | Önceki iş/aktivite mesleki skill'e çevrilecek mi? | Tercih: otomatik dönüşüm ve geçmişe XP yok. Teknik iş sahibi olmak Tesisatçılık seviyesi veya sertifika sayılmaz; mevcut job/maaş/aktivite kayıtları değişmez. | Başlangıç politikası öncesi |
 | D01.6 Eşitlik ve sürüm | Mevcut/yeni kişi aynı politika mı; ileride gelen kişi veya tekrar giriş başlangıcı yeniler mi? | Aynı sürümde aynı başlangıç; `(profile,initialization_policy)` kaynak kaydı bir kez. Sonradan sürüm değişimi eski kişiye tekrar ücretsiz grant üretmez. | Skill initialization/backfill |
 | D01.7 Oluşturma zamanı | Kimlik/skill onaylı toplu backfill ile mi, kullanıcı katılımıyla mı; rollout tarihi? | Actor kimliği ve A2 skill initialization ayrı adım. İlk A1 şeması boş olabilir; otomatik Auth/join trigger'ı eklememek önerilir. Gerçek backfill ayrı inceleme/onay. | Veri yazan yol açılmadan |
 | D01.8 Mevcut verilere etkisi | Actor'sız/henüz skill almamış kişi eski oyunu oynar mı? | Giriş, daire, sohbet, maaş/ek iş, aidat, oy ve staff aynen çalışır. Bakiye/meslek/seçim güncellenmez; yeni UI'ya sahte seviye gösterilmez. | Bütün A1 dilimleri |
-| D01.9 Alanlara ulaşılabilirlik | Seviye0 öğrenime giriş, İşletmecilik5'e yol, ücretli işe minimum, 7–10 gelişim? | D02/D03 ve A2–A4'te çözülür. A1 bu kararlar yokken iş/üniversite açmaz; ücretsiz Business5 veya mesleki başarı atamaz. | İlgili eğitim/iş erişimi |
+| D01.9 Alanlara ulaşılabilirlik | Seviye0 öğrenime giriş, İşletmecilik5'e yol, ücretli işe minimum, 7–10 gelişim? | **Zorunlu tasarım şartı:** seviye0'dan erişilebilir başlangıç eğitimi/gelişim yolu bulunmalı; seviye1 isteyen tek girişle kilitlenme olmaz. Katalogdaki dört alanın yolu A2–A4'te tasarlanır, alan aktive edilmeden kontrol edilir. A1 kurs varmış gibi davranmaz, Business5 atamaz. | İlgili eğitim/iş erişimi |
 
 Kimlik eşlemesi için öneri: mevcut `profiles.id` korunur; tek yeni `actor_id` ile bire bir referans, idempotent backend kaydı. Yeni Auth hesabı/username/üyelik üretilmez. Hesap silme/actor arşivleme ve finans geçmişi FK davranışı ayrıca incelenmeden cascade seçilmez.
 
-**D01'in A1 için asgari kararı:** actor kapsamı, kimlik eşlemesi ve gelecekteki initialization'ın açıkça ayrı olması. Seviye/XP dağıtımı onaylanmadıkça gerçek actor/skill backfill'i yoktur; XP eğrisinin tamamını A1'e taşımak gerekmez.
+**D01'in A1 için asgari kararı:** actor kapsamı, kimlik eşlemesi ve gelecekteki initialization'ın açıkça ayrı olması. Seviye0/XP0 tercihi kaydedildi, fakat gerçek actor/skill backfill'i için ayrıca onay gerekir; XP eğrisinin tamamını A1'e taşımak gerekmez.
 
 ## 3. D04 — ilk NPC nüfusu ve konut planı
 
 | Alt karar | Seçilecek şey | Öneri / korunacak sınır |
 | --- | --- | --- |
-| D04.1 Pilot nüfus | İlk kalıcı NPC sayısı N; nüfus tavanı P; kapsam global mi pilot bölge mi? | İlk nüfus öğretim görevlileriyle sınırlı olsun. İşletmeci/olağan çalışan/müşteri için sırf gelecekte gerekebilir diye NPC doldurulmasın. Sayılar aşağıda yalnız örnektir. |
-| D04.2 Konut | NPC bina sayısı, birim kapasitesi H, hangi konut hangi kalıcı NPC'ye ait? | İnsan `buildings/apartments/memberships` dışında ayrı katalog. Her NPC'ye bir konut; bir konutta en çok bir NPC. Boş NPC evi yeni bot oluşturma yetkisi değildir. |
-| D04.3 Alan listesi | İlk aktif öğretilebilir alanlar F; yalnız Tesisat mı, İşletmecilik de mi? | Tesisat ilk dikey dilimdir. İşletmecilik'i de kapsamak, daha sonra owner için gereken5'e yol açar. Dört skill'in katalogda olması dördünün dersinin aktif olması değildir. |
+| D04.1 Pilot nüfus | İlk kalıcı NPC sayısı N; nüfus tavanı P; kapsam global mi pilot bölge mi? | Tercih: iki ayrı alan öğretim görevlisi; **pilot N=2/P=2**. Kalıcı dünya sınırı değildir; işletmeci/çalışan/müşteri için fazladan NPC eklenmez. |
+| D04.2 Konut | NPC bina sayısı, birim kapasitesi H, hangi konut hangi kalıcı NPC'ye ait? | Tercih: **bir NPC apartmanı / 12 konut**; insan `buildings/apartments/memberships` dışında. Her NPC tek konut; boş on konut yeni bot izni değildir. Gerçek konut oluşturma ayrıca onaylanır. |
+| D04.3 Alan listesi | İlk aktif öğretilebilir alanlar F; yalnız Tesisat mı, İşletmecilik de mi? | Pilot kapsaması Tesisatçılık ve İşletmecilik için iki ayrı öğretim görevlisidir. Temel/İleri Öğreticilik skill kataloğunda bulunur; dördünün dersinin aktif olduğu anlamına gelmez. |
 | D04.4 Eğitmen eşlemesi | Her alan için hangi sabit öğretim görevlisi; bir öğretmen birden fazla alanı kapsayabilir mi? | Her atamada alan≥6 ve Temel≥5/İleri≥3; bot sabitleri ve alan-öğreticilik istisnası birlikte doğrulanır. Eksik kapsama otomatik NPC üretimiyle tamamlanmaz. |
 | D04.5 Kalıcı profiller | İsim, meslek, stable seed anahtarı, sabit beceri vektörü ve konut eşlemesi | Bu hazırlıkta ad/UUID/manifest yok. Ayrı incelenecek plan, çelişen meslek/skill sabitlerini tek NPC'ye yüklemez. Aynı NPC'nin başka işte yeteneği değişmez. |
 | D04.6 Ders/öğrenci kapasitesi | Kurum, öğretmen-ataması ve dönem başına kotanın kapsamı/sayıları | D03/A3'te sayılar seçilir. Nitelikli eğitmenin bulunması sınırsız ders/öğrenci garantisi değildir; botun işletmeye özgü kapasitesi korunur. |
@@ -48,16 +48,12 @@ Tanımlar: N oluşturulacak kalıcı bot, P onaylı nüfus tavanı, H toplam kul
 
 Tek öğretmen birden çok alan için sabit yeterlik taşıyabiliyorsa mutlaka `N≥alan sayısı` gerekmez. Ama kapsama matrisi ve kurum/atama bazlı ders kotası bunu desteklemelidir. Aynı öğretmenin adını iki alana yazmak, ikinci bir konut/NPC veya iki kat hizmet hakkı üretmez. Alanların hepsinde yeterli öğretmen yoksa boş ev bulunması alanı aktifleştirmek için yeterli değildir.
 
-### Onay bekleyen iki küçük seçenek
+### Tercih edilen pilot (canlı kurulum onayı değil)
 
-| Seçenek | Planlanan alan / öğretim görevlisi | İlk nüfus / tavan / konut | Değerlendirme |
-| --- | --- | --- | --- |
-| En küçük | Yalnız Tesisatçılık; bir alan öğretim görevlisi | **N=1, P=1**, bir NPC binasında **H=12** önerisi | İlk tek kurs için en dar plan. İşletmecilik dersini açmadan önce kapsama/nüfus planı revizyonu gerekir. |
-| Önerilen hazırlık | Tesisatçılık + İşletmecilik; ayrı iki alan öğretim görevlisi | **N=2, P=2**, bir NPC binasında **H=12** önerisi | İşletmecilik5 yolunu da planlar; yalnız iki konut kullanılır, on boş konut yeni NPC izni değildir. İlk A3 dersi yine yalnız Tesisat olabilir. |
+**Bir NPC apartmanı, H=12 konut; iki ayrı bot öğretim görevlisi; N=2 ve P=2.** P=2 yalnız ilk pilotun sınırıdır, kalıcı dünyanın sınırı değildir. Alan kapsaması Tesisatçılık + İşletmecilik. Boş on konut otomatik NPC oluşturmaz. Yeni alan/işletmeci/çalışan ihtiyacı ayrı plan revizyonu gerektirir. Bugün bot veya konut oluşturulmadı.
 
-**Bu sayılar seçilmedi; konut veya NPC oluşturulmadı.** H=12, insan cephesindeki düzenle uyumlu bir plan önerisidir; NPC konutunda önceden kesinleşmiş sayı değildir. P=2, gelecekte en çok2 bot bulunacak kalıcı oyun kuralı değil, onay bekleyen ilk pilot tavanıdır. Yeni alan/işletmeci/çalışan ihtiyacı sonradan kontrollü plan revizyonu gerektirir.
+Tercih edilen yeterlik eşlemesi (kişi adları/UUID ve gerçek konut atamaları hâlâ seçilmedi):
 
-Önerilen ikinci seçenekte taslak yeterlik eşlemesi:
 
 | Plan satırı (kişi adı/ID değildir) | Tesisatçılık | İşletmecilik | Temel Öğreticilik | İleri Öğreticilik | Konut ihtiyacı |
 | --- | --- | --- | --- | --- | --- |
@@ -70,11 +66,19 @@ Tek öğretmen birden çok alan için sabit yeterlik taşıyabiliyorsa mutlaka `
 
 Karar dosyası tamamlandığında aşağıdakiler ayrı ayrı imzalı/sürümlü karara dönüşmelidir; repository'de `approved=true` yazmak canlı çalıştırma yetkisi değildir:
 
-1. **Politika kararı:** D01 oyuncu kapsamı + başlangıç politikası; D04 alan listesi, N/P/H ve sabit rol/profil kapsaması. Bugün hepsi yukarıdaki açık alanları içerir.
+1. **Politika kararı:** D01 oyuncu kapsamı + başlangıç politikası; D04 alan listesi, N/P/H ve sabit rol/profil kapsaması. Seviye0/XP0 ve pilot sayıları tercih olarak belirli; gerçek kimlikler, takvim ve operasyon onayları açık kalır.
 2. **Kod/şema incelemesi:** yalnız onaylı sınırların küçük A1 dilimi; disposable test ve RLS/GRANT incelemesi. [A1 planı](A1_IMPLEMENTATION_PLAN.md).
 3. **Canlı boş migration onayı:** hedef/SQL/history ve eski veri özeti incelenir; population/backfill içermez.
 4. **Gerçek oyuncu actor backfill onayı:** kapsam ve idempotent eşleme ayrı; skill/para/meslek değiştirme yok. Skill initialization A2 için ayrıca değerlendirilir.
 5. **NPC provisioning/seed onayı:** onaylı sınırlı plan, sabit profiller, konut ve replay kontrolü. Yalnız bundan sonra gerçek NPC oluşturulabilir.
 6. **PR merge ve yayın onayı:** ayrıca verilir; yukarıdaki kararların biri diğerlerini otomatik yetkilendirmez.
 
-Bu hazırlık PR'ı yalnız kararları ve test edilebilir geliştirme sınırını sunar. D01/D04 değerleri onaylanmadan gerçek bot nüfusu veya canlı seed yoktur; A1 temelinin uygulanmış/tamamlanmış olduğu iddia edilmez.
+Bu hazırlık PR'ı yalnız kararları ve test edilebilir geliştirme sınırını sunar. Tercih edilen D01/D04 değerleri canlı yetki değildir; ayrıca onaylanmadan gerçek bot nüfusu veya canlı seed yoktur; A1 temelinin uygulanmış/tamamlanmış olduğu iddia edilmez.
+
+## Öğretmenlik eşik düzeltmesi
+
+- **Özel öğretmen:** Temel Öğreticilik ≥5 ve öğretilen alanda yetenek ≥5; **İleri Öğreticilik şartı yok**. Öğretilen alan İleri Öğreticilik ise o alanın ≥5 koşulu yine geçerlidir; bu ayrı genel İleri şartı değildir.
+- **Üniversite öğretim görevlisi:** Temel ≥5, İleri ≥3, alan ≥6 (korundu).
+- **Profesör:** Temel=10, İleri ≥5, alan ≥6 (korundu).
+
+İleri Düzey Öğreticilik, bu belgelerdeki İleri Öğreticilik ile aynı yetenektir; beşinci alan değildir. Özel öğretmen profesörün eğitim verimini aşamaz. Verim katsayıları, öğrenci/ders kapasite sayıları ve XP eğrisi seçilmedi. Bu eşiklerin belirli olması yeni kurs/NPC veya canlı erişim açmaz.

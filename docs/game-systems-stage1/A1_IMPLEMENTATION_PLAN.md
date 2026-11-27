@@ -1,6 +1,6 @@
 # A1 — küçük ve yalıtılmış ilk geliştirme planı
 
-**Hazırlık taslağı; bu PR'da kod, migration, backfill veya seed yoktur.** Başlangıç `main/94ff023` ve birleşmiş PR #16. [D01/D04 kararları](A1_DECISIONS.md) seçilmeden politika/kişi/konut üretmeyen inceleme sınırı korunur. Mevcut [envanter](CURRENT_SYSTEM_INVENTORY.md) değişmez.
+**Hazırlık taslağı; bu PR'da kod, migration, backfill veya seed yoktur.** Başlangıç `main/94ff023` ve birleşmiş PR #16. [D01/D04 tercihleri](A1_DECISIONS.md) kaydedildi; bunlar kişi/konut üretme onayı olmadığından yan etki üretmeyen inceleme sınırı korunur. Mevcut [envanter](CURRENT_SYSTEM_INVENTORY.md) değişmez.
 
 ## 1. İlk A1 kod diliminin sınırı
 
@@ -12,9 +12,9 @@
 - Küçük in-memory sentetik testler; gerçek isim, UUID, onaylı population manifest'i veya üretim seed dosyası yok.
 - App/API/Auth/oyun verisi/cron'a import ve çağrı yok. Yeni ana menü, bot listesi, sahte seviye, feature düğmesi veya staff yetkisi eklenmez.
 
-Bu ilk parça veri saklamaz, bot yaratmaz, para/XP vermez; uygulamaya entegre olmayan doğrulayıcıdır. Doğrulayıcının sonucu personel yetkisi veya canlı seed izni değildir. Client tarafında çalışan saf kontrol, sonraki PostgreSQL constraint/RPC kontrolünün yerine geçmez.
+Bu ilk parça tercih edilen değerleri doğrular ama veri saklamaz, bot yaratmaz, para/XP vermez; uygulamaya entegre olmayan doğrulayıcıdır. Doğrulayıcının sonucu personel yetkisi veya canlı seed izni değildir. Client tarafında çalışan saf kontrol, sonraki PostgreSQL constraint/RPC kontrolünün yerine geçmez.
 
-**A1'den çıkarılanlar:** XP eğrisi/ilerleme (A2), kurs/koltuk/ücret/üniversite (A3–A4), işletme/stock/iş/maaş/istihdam (B–C), NPC müşteri bütçesi/ihale (D), bütün yeni canlı kayıtlar. D01 başlangıç değerleri henüz onaylı değilken default0 veya legacy işten beceri türetmek de kapsam dışıdır.
+**A1'den çıkarılanlar:** XP eğrisi/ilerleme (A2), kurs/koltuk/ücret/üniversite (A3–A4), işletme/stock/iş/maaş/istihdam (B–C), NPC müşteri bütçesi/ihale (D), bütün yeni canlı kayıtlar. D01'deki seviye0/XP0 tercihi gerçek oyuncuya yazma izni değildir; legacy işten beceri türetmek yasaktır. Seviye0 başlangıç yolu zorunlu; gerçek kurs/kazanım A2–A4 kapsamındadır.
 
 ## 2. Sonraki A1 kalıcılık dilimi — aynı anda yapılmamalı
 
@@ -47,7 +47,7 @@ Bu hazırlıkta canlı salt okunur oyuncu/bakiye listesi bile alınmaz. Gelecek 
 
 | Test | Beklenen |
 | --- | --- |
-| Eksik/kararsız D01/D04 veya onaysız plan | Apply/provisioning sonucu yok; açık hata/eksik karar listesi |
+| Eksik/tutarsız plan veya tercihleri canlı işlem yetkisi gibi kullanma | Apply/provisioning sonucu yok; açık hata/eksik karar listesi |
 | Level -1/11, kesir veya tanımsız gereken skill | Reddedilir; eksik değer sessizce0 yapılmaz |
 | Aynı bot ID iki profil/konut; konutu iki NPC paylaşması | Reddedilir |
 | N>P, N>H, eksik konut veya insan konutuna bot | Reddedilir |
