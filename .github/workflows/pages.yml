@@ -38,6 +38,7 @@ jobs:
       - run: npm run test:rbac
       - run: npm run test:advanced
       - run: npm run test:a1
+      - run: npm run test:a1-player
   build:
     runs-on: ubuntu-latest
     steps:
