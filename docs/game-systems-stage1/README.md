@@ -26,12 +26,25 @@ Aynı dokümantasyon PR'ı güncellenir; yeni bir GitHub PR'ı, kod veya migrati
 
 | İnceleme maddesi | Mimari bölümü | Karar / geliştirme yeri |
 | --- | --- | --- |
-| Özel öğretmen, öğretim görevlisi, profesör; verim ve kapasite | `ARCHITECTURE.md` §3.1–3.2; ayrı yeterlik tablosu | D03/D04; A3 dar bot öğretim görevlisi kursu. Verilen öğretim görevlisi/profesör eşikleri kesin, özel öğretmenin ayrı sayısal alt sınırı atanmadığı için D03'te açık kaldı; başka unvanın şartları ona kopyalanmadı. |
+| Özel öğretmen, öğretim görevlisi, profesör; verim ve kapasite | `ARCHITECTURE.md` §3.1–3.2; ayrı yeterlik tablosu | D03/D04; A3 dar bot öğretim görevlisi kursu. Verilen öğretim görevlisi/profesör eşikleri kesin, özel öğretmen Temel≥5/alan≥5, genel İleri şartı yok; verim/kapasite formülleri açık kaldı. |
 | Dolu insan kadrosunda yüksek seviyeli başvuru | §6.1–6.2; önceden politika, tazminatlı değiştirme / sözleşmeyi koruyan ek kadro | D12/D13/D16; C1/C3/C4. Maaş düşürme hâlâ açık karar. |
 | Bot müşteriler ve bot apartmanı talebi; para kaynağı | §5.3, §7–10; ihtiyaç, fiyat-performans, sıklık ve kaynaklı bütçe | D11/D18/D20; **B5b sonrası D1**. Merkezî bütçe/kapalı havuz ve sayılar öneri/açık karar. |
 | Kayıtlı kural ile gerçek ihale teklifi; son 10 dakika | §5.1–5.2; gerçek teklif anında rezervasyon, kayıpta release, kazanımda kesintisiz devir | D08/D17; **B5b sonrası D2–D3**. 10 dakika kesin tasarım kararı; skor/iptal/kısa ihale ayrıntıları açık. |
 | Bot hızlı hizmet kotası ve sonraki teslimat/randevu | §4; ayrı sayaç ve gelecek slot rezervasyonu | D07/D17; B3/B4 çekirdeği, geniş bot hizmeti sonraki dilim. Sayısal kotalar belirlenmedi. |
-| Planlı ve sınırlı NPC nüfusu; her alana eğitmen kapsaması | §2.1; tek kalıcı kimlik/profil/konut, işe göre yeni NPC yok | D04; A1/A3. Nüfus sayısı/kapasite planı ayrı onay bekler. |
+| Planlı ve sınırlı NPC nüfusu; her alana eğitmen kapsaması | §2.1; tek kalıcı kimlik/profil/konut, işe göre yeni NPC yok | D04; A1/A3. Pilot 1 NPC apartmanı/12 konut/2 öğretim görevlisi tercihi kaydedildi; gerçek kurulum ayrıca onay bekler. |
 | İlk oynanabilir ücretli döngü | `DECISIONS_AND_DELIVERY.md` §3 | A1–A4 **eğitim prototipi**, **B5b ilk tamamlanmış ücretli apartman hizmeti**. D1–D3 ve geniş unvan sistemleri bunun ön şartı değil. |
 
 Mevcut **D01–D20** kimlikleri korunarak içerikleri güncellendi. Yeni müşteri bütçesi, gerçek ihale ve son-10-dakika otomasyonu için üç ayrı risk sınırı bulunduğundan, B5b sonrasına D1/D2/D3 eklendi; 18 önerilen adım sayısı bir hedef değildir. İhtiyaç ve test kapsamı nedeniyle ayrıdır, sayı tutturmak için değil. Bu plan, uygulama veya canlı onay anlamına gelmez.
+
+## A1 hazırlık eki — PR #16 sonrası
+
+PR #16 `main/94ff023` ile birleşmiştir. A1'in ayrı hazırlık çalışması aşağıdaki belgelerde yürür; önceki revizyon açıklamaları tarihsel kayıttır.
+
+- [D01/D04 karar dosyası](A1_DECISIONS.md): oyuncu başlangıç politikası, planlı ilk nüfus ve konut/alan/eğitmen kapsaması. Seviye0/XP0 ve bir NPC apartmanı/12 konut/iki ayrı öğretim görevlisi tercihi kaydedildi; canlı kurulum/seed onayı değildir.
+- [Küçük A1 geliştirme ve test planı](A1_IMPLEMENTATION_PLAN.md): ilk saf domain dilimi, sonraki boş şema/disposable test sınırı, mevcut oyuncu verilerinin korunması ve ayrı operasyon onayları.
+
+Bu ilk hazırlık PR'ında kod/migration, gerçek actor/NPC/konut veya seed yoktur. Yeni A1 testleri planlanmıştır; yalnız mevcut uygulamanın temel testleri çalıştırılır. Bot müşterilerin B5b'den sonra C istihdamını beklemeden gelebilmesi kaynak/bütçe modeline bağlı **alternatif sıra** olarak değerlendirilir; mevcut plan sessizce yeniden onaylanmış sayılmaz.
+
+### PR #17 tercih düzeltmesi
+
+Özel öğretmen Temel≥5 ve alan≥5 ister; genel İleri şartı yoktur. D01 için mevcut/yeni sakinlere dört alanda0/XP0, otomatik eski deneyim aktarımı olmaması ve erişilebilir seviye0 eğitim yolu; D04 için bir NPC apartmanı/12 konut ve Tesisat6–İşletmecilik6 alanlarında iki ayrı öğretim görevlisi (her ikisi Temel5/İleri3), yalnız pilot için tavan2 tercih edildi. Verim/kapasite formülleri ve XP eğrisi kesinleştirilmedi. Hiçbiri gerçek kayıt oluşturma veya canlı uygulama onayı değildir. İlk saf doğrulayıcı ve otomatik testler ayrı **kod** taslak PR'ında teslim edilir; yeni hazırlık PR'ı oluşturulmaz.
