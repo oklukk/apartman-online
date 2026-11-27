@@ -56,3 +56,10 @@ PR #17 ve #18 `main/b1750fc` üzerinde birleşti. Yukarıdaki hazırlık açıkl
 altı boş özel tabloyu, kanonik yetenek saklamasını, kapalı yazma sınırını ve disposable PostgreSQL
 kanıtlarını açıklar. Canlı uygulama, backfill, NPC/konut seed'i veya oyun aktivasyonu yapılmaz;
 her biri ayrı onay ister. Saf domain kontrolü veritabanı yetkisi değildir.
+
+## A1 oyuncu oluşturma altyapısı
+
+PR #19 `main/8ed8d47` üzerinde birleşti. [Kapalı oyuncu aktörü oluşturucu](A1_PLAYER_ACTORS.md)
+ayrı bir eklemeli migration ve disposable test dilimidir: yalnız DB sahibi çağırabilir;
+replay/yarışta tek actor ve dört0/XP0 korunur. Gerçek backfill/entegrasyon yapılmaz. Teknik not
+ayrılma/silme, A2 ENUM–katalog seçimi ve çoklu pilot planlarının ortak nüfus sınırı riskini de değerlendirir.

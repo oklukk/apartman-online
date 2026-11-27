@@ -14,7 +14,8 @@
     "test:ui": "node tests/ui-render.mjs",
     "test:rbac": "node tests/rbac.mjs",
     "test:advanced": "node tests/advanced-admin.mjs",
-    "test:a1": "node tests/a1-persistence.mjs"
+    "test:a1": "node tests/a1-persistence.mjs",
+    "test:a1-player": "node tests/a1-player-actors.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.119.0",

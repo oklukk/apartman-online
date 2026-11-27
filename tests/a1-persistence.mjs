@@ -84,7 +84,8 @@ try {
     create function cron.schedule(n text,s text,c text) returns bigint language sql as $$
       insert into cron.job(jobname,schedule,command) values(n,s,c) returning jobid $$;`);
   const files = (await readdir('supabase/migrations')).filter(f => f.endsWith('.sql')).sort();
-  assert.equal(files.length,8);
+  // Freeze this suite at the first A1 migration; later additive stages have their own suites.
+  assert.ok(files.length>=8);
   assert.match(files[7], /_a1_actor_persistence\.sql$/);
   for (const file of files.slice(0,7)) {
     const sql = (await readFile('supabase/migrations/' + file,'utf8'))
