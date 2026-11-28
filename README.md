@@ -81,3 +81,7 @@ Tasarım: `src/api.ts` veri sözleşmeleri/istemci; `src/components` oylama ve g
 ## Taslak gelişmiş yönetim — PR #4
 
 Ekonomi düzeltmeleri, ban/susturma/uyarı ve seçim/yönetici müdahaleleri mevcut RBAC üzerinde geliştirilmiştir. Canlıya uygulanmamıştır; üç migration ve rollout sırası [gelişmiş yönetim belgesinde](docs/V031_ADMIN_OPERATIONS.md). Test: `npm run test:advanced` (yalnız disposable localhost PostgreSQL).
+
+## A2-2a — pasif başlangıç öğrenmesi temeli
+
+Dört yetenek için12 Türkçe modül taslağı, bağımsız TS/SQL yanıt doğrulayıcısı ve kapalı taslak kanıt şeması [A2-2a teknik belgede](docs/game-systems-stage1/A2_2A_LEARNING_FOUNDATION.md). Gerçek XP/eğitim veya oyuncu RPC'si açılmaz; A1 oyuncu0/0 ve NPC sabit profil korumaları aynıdır. Yeni test: `npm run test:learning` (yalnız disposable localhost PostgreSQL). Fixture içeriklerini canlıya yüklemeyin; sayısal XP politikası ve rollout ayrı onay gerektirir.

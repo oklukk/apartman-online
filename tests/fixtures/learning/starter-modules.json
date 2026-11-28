@@ -1,0 +1,393 @@
+{
+  "status": "draft_only",
+  "notice": "Test edilebilir taslak; canlı içerik/XP politikası veya seed değildir.",
+  "modules": [
+    {
+      "code": "plumbing.starter.safe_valve",
+      "skill": "plumbing",
+      "ordinal": 1,
+      "prerequisite": null,
+      "version": 1,
+      "status": "draft_only",
+      "entryLevel": 0,
+      "titleTr": "Güvenli vanayı seç",
+      "descriptionTr": "Mutfak armatüründe sızıntı var; yerel kapatma vanası çalışıyor.",
+      "goalTr": "Soruna uygun güvenli izolasyonu ayırt etmek.",
+      "taskTr": "Şemadaki yerel vanayı seç; elektrik panosu ve yangın hattına dokunma.",
+      "assessmentKind": "selection",
+      "expectedAnswer": {
+        "choice": "local_valve"
+      },
+      "successCriterionTr": "Çalışır durumdaki yerel mutfak vanasının seçilmesi.",
+      "successFeedbackTr": "Yerel vana doğru seçim: yalnız ilgili hattı izole ettin.",
+      "failureFeedbackTr": "Bu senaryoda önce ilgili yerel vanayı seç; ortak güvenlik hatları çözüm değildir.",
+      "prompt": {
+        "scenario": "Mutfak altındaki yerel vana çalışır durumda.",
+        "choices": {
+          "local_valve": "Mutfak yerel vanası",
+          "fire_line": "Yangın hattı vanası",
+          "electric_panel": "Elektrik panosu"
+        }
+      }
+    },
+    {
+      "code": "plumbing.starter.diagnostic_order",
+      "skill": "plumbing",
+      "ordinal": 2,
+      "prerequisite": "plumbing.starter.safe_valve",
+      "version": 1,
+      "status": "draft_only",
+      "entryLevel": 0,
+      "titleTr": "Tanı adımlarını sırala",
+      "descriptionTr": "İzole edilmiş bağlantıda arıza incelemesi yapılıyor.",
+      "goalTr": "Gözlem, kontrollü test ve kayıt sırasını öğrenmek.",
+      "taskTr": "Güvenlik ve tanı kartlarını doğru sıraya koy.",
+      "assessmentKind": "ordering",
+      "expectedAnswer": {
+        "steps": [
+          "isolate",
+          "observe",
+          "controlled_test",
+          "record"
+        ]
+      },
+      "successCriterionTr": "Dört adımın eksiksiz ve doğru sırada olması.",
+      "successFeedbackTr": "Önce güvenlik, sonra gözlem ve kontrollü test; sonucu kaydettin.",
+      "failureFeedbackTr": "Testten önce hattı izole et ve gözlem yap; kaydı en sona bırak.",
+      "prompt": {
+        "cards": {
+          "isolate": "Hattı güvenle izole et",
+          "observe": "Gözlenen sorunu incele",
+          "controlled_test": "Kontrollü tanı testini yap",
+          "record": "Sonucu kaydet"
+        }
+      }
+    },
+    {
+      "code": "plumbing.starter.material_match",
+      "skill": "plumbing",
+      "ordinal": 3,
+      "prerequisite": "plumbing.starter.diagnostic_order",
+      "version": 1,
+      "status": "draft_only",
+      "entryLevel": 0,
+      "titleTr": "Sorun ile malzemeyi eşleştir",
+      "descriptionTr": "Üç farklı bulgu için uygun müdahale kartı seçilecek.",
+      "goalTr": "Belirti ve uygun malzeme ilişkisini kurmak.",
+      "taskTr": "Her bulguyu uygun malzeme veya işlemle eşleştir.",
+      "assessmentKind": "matching",
+      "expectedAnswer": {
+        "pairs": {
+          "worn_seal": "washer",
+          "loose_joint": "fitting",
+          "blocked_filter": "filter_clean"
+        }
+      },
+      "successCriterionTr": "Üç eşleştirmenin tamamının doğru olması.",
+      "successFeedbackTr": "Conta, bağlantı ve filtre sorunlarını birbirinden ayırdın.",
+      "failureFeedbackTr": "Her sorun aynı parçayla çözülmez; conta, bağlantı ve filtre kartlarını karşılaştır.",
+      "prompt": {
+        "findings": {
+          "worn_seal": "Aşınmış conta",
+          "loose_joint": "Gevşek bağlantı elemanı",
+          "blocked_filter": "Kirli filtre"
+        },
+        "choices": {
+          "washer": "Uygun conta",
+          "fitting": "Uygun bağlantı elemanı",
+          "filter_clean": "Filtre temizliği"
+        }
+      }
+    },
+    {
+      "code": "business.starter.document_match",
+      "skill": "business",
+      "ordinal": 1,
+      "prerequisite": null,
+      "version": 1,
+      "status": "draft_only",
+      "entryLevel": 0,
+      "titleTr": "Belgeyi işlemle eşleştir",
+      "descriptionTr": "Küçük bir bakım talebinin belgeleri düzenleniyor.",
+      "goalTr": "İşlemi doğru belgeyle izlenebilir kılmak.",
+      "taskTr": "Her işlem için doğru belgeyi seç.",
+      "assessmentKind": "matching",
+      "expectedAnswer": {
+        "pairs": {
+          "income": "receipt",
+          "purchase": "invoice",
+          "delivery": "delivery_note"
+        }
+      },
+      "successCriterionTr": "Her işlem türünün doğru belgeyle eşleşmesi.",
+      "successFeedbackTr": "Tahsilat, satın alma ve teslim belgelerini doğru ayırdın.",
+      "failureFeedbackTr": "İşlemin neyi kanıtladığını düşün; teslim belgesi tahsilatı göstermez.",
+      "prompt": {
+        "transactions": {
+          "income": "Tahsilat",
+          "purchase": "Satın alma",
+          "delivery": "Teslim"
+        },
+        "choices": {
+          "receipt": "Tahsilat makbuzu",
+          "invoice": "Fatura",
+          "delivery_note": "Teslim belgesi"
+        }
+      }
+    },
+    {
+      "code": "business.starter.request_plan",
+      "skill": "business",
+      "ordinal": 2,
+      "prerequisite": "business.starter.document_match",
+      "version": 1,
+      "status": "draft_only",
+      "entryLevel": 0,
+      "titleTr": "İhtiyacı plana dönüştür",
+      "descriptionTr": "Ortak alan için küçük bir malzeme talebi hazırlanıyor.",
+      "goalTr": "İhtiyaç doğrulaması ve planlama sırasını öğrenmek.",
+      "taskTr": "Plan kartlarını uygulanabilir sıraya koy.",
+      "assessmentKind": "ordering",
+      "expectedAnswer": {
+        "steps": [
+          "confirm_need",
+          "list_materials",
+          "compare_quotes",
+          "schedule"
+        ]
+      },
+      "successCriterionTr": "İhtiyaçtan başlayıp takvimle biten dört adım.",
+      "successFeedbackTr": "Önce ihtiyacı doğruladın, sonra malzeme ve teklifleri değerlendirip planladın.",
+      "failureFeedbackTr": "Teklif karşılaştırmadan önce ihtiyaç ve malzeme listesi net olmalı.",
+      "prompt": {
+        "cards": {
+          "confirm_need": "İhtiyacı doğrula",
+          "list_materials": "Malzemeleri listele",
+          "compare_quotes": "Teklifleri karşılaştır",
+          "schedule": "İşi planla"
+        }
+      }
+    },
+    {
+      "code": "business.starter.stock_choice",
+      "skill": "business",
+      "ordinal": 3,
+      "prerequisite": "business.starter.request_plan",
+      "version": 1,
+      "status": "draft_only",
+      "entryLevel": 0,
+      "titleTr": "Stok kararını gerekçeli seç",
+      "descriptionTr": "Talep üç adet, kullanılabilir stok bir adet. Bu yalnız eğitim örneğidir.",
+      "goalTr": "Talep ile mevcut stok arasındaki farkı hesaplamak.",
+      "taskTr": "Eksik miktarı karşılayan sipariş seçeneğini seç.",
+      "assessmentKind": "selection",
+      "expectedAnswer": {
+        "choice": "order_two"
+      },
+      "successCriterionTr": "Üç ihtiyaçtan mevcut bir stok çıkarılarak iki adet seçilmesi.",
+      "successFeedbackTr": "İki adet eksik: mevcut stoku dikkate aldın. Gerçek sipariş veya para hareketi oluşmadı.",
+      "failureFeedbackTr": "Talebin tamamını yeniden almak yerine mevcut kullanılabilir stoku çıkar.",
+      "prompt": {
+        "demand": 3,
+        "availableStock": 1,
+        "choices": {
+          "order_zero": "Sipariş verme",
+          "order_two": "İki adet planla",
+          "order_three": "Üç adet planla"
+        }
+      }
+    },
+    {
+      "code": "basic_teaching.starter.observable_goal",
+      "skill": "basic_teaching",
+      "ordinal": 1,
+      "prerequisite": null,
+      "version": 1,
+      "status": "draft_only",
+      "entryLevel": 0,
+      "titleTr": "Gözlenebilir hedefi seç",
+      "descriptionTr": "Kısa bir vana güvenliği anlatımı hazırlanıyor.",
+      "goalTr": "Öğrenme hedefini gözlenebilir davranış olarak ifade etmek.",
+      "taskTr": "Değerlendirilebilecek hedef cümlesini seç.",
+      "assessmentKind": "selection",
+      "expectedAnswer": {
+        "choice": "observable_action"
+      },
+      "successCriterionTr": "Öğrencinin göstererek yapabileceği hedefin seçilmesi.",
+      "successFeedbackTr": "Seçim gözlenebilir; öğrencinin doğru vanayı ayırt ettiğini kontrol edebilirsin.",
+      "failureFeedbackTr": "Genel bir his yerine öğrencinin yaparak göstereceği davranışı seç.",
+      "prompt": {
+        "choices": {
+          "observable_action": "Şemada ilgili yerel vanayı seçer",
+          "vague_understanding": "Konuyu çok iyi anlar",
+          "attendance": "Ekranı açık tutar"
+        }
+      }
+    },
+    {
+      "code": "basic_teaching.starter.practice_sequence",
+      "skill": "basic_teaching",
+      "ordinal": 2,
+      "prerequisite": "basic_teaching.starter.observable_goal",
+      "version": 1,
+      "status": "draft_only",
+      "entryLevel": 0,
+      "titleTr": "Öğrenme adımlarını sırala",
+      "descriptionTr": "Bir komşuya güvenli bir örnek üzerinden yeni görev anlatılıyor.",
+      "goalTr": "Örnek, rehberli deneme ve geri bildirimi ayırmak.",
+      "taskTr": "Öğrenme adımlarını sıraya koy.",
+      "assessmentKind": "ordering",
+      "expectedAnswer": {
+        "steps": [
+          "show_example",
+          "guided_practice",
+          "learner_try",
+          "feedback"
+        ]
+      },
+      "successCriterionTr": "Örnek, rehberli çalışma, bağımsız deneme ve geri bildirim sırası.",
+      "successFeedbackTr": "Öğrenciyi örnekten kendi denemesine taşıyıp geri bildirim verdin.",
+      "failureFeedbackTr": "Bağımsız denemeden önce örnek ve rehberli çalışma olmalı.",
+      "prompt": {
+        "cards": {
+          "show_example": "Örnek göster",
+          "guided_practice": "Birlikte dene",
+          "learner_try": "Öğrenci kendi denesin",
+          "feedback": "Kanıta dayalı geri bildirim ver"
+        }
+      }
+    },
+    {
+      "code": "basic_teaching.starter.feedback_match",
+      "skill": "basic_teaching",
+      "ordinal": 3,
+      "prerequisite": "basic_teaching.starter.practice_sequence",
+      "version": 1,
+      "status": "draft_only",
+      "entryLevel": 0,
+      "titleTr": "Geri bildirimi bulguyla eşleştir",
+      "descriptionTr": "Üç öğrenci yanıtına uygun geri bildirim türü seçilecek.",
+      "goalTr": "Kişiyi etiketlemeden somut denemeye yanıt vermek.",
+      "taskTr": "Her bulguyu uygun geri bildirimle eşleştir.",
+      "assessmentKind": "matching",
+      "expectedAnswer": {
+        "pairs": {
+          "missed_step": "ask_check",
+          "wrong_reason": "ask_explain",
+          "correct_attempt": "reinforce"
+        }
+      },
+      "successCriterionTr": "Üç geri bildirimin doğru bulguyla eşleşmesi.",
+      "successFeedbackTr": "Geri bildirimi kişiliğe değil gözlenen denemeye bağladın.",
+      "failureFeedbackTr": "Eksik adım, yanlış gerekçe ve doğru deneme farklı geri bildirim ister.",
+      "prompt": {
+        "findings": {
+          "missed_step": "Bir adım eksik",
+          "wrong_reason": "Gerekçe uyumsuz",
+          "correct_attempt": "Doğru deneme"
+        },
+        "choices": {
+          "ask_check": "Eksik adımı kontrol ettir",
+          "ask_explain": "Gerekçeyi yeniden açıklat",
+          "reinforce": "Doğru stratejiyi pekiştir"
+        }
+      }
+    },
+    {
+      "code": "advanced_teaching.starter.evidence_sequence",
+      "skill": "advanced_teaching",
+      "ordinal": 1,
+      "prerequisite": null,
+      "version": 1,
+      "status": "draft_only",
+      "entryLevel": 0,
+      "titleTr": "Kanıtla değerlendirmeyi sırala",
+      "descriptionTr": "Seviye sıfırdan erişilebilen bir değerlendirme örneği.",
+      "goalTr": "Ölçüt, kanıt ve sonraki çalışma bağlantısını kurmak.",
+      "taskTr": "Değerlendirme adımlarını doğru sıraya koy.",
+      "assessmentKind": "ordering",
+      "expectedAnswer": {
+        "steps": [
+          "define_criterion",
+          "collect_work",
+          "compare_criterion",
+          "plan_followup"
+        ]
+      },
+      "successCriterionTr": "Ölçütü önce belirleyen dört adımlı sıra.",
+      "successFeedbackTr": "Önce ölçüt, sonra çalışma kanıtı ve karşılaştırma; sonraki adımı buna göre seçtin. Bu bir öğretmenlik unvanı sağlamaz.",
+      "failureFeedbackTr": "Kanıtı değerlendirmeden önce neye bakacağını belirle.",
+      "prompt": {
+        "cards": {
+          "define_criterion": "Ölçütü belirle",
+          "collect_work": "Çalışma kanıtını al",
+          "compare_criterion": "Ölçütle karşılaştır",
+          "plan_followup": "Sonraki çalışmayı planla"
+        }
+      }
+    },
+    {
+      "code": "advanced_teaching.starter.adaptation_match",
+      "skill": "advanced_teaching",
+      "ordinal": 2,
+      "prerequisite": "advanced_teaching.starter.evidence_sequence",
+      "version": 1,
+      "status": "draft_only",
+      "entryLevel": 0,
+      "titleTr": "Çalışmayı kanıta göre uyarla",
+      "descriptionTr": "Üç farklı öğrenme bulgusuna sonraki adım hazırlanıyor.",
+      "goalTr": "Desteği veya zorluğu gözlenen ihtiyaca göre değiştirmek.",
+      "taskTr": "Her bulguyu uygun sonraki çalışmayla eşleştir.",
+      "assessmentKind": "matching",
+      "expectedAnswer": {
+        "pairs": {
+          "too_easy": "add_reasoning",
+          "missing_prerequisite": "offer_example",
+          "inconsistent": "new_evidence"
+        }
+      },
+      "successCriterionTr": "Üç bulguya uygun destek veya değerlendirme eşleştirmesi.",
+      "successFeedbackTr": "Zorluğu ve desteği gözlenen kanıta göre değiştirdin.",
+      "failureFeedbackTr": "Daha zor görev her durumda çözüm değildir; eksik ön koşulda destek gerekir.",
+      "prompt": {
+        "findings": {
+          "too_easy": "Görev çok kolay geldi",
+          "missing_prerequisite": "Ön koşul eksik",
+          "inconsistent": "Sonuç tutarsız"
+        },
+        "choices": {
+          "add_reasoning": "Gerekçelendirme ekle",
+          "offer_example": "Destekleyici örnek sun",
+          "new_evidence": "Farklı kanıtla yeniden değerlendir"
+        }
+      }
+    },
+    {
+      "code": "advanced_teaching.starter.fair_criterion",
+      "skill": "advanced_teaching",
+      "ordinal": 3,
+      "prerequisite": "advanced_teaching.starter.adaptation_match",
+      "version": 1,
+      "status": "draft_only",
+      "entryLevel": 0,
+      "titleTr": "Adil ölçütü seç",
+      "descriptionTr": "İki öğrencinin aynı görevi değerlendirilirken yöntem seçiliyor.",
+      "goalTr": "Değerlendirmeyi kişisel etiket yerine ortak ölçüte bağlamak.",
+      "taskTr": "Adil değerlendirme yaklaşımını seç.",
+      "assessmentKind": "selection",
+      "expectedAnswer": {
+        "choice": "same_rubric"
+      },
+      "successCriterionTr": "Aynı görevde aynı açık ölçüt ve kanıt yaklaşımının seçilmesi.",
+      "successFeedbackTr": "Aynı göreve aynı ölçütü uyguladın. Bu başlangıç çalışması profesörlük yeterliliği vermez.",
+      "failureFeedbackTr": "Değerlendirmeyi öğrencinin ününe veya giriş sıklığına bağlama.",
+      "prompt": {
+        "choices": {
+          "same_rubric": "Açık ortak ölçüt ve görev kanıtı",
+          "reputation": "Daha tanınan öğrenciye yüksek puan",
+          "login_streak": "Her gün girene otomatik başarı"
+        }
+      }
+    }
+  ]
+}

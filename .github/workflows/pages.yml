@@ -42,6 +42,7 @@ jobs:
       - run: npm run test:a1-npc
       - run: npm run test:a2
       - run: npm run test:a2-npc
+      - run: npm run test:learning
   build:
     runs-on: ubuntu-latest
     steps:

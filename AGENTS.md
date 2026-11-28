@@ -36,3 +36,10 @@
 - Yeni oyuncu mutasyonu assert_player_allowed guard'ını kullanmalı; eski *_before_moderation fonksiyonlarını authenticated'a açma. Aktif JWT ban/mute kontrolünü atlayamaz.
 - Seçim müdahalesi snapshot revision ve building lock ile cron/oylar karşısında kontrol edilir; geçmiş aday/oy/görev silinmez. Görev çakışma constraint'i kaldırılmaz; voided kayıtlar etkin yönetici sayılmaz.
 - test:advanced CI'da zorunludur. Gerçek MFA/tarayıcı testini fixture SQL testiyle karıştırma.
+
+## A2-2a pasif öğrenme
+
+- `learning_*` tabloları yalnız draft-only private kanıttır; oyuncu/personel/service_role erişimi açma. Taslak başarı veya UNAPPLIED `xp_source_claims` XP yetkisi değildir.
+- Sayısal politika ve atomik immutable award receipt uzlaştırması onaylanmadan `a1_fixed_row` veya oyuncu0/0 `a1_assert_actor` korumasını gevşetme. GUC/JWT metadata ile bypass ekleme; bot sabit profilleri korunur.
+- Mantıksal modül+aktör kaynak kimliği sürüm/tarih/cihaz değişince yenilenmez. Fixture'lar canlı içerik/seed değildir; gerçek kişi için owner taslak fonksiyonu çağırma.
+- Veritabanı regresyonuna `npm run test:learning` dahildir; gerçek Auth/MFA/Realtime kabulünü PostgreSQL stub testiyle karıştırma.
