@@ -77,3 +77,9 @@ PR #21 `main/27ad7f9` üzerinde birleşti. [A2-1 teknik notu](A2_1_SKILL_CATALOG
 skill anahtarının TEXT/katalog FK dönüşümünü, korunan NPC ENUM köprüsünü, açık enrollment
 sınırını ve XP vermeyen kaynak rezervasyonlarını açıklar. Denge alternatifleri onay bekler;
 eğitim, kaynak tamamlanması, XP/seviye dağıtımı, gerçek backfill ve canlı uygulama açılmaz.
+
+## A2-1b NPC katalog geçişi
+
+PR #22 `main/35a0a37` üzerinde birleşti. [NPC TEXT/katalog ve sıralı öğretim ilişkisi](A2_1B_NPC_CATALOG.md)
+eski manifestleri koruyan dönüşümü, tek öğretim kaynağını, legacy wrapper'ı ve gerçek beşinci
+meslek testlerini açıklar. Kurs/XP/işletme açılmaz; migration/provisioning ve yayın ayrı onay ister.

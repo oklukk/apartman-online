@@ -17,7 +17,8 @@
     "test:a1": "node tests/a1-persistence.mjs",
     "test:a1-player": "node tests/a1-player-actors.mjs",
     "test:a1-npc": "node tests/a1-npc-provisioning.mjs",
-    "test:a2": "node tests/a2-skills-xp.mjs"
+    "test:a2": "node tests/a2-skills-xp.mjs",
+    "test:a2-npc": "node tests/a2-npc-catalog.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.119.0",
