@@ -85,3 +85,6 @@ Ekonomi düzeltmeleri, ban/susturma/uyarı ve seçim/yönetici müdahaleleri mev
 ## A2-2a — pasif başlangıç öğrenmesi temeli
 
 Dört yetenek için12 Türkçe modül taslağı, bağımsız TS/SQL yanıt doğrulayıcısı ve kapalı taslak kanıt şeması [A2-2a teknik belgede](docs/game-systems-stage1/A2_2A_LEARNING_FOUNDATION.md). Gerçek XP/eğitim veya oyuncu RPC'si açılmaz; A1 oyuncu0/0 ve NPC sabit profil korumaları aynıdır. Yeni test: `npm run test:learning` (yalnız disposable localhost PostgreSQL). Fixture içeriklerini canlıya yüklemeyin; sayısal XP politikası ve rollout ayrı onay gerektirir.
+
+A2-2b: [Onaylı XP politikası ve kapalı ilerleme altyapısı](docs/game-systems-stage1/A2_2B_APPROVED_XP.md).
+`npm run test:xp` yalnız disposable PostgreSQL'de sentetik kanıtlarla çalışır. Üretim runtime'ı kapalıdır; gerçek XP/eğitim aktivasyonu, içerik ve oyuncu seed'i yapılmaz.

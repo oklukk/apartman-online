@@ -19,7 +19,8 @@
     "test:a1-npc": "node tests/a1-npc-provisioning.mjs",
     "test:a2": "node tests/a2-skills-xp.mjs",
     "test:a2-npc": "node tests/a2-npc-catalog.mjs",
-    "test:learning": "node tests/learning.mjs"
+    "test:learning": "node tests/learning.mjs",
+    "test:xp": "node tests/xp-progression.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.119.0",

@@ -43,3 +43,10 @@
 - Sayısal politika ve atomik immutable award receipt uzlaştırması onaylanmadan `a1_fixed_row` veya oyuncu0/0 `a1_assert_actor` korumasını gevşetme. GUC/JWT metadata ile bypass ekleme; bot sabit profilleri korunur.
 - Mantıksal modül+aktör kaynak kimliği sürüm/tarih/cihaz değişince yenilenmez. Fixture'lar canlı içerik/seed değildir; gerçek kişi için owner taslak fonksiyonu çağırma.
 - Veritabanı regresyonuna `npm run test:learning` dahildir; gerçek Auth/MFA/Realtime kabulünü PostgreSQL stub testiyle karıştırma.
+
+## A2-2b kapalı ilerleme
+
+- Onaylı XP sayıları `xp_policies` sürümündedir; runtime disabled ve yalnız disposable sentetik adaptör vardır. Gerçek adapter/aktivasyon, tavan ve üst aşama seçimleri ayrı onay ister.
+- `actor_skills` tek kanonik değerdir. Oyuncu ilk0/0; sonraki değerler immutable claim-bağlı makbuz zinciriyle tam uzlaşmalı. NPC sabit kolunu koru; GUC/JWT bypass ekleme.
+- XP yazmaları runtime→building→üyelik→yaptırım→actor sırasını ve sunucu kazanım gününü kullanır. Sürüm/gün/cihaz değiştirmek kaynağı yenilemez; taslak kanıt ödül yetkisi değildir.
+- `npm run test:xp` bütün DB regresyonlarına dahildir. Test DB adı bir ek kapatma tedbiridir, owner kontrolünün yerine geçmez. Gerçek oyuncu için sentetik kayıtçıyı kullanma.

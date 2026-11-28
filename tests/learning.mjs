@@ -51,7 +51,8 @@ try{
  -- Registry stub only; no real scheduler daemon or worker.
  create schema cron;create table cron.job(id bigint generated always as identity,jobname text unique,schedule text,command text);
  create function cron.schedule(n text,s text,c text)returns bigint language sql as $$insert into cron.job(jobname,schedule,command)values(n,s,c)returning id$$;`);
- const files=(await readdir('supabase/migrations')).filter(f=>f.endsWith('.sql')).sort();assert.equal(files.length,13);assert.match(files[12],/_a22a_passive_learning_foundation\.sql$/);
+ const files=(await readdir('supabase/migrations')).filter(f=>f.endsWith('.sql')).sort();assert.ok(files.length>=13); // historical first13 migrations
+ assert.match(files[12],/_a22a_passive_learning_foundation\.sql$/);
  for(const f of files.slice(0,12)){await db.query('begin');await db.query((await readFile('supabase/migrations/'+f,'utf8')).replace(/create extension if not exists pg_cron with schema pg_catalog;/g,''));await db.query('commit');}
  const [a,b,actorless,outsider,staff]=[uuid(),uuid(),uuid(),uuid(),uuid()];
  for(const[i,u]of[a,b,actorless,outsider,staff].entries())await db.query('insert into auth.users values($1,$2,now())',[u,{username:'a22a_fixture_'+i}]);
