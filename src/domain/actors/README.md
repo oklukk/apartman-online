@@ -1,6 +1,8 @@
 # A1 — saf actor domain doğrulayıcısı
 
-Bu dizin ilk **gerçek kod** dilimidir. Tercih kaynağı: [PR #17](https://github.com/oklukk/apartman-online/pull/17), belge commit'i `30a3df7`. Kod PR'ı inceleme farkını küçük tutmak için PR #17 belge dalını temel alır; iki PR da taslak kalır, otomatik merge/yayın yoktur. Belge PR'ı birleşirse kod PR'ının hedef dalı ayrıca gözden geçirilmelidir.
+Bu dizin ilk **gerçek kod** diliminden gelen saf doğrulayıcıdır. Tercih kaynağı [PR #17](https://github.com/oklukk/apartman-online/pull/17); PR #18'de başlayan kod ve A1 kalıcılık dilimleri artık birleşmiştir. [A2-1b](../../../docs/game-systems-stage1/A2_1B_NPC_CATALOG.md) katalog uyarlaması bu modülün uygulamadan yalıtımını korur; canlı işlem veya otomatik yayın izni vermez.
+
+Fonksiyonların son isteğe bağlı `catalogCodes` parametresi, dört başlangıç alanını içeren tekil/geçerli kod snapshot'ıdır. Varsayılan `SKILLS` ilk dört alan olarak kalır; `InitialSkill` oyuncunun dört0/XP0 başlangıcını ayırır. Açık katalog verilirse yeni NPC alanları aynı sabit seviye kurallarıyla doğrulanır. Snapshot, DB'de varlık/etkinlik/öğretilebilirlik veya caller yetkisi kanıtı değildir. Manifest sıra/eşitlik denetimi PostgreSQL onay kaydında kalır; saf karşılaştırma girdiyi sıralayıp değiştirmez.
 
 ## Ne yapar?
 
@@ -19,7 +21,7 @@ Bu dizin ilk **gerçek kod** dilimidir. Tercih kaynağı: [PR #17](https://githu
 
 Saf doğrulayıcı **güvenlik veya canlı kurulum otoritesi değildir**. Girdi sakin/profile/business referansları çağıranın aday snapshot'ıdır; veritabanında varlık/üyelik/sahiplik/rol/ban doğrulaması yapmaz. İstemcinin kendi gönderdiği snapshot'ı doğrulaması yetki oluşturamaz. Gelecekte server, gerçek veriyi okuyup RLS/GRANT/constraint ve checked işlemlerle tekrar denetlemelidir. Önceki bot profili de güvenilir store'dan alınmalıdır; client'ın verdiği `previous` güncelleme yetkisi değildir.
 
-Sonuç `ok:true` olsa bile migration, backfill, seed, gerçek oyuncu/bot/konut oluşturma veya yayın izni çıkmaz. Bu PR'da bunları yapabilen fonksiyon, script, trigger veya komut yoktur. Dairesiz personel/actor'sız oyuncu için mevcut oyun ve güvenlik erişimi değişmez. İleri Düzey Öğreticilik mevcut `advanced_teaching` alanıdır, yeni beşinci skill değildir.
+Sonuç `ok:true` olsa bile migration, backfill, seed, gerçek oyuncu/bot/konut oluşturma veya yayın izni çıkmaz. Bu saf modül bu işlemleri yapan fonksiyon/script içermez; SQL katmanındaki kapalı oluşturma işlemleri ayrı teknik belgelerde açıklanır. Dairesiz personel/actor'sız oyuncu için mevcut oyun ve güvenlik erişimi değişmez. İleri Düzey Öğreticilik mevcut `advanced_teaching` alanıdır, ayrı bir yeni skill değildir.
 
 Kimlikler bu saf katmanda boş olmayan, kırpılmamış ve en çok100 karakterlik opaque referanslardır; DB UUID/FK denetimi olduğu iddia edilmez. Gerçek deployment politika sürümü, NPC ad/UUID/konut ataması, XP eğrisi ve öğrenim kapasitesi hâlâ ayrı iş/inceleme gerektirir.
 
@@ -35,6 +37,6 @@ npm run build
 
 Strict TypeScript build yeni dosyayı denetler; Vite giriş grafiği onu import etmediği için oyuncuya yeni bundle/ekran gönderilmez. PR #17 belge dalındaki üretim build dosyalarının SHA-256 değerleriyle bu dalın build'i ayrıca karşılaştırılır. Gerçek sonuçlar kod PR'ı açıklamasındadır.
 
-Yeni PostgreSQL/RLS veya Auth/MFA/Realtime kabulü yapılmış değildir. Eski CI dört disposable PostgreSQL paketini regresyon olarak çalıştırır. Sonraki A1 DB dilimi ayrı migration ve gerçek PostgreSQL testleri ister. Geri alma yalnız bu üç yeni dosyayı geri almaktır; eski uygulama veya DB rollback gerekmez.
+Saf testler PostgreSQL/RLS veya Auth/MFA/Realtime kabulü değildir. Güncel CI ayrı disposable PostgreSQL paketlerini de çalıştırır; [kalıcılık](../../../docs/game-systems-stage1/A1_PERSISTENCE.md) ve [NPC katalog geçişi](../../../docs/game-systems-stage1/A2_1B_NPC_CATALOG.md) ilgili SQL kanıtlarını ve geri alma sınırını açıklar. Bu modül kendi başına uygulama/DB'ye bağlanmaz.
 
-Yerel teslim doğrulaması: `npm test` **77/77** (55 mevcut + 22 yeni grup), `test:ui` ve strict `build` başarılı. Ek rol/alan matrisi; gerekli yeteneklerin eksik veya yanlış seviyede olması, gerekçesiz ek yetenekler (0/3/4/10), bilinmeyen alanlar, geçersiz önceki snapshot ve çok alanlı öğretim görevlisi regresyonunu kapsar. Belge dalının aynı ortamda alınan build'iyle **30 üretim dosyasının tamamı SHA-256 düzeyinde aynı**; yeni modül oyuncu bundle'ına girmedi. CI sonucu ve kalan sınırlar kod PR'ı açıklamasında raporlanır.
+Yerel teslim doğrulaması: `npm test` **81/81** (55 önceki + 22 A1 + 4 katalog grubu), `test:ui` ve strict `build` başarılı. Rol/alan matrisi; gerekli/ilgili sabitler, gerekçesiz ek yetenekler, geçersiz snapshot, çok alanlı öğreticilik ve beşinci katalog alanını kapsar. **30 üretim dosyası SHA-256 düzeyinde önceki baseline ile aynı**; modül oyuncu bundle'ına girmedi. CI sonucu ve kalan sınırlar kod PR'ı açıklamasındadır.

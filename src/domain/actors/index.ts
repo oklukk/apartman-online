@@ -1,12 +1,13 @@
 /** Pure A1 candidate-plan validation. No persistence, ID generation, Auth or deployment authority. */
 export const SKILLS = Object.freeze(['plumbing', 'business', 'basic_teaching', 'advanced_teaching'] as const);
-export type Skill = typeof SKILLS[number];
+export type InitialSkill = typeof SKILLS[number];
+export type Skill = string;
 export type TeachingRole = 'private' | 'lecturer' | 'professor';
 export type BotRole = 'lecturer' | 'worker' | 'operator';
 export type Levels = Readonly<Partial<Record<Skill, number>>>;
 export type Progress = Readonly<{ level: number; xp: number }>;
 export type InitialPlayer = Readonly<{
-  kind: 'player'; id: string; profileId: string; skills: Readonly<Record<Skill, Progress>>;
+  kind: 'player'; id: string; profileId: string; skills: Readonly<Record<InitialSkill, Progress>>;
 }>;
 export type FixedBot = Readonly<{
   kind: 'bot'; id: string; name: string; homeId: string; role: BotRole;
@@ -38,7 +39,13 @@ export const PREFERRED_PILOT = Object.freeze({
 type Row = Record<string, unknown>;
 const row = (v: unknown): v is Row => v !== null && typeof v === 'object' &&
   (Object.getPrototypeOf(v) === Object.prototype || Object.getPrototypeOf(v) === null);
-const skill = (v: unknown): v is Skill => typeof v === 'string' && (SKILLS as readonly string[]).includes(v);
+// Optional catalog codes are a caller-supplied snapshot, never authority or an I/O lookup.
+function catalog(codes: unknown): ReadonlySet<Skill> | null {
+  if (!Array.isArray(codes) || codes.some(c => typeof c !== 'string' || !/^[a-z][a-z0-9_]{2,79}$/.test(c)) ||
+      new Set(codes).size !== codes.length || SKILLS.some(c => !codes.includes(c))) return null;
+  return new Set(codes);
+}
+const skill = (v: unknown, known: ReadonlySet<Skill>): v is Skill => typeof v === 'string' && known.has(v);
 const id = (v: unknown): v is string => typeof v === 'string' && v.length > 0 && v.length <= 100 && v.trim() === v;
 const integer = (v: unknown, min: number, max = Number.MAX_SAFE_INTEGER): v is number =>
   typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= max;
@@ -60,45 +67,47 @@ function ids(v: unknown, path: string, issues: Issue[]): v is string[] {
   if (new Set(v).size !== v.length) issue(issues, path, 'duplicate', 'Referans tekrarlanamaz.');
   return true;
 }
-function fields(v: unknown, path: string, issues: Issue[]): v is Skill[] {
-  if (!Array.isArray(v) || v.some(x => !skill(x))) {
+function fields(v: unknown, path: string, issues: Issue[], known: ReadonlySet<Skill>): v is Skill[] {
+  if (!Array.isArray(v) || v.some(x => !skill(x, known))) {
     issue(issues, path, 'shape', 'Bilinen yetenek alanları gerekli.'); return false;
   }
   if (new Set(v).size !== v.length) issue(issues, path, 'duplicate', 'Alan tekrarlanamaz.');
   return true;
 }
-function levels(v: unknown, path: string, issues: Issue[]): v is Row {
-  if (!row(v) || Object.keys(v).some(k => !skill(k)) || Object.values(v).some(x => !integer(x, 0, 10))) {
+function levels(v: unknown, path: string, issues: Issue[], known: ReadonlySet<Skill>): v is Row {
+  if (!row(v) || Object.keys(v).some(k => !skill(k, known)) || Object.values(v).some(x => !integer(x, 0, 10))) {
     issue(issues, path, 'range', 'Yetenekler bilinen alanlarda 0–10 tamsayı olmalı.'); return false;
   }
   return true;
 }
 
 /** Qualifications only, never Auth/staff permission, lesson capacity or efficiency. */
-export function meetsTeachingRequirements(input: unknown, role: TeachingRole, field: Skill): boolean {
+export function meetsTeachingRequirements(input: unknown, role: TeachingRole, field: Skill, catalogCodes: readonly string[] = SKILLS): boolean {
   const errors: Issue[] = [];
-  if (!skill(field) || !['private', 'lecturer', 'professor'].includes(role) || !levels(input, 'levels', errors)) return false;
+  const known = catalog(catalogCodes);
+  if (!known || !skill(field, known) || !['private', 'lecturer', 'professor'].includes(role) || !levels(input, 'levels', errors, known)) return false;
   const value = (key: Skill) => own(input, key) && integer(input[key], 0, 10) ? input[key] as number : -1;
   return value('basic_teaching') >= (role === 'professor' ? 10 : 5) &&
     value(field) >= (role === 'private' ? 5 : 6) &&
     (role === 'private' || value('advanced_teaching') >= (role === 'professor' ? 5 : 3));
 }
 
-function bot(v: unknown, path: string, issues: Issue[]): v is FixedBot {
+function bot(v: unknown, path: string, issues: Issue[], known: ReadonlySet<Skill>): v is FixedBot {
   const start = issues.length;
   if (!shape(v, ['kind', 'id', 'name', 'homeId', 'role', 'field', 'levels', 'teachingFields'], path, issues)) return false;
   if (v.kind !== 'bot' || !id(v.id) || !id(v.name) || !id(v.homeId))
     issue(issues, path, 'identity', 'Bot kimliği, profili ve ayrı konut referansı gerekli.');
-  if ((v.role !== 'lecturer' && v.role !== 'worker' && v.role !== 'operator') || !skill(v.field))
+  if ((v.role !== 'lecturer' && v.role !== 'worker' && v.role !== 'operator') || !skill(v.field, known))
     issue(issues, path, 'fixed-profile', 'Bilinen sabit meslek ve alan gerekli.');
   const fixedLevels = v.levels, taughtFields = v.teachingFields;
-  if (!levels(fixedLevels, path + '.levels', issues) || !fields(taughtFields, path + '.teachingFields', issues)) return false;
-  if (skill(v.field)) {
+  if (!levels(fixedLevels, path + '.levels', issues, known) || !fields(taughtFields, path + '.teachingFields', issues, known)) return false;
+  if (skill(v.field, known)) {
     if (v.role === 'lecturer') {
       if (!taughtFields.includes(v.field) || taughtFields.length === 0 ||
           taughtFields.some(f => fixedLevels[f] !== 6) ||
           fixedLevels.basic_teaching !== (taughtFields.includes('basic_teaching') ? 6 : 5) ||
-          fixedLevels.advanced_teaching !== (taughtFields.includes('advanced_teaching') ? 6 : 3))
+          fixedLevels.advanced_teaching !== (taughtFields.includes('advanced_teaching') ? 6 : 3) ||
+          Object.keys(fixedLevels).some(k => !['basic_teaching', 'advanced_teaching', ...taughtFields].includes(k)))
         issue(issues, path, 'fixed-profile', 'Bot öğretim görevlisinin alan6 ve Temel5/İleri3 sabitleri, alan istisnasıyla gerekli.');
     } else if (v.role === 'worker' || v.role === 'operator') {
       // The current model declares one professional field; operators also need business.
@@ -114,14 +123,16 @@ function bot(v: unknown, path: string, issues: Issue[]): v is FixedBot {
 }
 
 /** Initial plans only: progressed players are an A2 concern, not reset to level/XP zero here. */
-export function validateInitialActorPlan(input: unknown): ValidationResult {
+export function validateInitialActorPlan(input: unknown, catalogCodes: readonly string[] = SKILLS): ValidationResult {
   const issues: Issue[] = [];
+  const known = catalog(catalogCodes);
+  if (!known) return result([{ path: 'catalogCodes', code: 'shape', message: 'Tekil ve başlangıç alanlarını içeren katalog kodları gerekli.' }]);
   if (!shape(input, ['scope', 'populationLimit', 'residentProfileIds', 'players', 'bots', 'buildings',
     'homes', 'activeTeachingFields', 'zeroLevelLearningPaths', 'assignments'], 'plan', issues)) return result(issues);
   if (input.scope !== 'pilot' && input.scope !== 'world') issue(issues, 'scope', 'shape', 'Plan kapsamı gerekli.');
   if (!integer(input.populationLimit, 0)) issue(issues, 'populationLimit', 'range', 'Sonlu nüfus tavanı gerekli.');
   const residentsOk = ids(input.residentProfileIds, 'residentProfileIds', issues);
-  const fieldsOk = fields(input.activeTeachingFields, 'activeTeachingFields', issues);
+  const fieldsOk = fields(input.activeTeachingFields, 'activeTeachingFields', issues, known);
   for (const key of ['players', 'bots', 'buildings', 'homes', 'zeroLevelLearningPaths', 'assignments']) {
     if (!Array.isArray(input[key])) issue(issues, key, 'shape', 'Liste gerekli.');
   }
@@ -183,7 +194,7 @@ export function validateInitialActorPlan(input: unknown): ValidationResult {
   const bots = new Map<string, FixedBot>(), occupied = new Set<string>();
   plan.bots.forEach((b: unknown, i) => {
     const path = `bots[${i}]`;
-    if (!bot(b, path, issues)) return;
+    if (!bot(b, path, issues, known)) return;
     unique(b.id, actorIds, path); unique(b.homeId, occupied, path);
     if (!homes.has(b.homeId)) issue(issues, path, 'housing', 'Bot yalnız ayrı NPC konutuna bağlanmalı.');
     bots.set(b.id, b);
@@ -192,14 +203,14 @@ export function validateInitialActorPlan(input: unknown): ValidationResult {
     issue(issues, 'bots', 'population', 'Nüfus tavanı ve konut kapasitesi aşılamaz.');
   if (fieldsOk) for (const field of plan.activeTeachingFields) {
     if (![...bots.values()].some(b => b.role === 'lecturer' && b.teachingFields.includes(field) &&
-      meetsTeachingRequirements(b.levels, 'lecturer', field)))
+      meetsTeachingRequirements(b.levels, 'lecturer', field, catalogCodes)))
       issue(issues, 'activeTeachingFields', 'coverage', 'Her aktif alana nitelikli sabit öğretim görevlisi gerekli.');
   }
   const paths = new Set<Skill>();
   plan.zeroLevelLearningPaths.forEach((p: unknown, i) => {
     const path = `zeroLevelLearningPaths[${i}]`;
     if (!shape(p, ['field', 'entryLevel'], path, issues)) return;
-    if (!skill(p.field) || p.entryLevel !== 0) {
+    if (!skill(p.field, known) || p.entryLevel !== 0) {
       issue(issues, path, 'zero-entry', 'Başlangıç yolu seviye0 kabul etmeli.'); return;
     }
     if (!plan.activeTeachingFields.includes(p.field)) issue(issues, path, 'zero-entry', 'Yol aktif plan alanına bağlı olmalı.');
@@ -212,7 +223,7 @@ export function validateInitialActorPlan(input: unknown): ValidationResult {
     const path = `assignments[${i}]`;
     if (!shape(a, ['botId', 'businessId', 'field'], path, issues)) return;
     const b = id(a.botId) ? bots.get(a.botId) : undefined;
-    if (!b || !id(a.businessId) || !skill(a.field) ||
+    if (!b || !id(a.businessId) || !skill(a.field, known) ||
         (b.role === 'lecturer' ? !b.teachingFields.includes(a.field) : b.field !== a.field)) {
       issue(issues, path, 'assignment', 'Atama mevcut sabit bot ve uygun alanı kullanmalı.'); return;
     }
@@ -222,8 +233,8 @@ export function validateInitialActorPlan(input: unknown): ValidationResult {
 }
 
 /** Preferred pilot is deliberately separate from the generic world-plan invariants. */
-export function validatePreferredPilot(input: unknown): ValidationResult {
-  const base = validateInitialActorPlan(input);
+export function validatePreferredPilot(input: unknown, catalogCodes: readonly string[] = SKILLS): ValidationResult {
+  const base = validateInitialActorPlan(input, catalogCodes);
   if (!base.ok) return base;
   const p = input as InitialActorPlan;
   const fieldsMatch = p.activeTeachingFields.length === 2 && PREFERRED_PILOT.teachingFields.every(f => p.activeTeachingFields.includes(f));
@@ -237,9 +248,11 @@ export function validatePreferredPilot(input: unknown): ValidationResult {
 }
 
 /** Compare immutable candidate definitions, including optional skills: absent is not zero. */
-export function validateFixedBotProfileChange(previous: unknown, next: unknown): ValidationResult {
+export function validateFixedBotProfileChange(previous: unknown, next: unknown, catalogCodes: readonly string[] = SKILLS): ValidationResult {
   const issues: Issue[] = [];
-  if (!bot(previous, 'previous', issues) || !bot(next, 'next', issues)) return result(issues);
+  const known = catalog(catalogCodes);
+  if (!known) return result([{ path: 'catalogCodes', code: 'shape', message: 'Geçerli katalog kodları gerekli.' }]);
+  if (!bot(previous, 'previous', issues, known) || !bot(next, 'next', issues, known)) return result(issues);
   const signature = (b: FixedBot) => JSON.stringify([b.id, b.name, b.homeId, b.role, b.field,
     Object.entries(b.levels).sort(([a], [c]) => (a < c ? -1 : a > c ? 1 : 0)), [...b.teachingFields].sort()]);
   if (signature(previous) !== signature(next)) issue(issues, 'next', 'fixed-profile', 'Sabit bot profili atama veya ilerlemeyle değiştirilemez.');

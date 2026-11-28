@@ -251,3 +251,40 @@ test('domain has no IO imports, actor factories, randomness or connection to exi
   scan('src');
   assert.deepEqual(Object.keys(domain).sort(), ['PREFERRED_PILOT', 'SKILLS', 'meetsTeachingRequirements', 'validateFixedBotProfileChange', 'validateInitialActorPlan', 'validatePreferredPilot'].sort());
 });
+test('explicit catalog snapshot admits a fifth NPC profession without expanding default initial player skills', () => {
+  const codes = freeze([...SKILLS, 'fixture_trade']);
+  const p = fixture(); p.scope = 'world'; p.activeTeachingFields[0] = 'fixture_trade'; p.zeroLevelLearningPaths[0].field = 'fixture_trade';
+  Object.assign(p.bots[0], { field: 'fixture_trade', teachingFields: ['fixture_trade'], levels: { fixture_trade: 6, basic_teaching: 5, advanced_teaching: 3 } });
+  rejected(p); assert.deepEqual(validate(freeze(p), codes), { ok: true, issues: [] });
+  assert.equal(teaches(p.bots[0].levels, 'lecturer', 'fixture_trade', codes), true);
+  assert.equal(teaches(p.bots[0].levels, 'lecturer', 'fixture_trade'), false);
+  assert.equal(change(p.bots[0], copy(p.bots[0]), codes).ok, true);
+  assert.equal(pilot(fixture(), codes).ok, true); assert.equal(pilot(p, codes).ok, false);
+  const extraPlayer = copy(p); extraPlayer.players[0].skills.fixture_trade = {level: 0, xp: 0};
+  rejected(extraPlayer, 'shape', value => validate(value, codes));
+});
+test('catalog context fails closed on malformed, duplicate or missing initial codes and preserves deterministic results', () => {
+  for (const codes of [null, [], ['fixture_trade'], [...SKILLS, 'Bad-code'], [...SKILLS, 'plumbing'], [...SKILLS, null]]) {
+    rejected(fixture(), 'shape', value => validate(value, codes));
+    assert.equal(teaches({ basic_teaching: 5, plumbing: 6 }, 'private', 'plumbing', codes), false);
+  }
+  const p = freeze(fixture()), codes = freeze([...SKILLS, 'fixture_trade']);
+  assert.deepEqual(validate(p, codes), validate(p, [...codes].reverse()));
+});
+test('fifth-field worker/operator profiles remain minimal and lecturers reject unrelated catalog abilities', () => {
+  const codes = [...SKILLS, 'fixture_trade'];
+  for (const role of ['worker', 'operator']) {
+    const p = ordinaryBotPlan(role, 'fixture_trade'); assert.equal(validate(p, codes).ok, true);
+    for (const level of [0, 10]) { const bad = copy(p); bad.bots[0].levels.advanced_teaching = level; rejected(bad, 'fixed-profile', v => validate(v, codes)); }
+  }
+  const p = fixture(); p.bots[0].levels.fixture_trade = 10;
+  rejected(p, 'fixed-profile', v => validate(v, codes));
+});
+test('multi-field teaching with a fifth catalog field retains the pedagogy6 priority and fixed profile rules', () => {
+  const codes = [...SKILLS, 'fixture_trade'], p = fixture(); p.scope = 'world'; p.bots = [p.bots[0]];
+  p.activeTeachingFields = ['fixture_trade', 'basic_teaching', 'advanced_teaching'];
+  p.zeroLevelLearningPaths = p.activeTeachingFields.map(field => ({field, entryLevel: 0}));
+  Object.assign(p.bots[0], {field: 'fixture_trade', teachingFields: [...p.activeTeachingFields], levels: {fixture_trade: 6, basic_teaching: 6, advanced_teaching: 6}});
+  assert.equal(validate(p, codes).ok, true);
+  p.bots[0].levels.advanced_teaching = 3; rejected(p, 'fixed-profile', v => validate(v, codes));
+});
