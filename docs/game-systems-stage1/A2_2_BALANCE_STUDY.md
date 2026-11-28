@@ -4,7 +4,7 @@
 Başlangıç: `4c2521d574b7d095a4a6c526d4fa7575078d9bd7` (PR #23 sonrası).
 Hiçbir paket seçilmiş oyun kuralı değildir. Uygulamaya, SQL'e veya canlı dünyaya uygulanmamıştır.
 
-**Revizyon notu:** 1–12. bölümlerdeki A/B/C paketleri ve sınırsız içerik erişimli ölçümler tarihsel kontrol karşılaştırmasıdır. Yeni tasarım hedefi ve takvim deneyleri [13. bölümde](#13-sınırlı-öğrenme-ve-günlük-oyun-döngüsü) yer alır. Takvim A/B/C, XP paketi A/B/C ile karıştırılmamalıdır.
+**Revizyon notu:** 1–12. bölümlerdeki A/B/C paketleri ve sınırsız içerik erişimli ölçümler tarihsel kontrol karşılaştırmasıdır. Sınırlı öğrenme takvimleri [13. bölümde](#13-sınırlı-öğrenme-ve-günlük-oyun-döngüsü) yer alır. Takvim A/B/C, XP paketi A/B/C ile karıştırılmamalıdır. Son B+ erişim incelemesi ve güncel adaylar [14. bölümde](#14-b-modeli-son-erişim-ve-günlük-döngü-incelemesi) yer alır.
 
 ## 1. Önce bütünleşik üç seçenek
 
@@ -440,3 +440,178 @@ Onay gerekenler: başlangıç modüllerinin süre/ödül/başarı içeriği; haf
 Yerel regresyon: `npm test`81/81, statik React `npm run test:ui`, `npm run build`, eski ve yeni çıktıların `--check` tekrar üretimi başarılıdır. Yeni25 test mevcut CI workflow'una eklenmedi; bağımsız araştırma komutuyla çalıştırıldı. PR CI'ı mevcut disposable PostgreSQL paketlerini ayrıca kontrol eder; canlı bağlantı testi değildir.
 
 Bu bölümde yeni bir sunucu ödül işlevi, kurs sistemi, RPC, migration, tablo, frontend veya canlı bağlantı yoktur. Gerçek Auth/MFA/Realtime ve insan katılım/tutma kabul testi yapılmadı. Geri alma yalnız araştırma dosyalarını geri almakla sınırlıdır. PR#24 taslak kalır; merge, yayın ve uygulama için kullanıcı onayı beklenir.
+
+## 14. B+ modeli: son erişim ve günlük döngü incelemesi
+
+**Araştırma / öneri; uygulama onayı değildir.** Önceki A/B/C XP paketleri, Takvim A/B/C sonuçları ve43 test aynen korunur. Başlangıç commit'i `cfb922beacfd4f8f98925eda0524324a89c74720`'dir. B karma eğrisi, normal faaliyet ödülleri,0–10 seviye sınırı, genel110/alan70 XP tavanları ve uzmanlık kanıtları değişmez. Kısa başlangıç üç adet tek kullanımlık5dk/32XP modüldür; yüksek hızlı tekrar üretimi değildir.
+
+Yeni sayısal kaynaklar: [B+ tabloları](xp-balance-study/bplus/TABLES.md), [alternatif parametreler](../../analysis/xp-balance/bplus-config.json), [çalıştırma/ölçüm rehberi](../../analysis/xp-balance/README.md). Tüm yeni sayılar simülasyon varsayımıdır. Gerçek eğitim/iş arzı veya insan tutma ölçümü değildir.
+
+### 14.1 Boş gün tanımını düzeltmeden karşılaştırma yapılmaz
+
+Önceki `no_work_active_days`, L10 bitince gün saymayı bırakır. Bu yüzden A30dk için görülen20 boş gün,180 günün tamamında20 boş gün demek değildir:114. gün L10 sonrası66 gün eklenince86 olur. B+ daha erken bitiyorsa aynı sorun olumlu sonucu abartabilir.
+
+Yeni çıktılar üç ayrı ölçü taşır:
+
+1. **Uzmanlık öncesi boş öğrenme günü:** eski ölçümle karşılaştırılabilir; aktif, seçilen alanda hiç öğrenme çalışması yok, hedef henüz bitmemiş.
+2. **180 günün tamamında öğrenme yapılmayan aktif gün:** hedef bitince kalan günleri de içerir. Aktif olmayan günler ayrı tutulur; iki haftalık ara seviye/XP kaybı oluşturmaz.
+3. **Modellenen öğrenme veya topluluk fırsatı olmayan gün:** ancak açıkça tanımlı, sonlu topluluk olayı varsayımı altında hesaplanır. Oyuncunun gerçekte anlamlı bir şey bulamadığı gün sayısı **bilinmiyor**. Sohbet/yönetim düğmesinin erişilebilir olması yeni konuşma veya karar var demek değildir.
+
+Kullanılmayan öğrenme dakikası, ekranda beklemeye zorlanmak değildir. Kısmi ders/proje çalışması XP üretmese de öğrenme çalışmasıdır; boş gün sayılmaz. Tek alanda bitmiş hedef ile başka yeteneğe geçmek ayrı deneylerdir.
+
+### 14.2 Deney tasarımı ve B+ seçenekleri
+
+Parametreler yalnız sonuç hedefini tutturmak için seçilmedi. Önce B'nin günlük/haftalık hak, sınırlı içerik ve kontenjan sorunlarına karşı mekanizmalar ayrı sınandı; başarısız birleşimler de aşağıda korunur. B+S ve B+D adları yalnız okunabilir rapor etiketidir:
+
+| Aday / kod | Kural farkı | Amaç / bedel |
+| --- | --- | --- |
+| B ilk referans (`B_original`) | Önceki15dk/24XP başlangıç, eski B takvimi |44 boş günün aynen tekrar üretimi |
+| B kısa başlangıç (`B_short`) | Her öğrencide5dk/32XP üç başlangıç modülü | Başlangıç etkisini erişim etkisinden ayırır |
+| Hak / çalışma / kuyruk / dağılım / ihtiyaç tekil deneyleri | Her biri yalnız ilgili bileşeni açar | Katkıyı ayırır; her birinin başarılı olması beklenmez |
+| İlk birleşim (`Bplus_expiring`) |2/gün,7/hafta uygulama;9/hafta olgu sunumu; sonlu192 olgu; kısa erişim; bireysel alternatif ve ön kayıt | Daha fazla olgu açmak, daha fazla tamamlanabilir olgu demek değildir |
+| Bekleyen havuz, toplu tüketim (`Bplus`) | Aynı içerik/XP; tamamlanmamış bireysel olgular sonlu bekleyen havuzda kalır | Erken içerik eskimesini çözer ama haklar haftanın başında tüketilebilir |
+| **B+D** (`Bplus_paced`) | Bekleyen havuz + güne yayılan hak; bireysel çalışma alternatifi ve ön kayıt | Daha erişilebilir, ancak uzun alternatif kısa oturumu yavaşlatabilir |
+| **B+S** (`paced_no_selfstudy`) | B+D ile aynı kaynak/hak/kuyruk; bireysel alternatif seçilmez, ders yolu korunur | Daha sade; özellikle kısa/düzensiz oturumlar için maliyeti azaltır |
+| Kuyruk seçilmez (`paced_no_queue`) | B+D'de ön kayıt yerine açık derse doğrudan başvuru | Ön kayıt ve katılım davranışının etkisini sınar |
+
+**Kontrollü ortak sınırlar:** B+S/B+D'de uygulama en çok2/gün ve7/hafta/alan. Ayrıca o Türkiye haftasında geçen gün sayısı kadar birikimli hak açılır: pazartesi1, salı2, … pazar7. Pazartesi iki kez yapıp salının hakkını önden tüketemez; pazartesi yoksa salı iki gerçek faaliyet tamamlayabilir. Haftada toplam7 ve günde2 yine aşılmaz. Bu bir giriş serisi/bonus değildir; sadece giriş yapmak XP veya para vermez. Kullanılmayan haftalık hak sonraki haftaya taşınmaz; seviye ve bitmemiş eğitim içeriği kaybolmaz. Uzun aranın tamamını tek oturumda telafi etme garantisi yoktur.
+
+Olgu sunumları haftada9, hafta içine dengeli dağıtılır; bu çalışma hakkını9'a çıkarmaz. Bireysel öğrenme olguları alan/oyuncu başına192 farklı bağlamla **sonludur**, açıldıktan sonra tamamlanana kadar bekleyebilir. Kitaplar, modüller ve üst seviye yeterlilikler önceki sınırlı listelerden gelir.64 olguluk karşı deney içerik arzına bağımlılığı gösterir. Gerçek apartman ihtiyaçları ise ayrı, sınıfta ortak, alan başına toplam52 ve haftada en çok2 açılan olay fixture'ıdır;3 gün içinde kapanır. Bekleyen eğitim olgusuyla süresi geçmiş gerçek arızayı aynı saymıyoruz.
+
+### 14.3 Kaynak tekilliği: tarih veya ad yeni başarı değildir
+
+Yeni simülasyondaki kayıtlar açılışta onaylı bir **sentetik kanıt listesine** alınır. Kişisel olguda aynı öğrenciye atanmış aynı varlık/arıza/ölçüm/karar bağlamı; ortak ihtiyaçta aynı olay/sonuç kimliği ikinci kez kaydedilemez. Sadece yeniID, başlık veya tarih üretmek ikinci kayıt/XP vermez. Gösterim tarihi değişse bile asıl açılma/kapanma bilgisi kullanılır. Kaynak başka oyuncuya veya yeteneğe yönlendirilemez; ortak ihtiyacı sınıftan yalnız bir kişi tamamlar. Başarısız deneme kaynağı ödüllendirilmiş saymaz; aynı kanıt daha sonra başarılı olsa da yalnız bir kez ödül verir.
+
+192 bağlam, örneğin farklı tesisat noktası, arıza, ölçüm ve güvenli karar kombinasyonlarıdır; öğreticilik başlangıcı da ayrı bağlamla desteklenir. **Bu sayı192 pedagojik olarak yazılmış/doğrulanmış oyun görevi teslimi değildir.** Gerçekten anlamlı farklı iş, sonuç doğrulayıcısı ve içerik kalitesi sonraki geliştirme/onay işidir. Simülasyonda farklı adlar uydurarak talebi sonsuza büyütmek yerine kapalı liste ve64 olgu karşı senaryosu kullanılır. Yeni tarih geldiğinde yeni kaynağı kendiliğinden çoğaltan bir canlı sistem geliştirilmez.
+
+Bu sınırlamalar yalnız analiz belleğindedir; üretim güvenlik sınırı değildir. Gelecekte gerçek tamamlanma/atama kimliği, güvenilir sunucu doğrulaması, semantik/ilişkisel tekillik ve atomik kaynak tüketimi gerekecektir. Mevcut `xp_source_claims` tek UUID/tek aktör/tek hedef sözleşmesi değişmez; alt UUID kopyalama önerilmez.
+
+### 14.4 Bireysel alternatif ve rezervasyonun gerçek maliyeti
+
+B+D'de yer bulunmayan orta/ileri modülün yalnız ilk4'ü için25dk bireysel çalışma + doğrulanmış değerlendirme adayı vardır; normal ders15dk'dır. Haftada en çok2 bireysel başlangıç, mevcut günlük1/haftalık3 kurs başlangıç hakkının **içindedir**. Aynı modül kimliği, aynı24XP ve aynı başarı kanıtı kullanılır; derse sonradan katılmak ikinci XP vermez. Kısmi çalışma korunur; değerlendirme bitmeden koşul tamamlanmaz. İleri alternatif de ayrı varsayımsal ileri yol olmadan açılmaz.
+
+Bu alternatif otomatik değerlendirilebilir, güvenilir sonuç kanıtı **varsa** öğretim görevlisi ders kontenjanı harcamaz. Böyle bir değerlendirme altyapısı henüz yoktur. İnsan incelemesi gerekecekse o kapasite ayrıca bütçelenmeli; sonuçlar ücretsiz/sınırsız insan değerlendirmesi varmış gibi canlıya taşınmamalı. B+S bu nedenle daha az yeni varsayım isteyen başlangıç adayıdır. Alternatifi kullanıcıya zorlamak yerine seçilebilir tutmak gerekir; düşük süreli oyuncu daha uzun çalışmayı reddedebilir.
+
+Ön kayıt aynı alan/modül için tek taleptir; kuyruk önceliği istek tarihiyle belirlenir, en çok7 gün ileri sunuma rezervasyon aranır. Öğrenci devamsızken de yer tutulabilir; pencere biterse kaçırılan rezervasyon olarak kaydedilir. Gelecekte henüz açılmamış yerden vazgeçilirse aynı kontenjan/bütçe iade edilir; açılmış/harcanmış ders bütçesi geriye dönük silinmez. Bitmiş modül veya L10'a ulaşmış öğrenci yeni yer tutamaz.
+
+Ön kayıtta bütçe sunumun açıldığı haftaya, yürüyerek katılım kontrolünde kabul haftasına bağlanır; bu zamanlama farkı rezervasyon tasarımının parçasıdır. Sonuçlar yalnız FIFO sırasının saf etkisi olarak sunulmaz. Tamamlanmış rezervasyonların beklemesi sağdan sansürlüdür; henüz katılmamış kişiler için bekleme garantisi değildir.
+
+### 14.5 Nihai sayısal karşılaştırma
+
+Aşağıdaki tüm süreler **varsayımsal ileri yol mevcutken**, tek Tesisatçılık ve30dk/gün içindir. Öğretim görevlisi/kurs sayısı artırılmadı; başlangıç farkı B kısa kontrolünde ayrılır.180 sonrası kilometre taşları1460 güne uzatılmış aynı deneyden gelir.
+
+| Takvim / aday | L3 | L5 | L7 | L10 | Boş öğrenme: L10 öncesi | Boş öğrenme:180 gün tamamı |
+| --- | --- | --- | --- | --- | --- | --- |
+| A referansı |4|12|29|114|20|86|
+| B ilk referans |5|17|51|226|44|44|
+| C referansı |5|23|85|303|70|70|
+| B kısa başlangıç |3|16|51|225|45|45|
+| B+ ilk, olgular erken eskiyor |3|11|33|Ulaşılamadı|71|71|
+| B+ bekleyen havuz, haklar toplu |3|11|33|158|47|69|
+| **B+D: haklar güne yayılıyor** |3|12|33|161|0|19|
+| **B+S: aynı, bireysel alternatif seçilmiyor** |3|13|37|161|0|19|
+
+İlk başarısız birleşimde9 olgu/hafta açılıp en çok7 kullanılabildiği için olgular beklerken eskiyor.192 kayıt bitince XP yolu da kapanıyor. İçerik/ödül artırmak yerine yalnız **sonlu kişisel çalışma havuzunu koruma** deneyi erişimi açıyor. Fakat2/gün hakkı toplu tüketmek yeni boş günler yaratıyor: daha hızlı L10'a rağmen69 boş gün. Aynı7 haftalık hakkı güne yaymak bu ödünleşimi azaltıyor. Bu başarısız sonuçlar kaldırılmadı; B+'nın her bileşeni otomatik olarak olumlu değildir.
+
+![B+ boş gün ve tek alan gelişimi](xp-balance-study/bplus/bplus-learning.png)
+
+**B+S — bütün süreler:**
+
+| dk/gün | L3 gün | L5 gün | L7 gün | L10 gün | İşletmecilik5 tek alan | Boş gün:180g |
+| --- | --- | --- | --- | --- | --- | --- |
+|15|4|21|59|193|21|0|
+|30|3|13|37|161|14|19|
+|60|3|13|37|161|14|19|
+|120|3|13|37|161|14|19|
+
+B+D'de15dk tek alan L5=23, L10=197 gündür; B+S'de21/193.30dk'da bireysel alternatif L5'i13→12 ve L7'yi37→33 güne çeker ama L10 yine161'dir. Bireysel alternatif herkese zorunlu varsayılırsa kısa oyuncu kötüleşebilir. Sınırlı başlangıç dört yeteneğin her birinde seviye0'dan erişilebilir;0–3 üstüne başlangıç içeriğiyle ilerleme yapılamaz. Diğer öğreticilik alanlarına4+ eğitmen varmış gibi davranılmaz.
+
+### 14.6 Hak reddi, kontenjan beklemesi ve sınıf büyüklüğü
+
+Eski44 boş gün;133 günlük hak,47 haftalık hak ve125 kontenjan kısıtı görülen günle birlikte raporlanmıştı. Bunlar çakışan kısıt günleridir; toplam boş gün veya kaç farklı gerçek fırsat kaybedildiği değildir.
+
+Yeni `validated_*_denial_days` ölçüsü, en az10dk bütçe ve hâlen uygun, tamamlanmamış kanıt kaynağı varken hak yüzünden reddi sayar. Aynı kaynak ertesi gün bekleyebilir; sayıyı kalıcı kayıp XP veya kaybedilmiş farklı iş sayısı olarak yorumlamayın. Tek kaynak tekrarları ayrıca tekilleştirilir.
+
+|30dk tek alan,180 gün|B sonlu kaynak kontrolü|B+D|B+S|
+| --- | --- | --- | --- |
+| Günlük hak nedeniyle doğrulanmış fırsat reddi görülen gün |110|3|1|
+| Haftalık hak nedeniyle ret görülen gün |48|21|20|
+| Güne yayılmış hakkın henüz açılmaması nedeniyle ret |0|108|113|
+| Ön kayıt/kurs beklemesi görülen gün |Ön kayıt yok|79|100|
+| Katılınmış rezervasyonda en uzun bekleme |Ölçülmedi|7 gün|7 gün|
+| Günlük XP tavanıyla kesilen XP |0|0|0|
+
+Bu günler toplanmaz. B+S'de sınıf beklemesi sürerken sınırlı başka bir kanıt çalışması yapılabildiği için uzmanlık öncesi boş gün0 olabilir. Bekleme listesi kontenjan yaratmaz. Güne yayılmış ret sayısı yüksekse oyuncuya yeni fırsat tarihini göstermek önemlidir; fazladan tıklama veya bekleme dayatılmamalıdır.
+
+**İki pilot eğitmenin kapasitesi:** alan başına her sunum en çok2 kişi, haftada en çok6 orta eğitim kabulü; iki eğitmende toplam en çok12. İleri yolun ayrıca varsayımsal değerlendirme bütçesi2/alan/haftadır; bunu alan6 NPC'lerin ileri öğretme yeterliliği saymıyoruz. Hiçbir B+ adayı bu limitleri veya NPC yeteneklerini artırmaz.
+
+|30dk tek alan|6 öğrenci L5 / L10|12 öğrenci L5 / L10|
+| --- | --- | --- |
+| B kısa başlangıç |16 /225|19 /233|
+| B+D |12 /161|12 /164|
+| B+S |13 /161|15 /172|
+
+12 kişide B+D/S'nin katılınmış rezervasyon beklemesi en çok21 güne çıkabilir;7 günlük ön rezervasyon araması toplam bekleme süresi garantisi değildir. B+D azalan öğretmen baskısını daha fazla bireysel ve henüz geliştirilmemiş değerlendirmeye taşır. B+S kurum kapasitesine daha çok bağımlıdır. Bu sayısal avantajın gerçek öğretme verimi veya öğrenci kapasitesi formülü olduğu ileri sürülmez.
+
+**Yalnız pilot:** bütün B+ adaylarında ileri yol yoksa L6/700XP'de durulur;7–10 sonuçları uygulanabilir pilot özelliği değildir. **Yalnız64 geçerli olgu/alan:** ileri yol açık olsa bile L10'a1460 günde ulaşılamaz. Kaynak tekilliği korununca içerik arzının gerçek bedeli görünür.192 varsayımını gerçek içerik teslimi saymak bu analizin en önemli kabul risklerinden biridir.
+
+### 14.7 Fazladan süre, iki yetenek, düzensizlik ve ara
+
+**İki alana ayrılmış günlük bütçe: İşletmecilik5 / iki alanda da L10 takvim günü**
+
+| dk/gün | B kısa başlangıç | B+D | B+S |
+| --- | --- | --- | --- |
+|15|40 /382|52 /394|40 /382|
+|30|22 /236|23 /197|21 /193|
+|60|18 /227|12 /163|14 /168|
+|120|19 /228|12 /164|14 /168|
+
+Sadece tek yetenekte B+S30→120dk artışı L10'u hızlandırmaz; B+D yalnız1 gün hızlandırır. İki yetenekte ise B+S193→168 ile25, B+D197→164 ile33 gün kazanır.60→120dk'da belirgin ek fayda kalmaz; daha fazla süre sınırsız XP'ye dönüşmez.15dk çift alanda B+S, B kısa kontrolünden daha hızlı değildir; zaman bütçesi asıl sınırdır. B+D'nin uzun alternatifleri aynı profili yavaşlatır. Sonuçlar sabit modül/okuma/uygulama önceliğiyle çalışan sentetik oyunculara aittir; optimal insan stratejisi garantisi değildir.
+
+![Tek ve iki alanda marjinal süre faydası](xp-balance-study/bplus/bplus-marginal.png)
+
+Düzensiz30dk çift alan (pazartesi/çarşamba/cumartesi): B kısa ve B+S İşletmecilik5=45, iki L10=444 gün; B+D64/458 ile daha kötüdür.15dk düzensiz çift alanda B+S İşletmecilik5=92 gün, B kısa115; iki L10892/890 ile hemen hemen aynıdır. Bir hedefin erken erişilmesi bütün ilerlemenin erken biteceğini göstermez.
+
+14 gün ara veren30dk çift alan: B kısa İşletmecilik5=35, iki L10=248; B+D40/211; B+S35/205 gündür. Ara boyunca XP/seviye aynı kalır; geri gelince XP veya para kendiliğinden verilmez. Sonlu bekleyen olgular kaybolmaz, gün/hafta hakları ise sınırlı kalır. Bütün15/30/60/120dk ve7/14/30/60/90/180 gün ayrıntıları `snapshots.csv` ve `milestones.csv` içindedir; aktif gün/çalışma dakikası da kaydedilir.
+
+### 14.8 XP dışı günlük apartman döngüsü ve ayrı ölçüm
+
+| Sınıf | Olanak | Ölçüm/tasarım sınırı |
+| --- | --- | --- |
+| **Mevcut çalışan özellikler** | Komşu sohbeti, pano/gelişmeler, mevcut oylama ve seçim, aidat/kasa/iş ekranları | Erişim vardır; her gün yeni anlamlı mesaj/oylama olduğunu bilmiyoruz. Eski maaş/ek iş/aidat kuralları değişmez; giriş için yeni para ödülü yoktur. |
+| **Yeni geliştirme gerektiren mekanikler** | Gerçek ihtiyaç kaydı, mesleki tanı/uygulama doğrulaması, kurs ön koşulu/kapasite/ön kayıt, sınırlı olgu havuzu, ilerleme ve gelecek oturum takibi | Bu PR'da çalışan oyun özelliği değildir; gelecekte ayrı sunucu/şema/UI onayı gerekir. |
+| **Yalnız tasarım önerileri** | Gönüllü haftalık apartman hedefi, dünkü çalışmanın sonucu/komşu geri bildirimi, ortak bakım planı, sosyal katkı özeti | Otomatik XP/para/başarım veya seri ödülü vaat edilmez; insan katılım hipotezidir. |
+
+Önerilen günlük akış: yeni komşuluk gelişmesi/sonuç varsa incele → uygun gerçek ihtiyaç veya öğrenme adımını seç → kanıtlı faaliyeti tamamla → sonraki fırsatı gör → istenirse mevcut sohbet/karara katıl. Haftalık akışta eksik kurs/uygulama planı ve gönüllü ortak bakım hedefi vardır. Takvim bir dakikada giriş istemez; kurs pencereleri geniştir. Geçmiş birkaç günün kaçırılması seviye kaybettirmez. Oyuncunun öğrenme hakkı bitince oyunu bırakabilmesi de normaldir.
+
+**Genel faaliyet yokluğunu nasıl ayırdık?** Gerçek mesaj/veri okunmadı. İki açık dışsal olay fixture'ı karşılaştırıldı:
+
+- Seyrek mevcut-kabiliyet senaryosu: haftada2 gerçekten yeni komşu konuşma ihtiyacı (en çok3 gün değerlendirilebilir,10dk) ve28 günde bir24 saatlik oylama fırsatı (5dk). Her olay bir kez değerlendirilir; aynı mesajı tekrar okumak yeni etkinlik sayılmaz.
+- Daha canlı topluluk önerisi: haftada4 yeni konuşma ihtiyacı ve ayrıca haftalık15dk ortak hedef planlaması. Sonuncusu yeni tasarım önerisidir; mevcut özellik diye sayılmaz. Olayların gerçek kişilerden geldiği **varsayımdır**.
+
+|30dk tek alan,180g|Öğrenme olmayan aktif gün|Seyrek senaryoda modellenen öğrenme/topluluk fırsatı olmayan gün|Canlı topluluk önerisi senaryosunda aynı ölçü|
+| --- | --- | --- | --- |
+| B ilk referans |44|44|0|
+| B+S |19|12|6|
+
+Bu tablo B+S'nin her sosyal varsayımda üstün olmadığını da gösterir: canlı topluluk varsayımı eski B'nin boşluklarını bile doldurabilir. Gerçek “anlamlı faaliyet bulamadım” günleri ve tutma oranı **bilinmiyor**. Sosyal erişimi veya varsayımsal yoğun mesaj akışını gerçek başarı gibi raporlamıyoruz.
+
+120dk oyuncu iki alana yayılabilir, ortak ihtiyaç/planlamaya katılabilir, mevcut yönetim/oylama/sohbete zaman ayırabilir. Bu seçenekler herkese günde iki saat zorunlu görev veya garanti anlamlı içerik sağlamaz. Öğreticilik gibi diğer alanlarda başlangıç yapılabilir ama pilotta4+ eğitmen/kurs varmış gibi üst seviye vaat edilmez. Kapsamı XP hedefini doldurmak için yeni işletme/eşya/başarım sistemlerine genişletmiyoruz.
+
+### 14.9 Nihai değerlendirme ve gereken kararlar
+
+**B+S'yi sınırlı pilot tasarımı için daha sade inceleme adayı olarak öneriyorum; B+D'yi seçilebilir, doğrulama altyapısı onaylanırsa eklenecek alternatif olarak tutuyorum.** Aynı XP eğrisinde B+S30dk profilde44→19 tam-dönem öğrenmesiz gün ve226→161 gün L10 sonucu verir.19 günün tamamı L10 sonrasıdır;0 boş gün iddiası yalnız uzmanlık öncesine aittir.15dk başlangıç erişilebilir, kısa/düzensiz oturumda uzun bireysel çalışmaya zorlanmaz. Buna rağmen tek alanda120dk marjinal fayda sorunu çözülmez; iki alan ve gerçek topluluk faaliyeti gerekir.12 kişilik sınıfta B+D daha hızlı ama henüz olmayan bireysel doğrulama altyapısına daha çok dayanır.
+
+Bu sonuçlar B+'nın her koşulda daha iyi olduğunu kanıtlamaz. Öğrenme içeriği64 olguyla kalırsa ilerleme tıkanır; yalnız pilotta L6 sınırı vardır; zaman bütçesi düşük çift alan oyuncusu daha hızlı bitirmeyebilir. Kuyruk devamsızlığı yer kaybına neden olabilir. Bekleyen içerik sınırlı olsa da tekrar eden şablonların sıkıcılığı sayısal modelden çıkarılamaz. İnsan oynanabilirlik/kavrayış testi ve gerçek içerik kalite kontrolü yapılmadan denge kesinleştirilmemeli.
+
+**Kullanıcı kararı gerekenler:** B+S/B+D ve bireysel alternatifin isteğe bağlılığı;2 günlük/7 haftalık hak ve güne açılan tavanın kabulü;192 farklı olgu arzının gerçek içerik planı; bekleyen kişisel çalışma ile süresi geçen gerçek ihtiyacın ayrımı;52 ortak olay varsayımının gerçek talebi; ön kayıt/iptal/devamsızlık politikası ve kapasite bütçesinin dönemi; ileri yolun kim tarafından/nasıl doğrulanacağı; XP dışı haftalık hedefin tasarımda kalması veya sonraki görev olması. Hiçbiri otomatik canlı kurulum, aktör/seed, eğitim veya ekonomi onayı değildir.
+
+### 14.10 Doğrulama ve CI
+
+Önceki43 test ve dosyaları değişmedi;27 yeni araştırma testiyle toplam70 test vardır. Tek kaynak için değişenID/ad/tarih/bağlam, başka oyuncu/alan, ortak ihtiyaç tekilliği, katalog sınırı, başarısızlık/tekrar, sınırlı alternatifte aynı modül/ön koşul, kısmi çalışma, kapasite/ön kayıt/iptal/devamsızlık ve L10 sonrası gereksiz yer tutmama sınanır. Dört yeteneğin kısa başlangıcı ve uzmanlık koşulları korunur. Simülasyon bir üretim güvenlik sınırı veya gerçek eşzamanlı veritabanı testi değildir.
+
+Yerel doğrulama:70/70 araştırma testi,81/81 kaynak testi, statik React UI testi ve derleme başarılıdır. Eski XP paketleri, önceki takvimler ve B+ CSV/JSON/Markdown sonuçları üç ayrı `--check` komutuyla byte bazında tekrar üretilmiştir.
+
+Yeni `.github/workflows/xp-research.yml`, yalnız ilgili PR değişikliklerinde read-only Python araştırma testlerini ve üç veri kümesinin byte bazında tekrar üretimini çalıştırır. Secrets, Supabase, veritabanı, npm bağımlılığı veya deployment adımı yoktur. Mevcut Pages workflow'u değiştirilmez. `npm test`, statik React UI testi ve derleme ayrıca regresyondur; gerçek Auth/MFA/Realtime veya insan kabul testi sayılmaz.
+
+Yalnız rapor, parametre, bağımsız analiz/test, CSV/JSON ve Matplotlib grafikleri eklenir. Üretim, frontend, migration, canlı oyuncu/NPC/konut/kurs ve gerçek ekonomik/XP kayıtları değişmez. Geri alma bu araştırma dosyalarını ve bağımsız analiz workflow'unu geri almakla sınırlıdır. PR#24 taslak kalır; merge ve yayın yapılmaz, nihai oyun dengesi için kullanıcı onayı beklenir.
