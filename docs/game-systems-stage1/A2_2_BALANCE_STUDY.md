@@ -4,6 +4,8 @@
 Başlangıç: `4c2521d574b7d095a4a6c526d4fa7575078d9bd7` (PR #23 sonrası).
 Hiçbir paket seçilmiş oyun kuralı değildir. Uygulamaya, SQL'e veya canlı dünyaya uygulanmamıştır.
 
+**Revizyon notu:** 1–12. bölümlerdeki A/B/C paketleri ve sınırsız içerik erişimli ölçümler tarihsel kontrol karşılaştırmasıdır. Yeni tasarım hedefi ve takvim deneyleri [13. bölümde](#13-sınırlı-öğrenme-ve-günlük-oyun-döngüsü) yer alır. Takvim A/B/C, XP paketi A/B/C ile karıştırılmamalıdır.
+
 ## 1. Önce bütünleşik üç seçenek
 
 | Öneri | A — Hızlı | B — Dengeli | C — Uzun vadeli |
@@ -247,3 +249,194 @@ python3 analysis/xp-balance/study.py --config /tmp/xp-candidate.json --out /tmp/
 ```
 
 Bu PR taslaktır. Birleştirme, yayın, üretim geliştirmesi veya canlı XP işlemi yapılmaz; denge ve tasarım kabulü kullanıcıya aittir.
+
+## 13. Sınırlı Öğrenme ve Günlük Oyun Döngüsü
+
+### 13.1 Karar ile öneriyi ayırma
+
+**Kesin kullanıcı kararı:** gelişim yalnız XP biriktirmek değildir; zaman içinde açılan faaliyet, ön koşul, ilerleme sınırı ve başarılı uygulama gerekir. Her yetenekte sıfırdan erişilebilir başlangıç yolu bulunmalıdır. Dar dakikalık giriş zorunluluğu, giriş düğmesinden XP, zorunlu seri ödülü veya yoklukta seviye kaybı yoktur.
+
+**Onay bekleyen sayılar:** aşağıdaki bütün takvimler, süreler, XP ödülleri, haklar, kontenjanlar, başarı sayıları ve gün sonuçları yalnız **öneri / çevrimdışı simülasyon varsayımıdır**. Mevcut A/B/C XP paketleri silinmedi; yeni deneylerde **B XP eğrisi, normal faaliyet ödülleri ve genel110/alan70 günlük tavanları sabittir**. Yeni takvim A/B/C bağımsız bir eksendir. Başlangıç paketi alternatiflerinde yalnız açıkça belirtilen faaliyet süresi/ödülü değişir; eğri değişmez.
+
+[Sayısal takvim eki](xp-balance-study/calendar/TABLES.md), [parametreler](../../analysis/xp-balance/calendar-config.json), [tekrar üretme](../../analysis/xp-balance/README.md) ve `calendar/` altındaki CSV'ler yeni sonuçların kaynağıdır. İlk rapordaki sınırsız erişim varsayımı artık tasarım önerisi değil, karşılaştırma kontrolüdür.
+
+### 13.2 Aşamalar, sonlu içerik ve yeterlilik
+
+| Aralık | Önerilen öğrenme yolu | Ön koşul ve ilerleme sınırı |
+| --- | --- | --- |
+| 0–3 | Bir kez 5dk yönlendirilmiş uygulama; üç farklı başlangıç modülü; iki kitap bölümü; sınırlı günlük temel uygulama | İlk modül **seviye0** ile başlar; modüller sırayla tamamlanır. L3 için üç modülün başarısı gerekir. Temel faaliyetten XP en çok T(3)=140'a kadar; aynı modül/kitap tekrar XP vermez. NPC kurs kontenjanı gerekmez. |
+| 4–6 | Dönem/gün pencereli meslek kursları; dört farklı kitap bölümü; gerçek farklı uygulamalar | L4: en az1 orta modül +3 başarılı orta uygulama; L5: en az2 modül +6 uygulama; L6: en az3 modül +10 uygulama. Kalan orta modüller 12 ile sınırlı; düşük aşama işi T(6)=700 üstüne ilerletmez. |
+| 7–10 | İleri çalışma/portfolyo modülleri, farklı ileri uygulamalar ve yeterlilik | L7:1 ileri modül +4 ileri uygulama; L8:2 +10; L9:3 +18 ve20dk proje; L10:4 +28 ve10dk yeterlilik. İleri modül kataloğu12, kitap bölümü6; toplam XP T(10)=3540 ile sınırlı. Proje önceki seviye açıldıktan sonra başlar. |
+
+Başlangıç/modül/kitap listeleri her yetenekte ayrı ve sonludur. Modül önceki modülün başarısını ister; başlangıç dersi kendisinin kazandıracağı seviyeyi istemez. Dört mevcut yeteneğin başlangıcı ayrı sınanır. **Pilot öğretim görevlileri yalnız Tesisatçılık ve İşletmecilik alanındadır:** Temel/İleri Öğreticilik için 4+ örgün eğitim pilotta mevcut sayılmaz; bu alanlar başlangıç sonrasında uygun öğretici arzını bekler. Öğretmen/profesör eşikleri 7. bölümdeki hâliyle korunur.
+
+Temel çalışma kendi aşamasının XP tavanına geldiğinde yeni seviye üretemez. Gerekli kurs/başarı yoksa biriken XP seviyeyle aynı şey değildir. Yeterlilik çalışması 5dk parçalara bölünebilir; son parça ve başarılı doğrulama olmadan kanıt tamamlanmaz. Projeler XP vermez. Bir kitap bölümü, modül veya başarı kaynağı dönem/deneme kimliği değiştirilerek ikinci kez ödüllendirilemez.
+
+**İleri yol sınırı:** alan6/Temel5/İleri3 olan iki NPC, alan7–10 öğretebilir varsayılmadı. Ana uzmanlık sonuçları, ayrıca onaylanıp geliştirilecek sınırlı ileri çalışma içeriği ve doğrulanabilir portfolyo değerlendirmesi **varsa** hesaplanır. Bu varsayımsal yol için ayrıca sınırlı değerlendirme kontenjanı vardır; yeni öğretim görevlisi/NPC oluşturulmaz. Yalnız mevcut pilotun bulunduğu `pilot_only` karşı senaryosu **L6 ve700 XP'de durur**. İleri kurs açılışı veya uzmanlık yetkilisi gerçekten mevcut değildir.
+
+### 13.3 Üç öğrenme takvimi
+
+Pencereler Türkiye yerel gününün00.00'ında açılır; son günün ertesi00.00'ında kapanır. Aşağıdaki günler Tesisatçılık içindir; aynı iki eğitmenin İşletmecilik takvimi bir gün kaydırılır. Pazar→pazartesi devirleri gün/hafta hesaplarında sınanır.
+
+| Öneri | Takvim A — Esnek | Takvim B — Dengeli | Takvim C — Planlı |
+| --- | --- | --- | --- |
+| Uygulama hakkı (gün/hafta) | 2 /10 | 1 /5 | 1 /4 |
+| Ayrı varsayımsal yeni görev arzı (haftada, oyuncu/alan) | 12 | 7 | 5 |
+| Göreve erişim penceresi | 3 gün | 3 gün | 4 gün |
+| Orta kurs yeni sunum günleri | Her gün | Pazartesi, çarşamba, cumartesi | İki haftada bir pazartesi, perşembe |
+| Kurs katılım penceresi | 3 gün | 3 gün | 7 gün |
+| Oyuncu kurs başlangıç hakkı (gün/hafta/alan) | 2 /4 | 1 /3 | 1 /2 |
+| Aynı sunumun toplam kontenjanı | 2 | 2 | 2 |
+| Eğitmen başına haftalık yeni kabul tavanı | 12 | 6 | 4 |
+| Varsayımsal ileri içerik sunumu | Salı, cuma;4 gün açık | Cuma;7 gün açık | Dört haftada bir pazartesi;7 gün açık |
+| İleri sunum kontenjanı / haftalık kabul | 2 /4 | 2 /2 | 2 /2 |
+| Proje penceresi | Her gün /7 gün açık | Pazartesi, cumartesi /7 gün açık | İki haftada bir pazartesi /7 gün açık |
+| Başarısız deneme bütçesi (hafta/alan) | 3 | 2 | 2 |
+
+**Yeterlilik ≠ kontenjan ≠ takvim.** Öğretim görevlisinin alan/öğreticilik eşikleri ayrı doğrulanır. Uygun eğitmen bile haftalık kontenjanı aşamaz. Kontenjan bulunması da kapalı sunuma girmeyi veya ön koşulu atlamayı sağlamaz. Bu tabloda kapasite, yeni öğrenci kabul sayısıdır; kesin öğretme verimi/öğrenci kapasitesi formülü seçilmedi.
+
+Başvurunca o sunumun toplam kontenjanı ve kabul haftasının eğitmen bütçesi bir kez tüketilir. Çalışmayı sonraki gün sürdürmek ikinci kabul sayılmaz. Pencere kapanırsa kısmi ilerleme korunur; sonraki sunuma yeni yer gerekir, aynı modül kimliğiyle devam edilir. Başarıdan sonra yeni sunuma kayıt dahi ikinci XP üretmez. Başarısızlık süre ve deneme hakkı harcar; bütçe bitince sonraki Türkiye haftası beklenir. Seviye düşmez. Kitap için günde en fazla bir bölüm tamamlanır; başlangıçta günde bir modül vardır.
+
+Günlük uygulama ve kurs hakları **faaliyet türü/alan** düzeyindedir; başarısız uygulama da hakkı tüketir. Hepsinin verdiği XP ayrıca aynı genel/alan XP tavanına uğrar. Kullanılmayan haklar/XP limitleri birikmez. Farklı işletme, günün başka faaliyeti veya yeniden çağrı yeni hak yaratmaz.
+
+### 13.4 Deney kapsamı ve bekleme tanımları
+
+Referans, biri ölçülen olmak üzere **altı sentetik öğrencidir**; diğer beşi sabit30dk/gün oynar ve Tesisatçılık/İşletmecilik arasında dağılır. İki sınırlı pilot eğitmen vardır; arka plan oyuncuları kapasiteyi gerçekten tüketir. Günlük işlem önceliği dönüşümlüdür. Bu gerçek sınıf, oyuncu, NPC veya kurs kaydı değildir. Tek öğrenci,12 kişilik talep ve iki kat kurum kontenjanı da karşılaştırılır. Bunlar adil sıra veya garanti edilmiş bekleme süresi kanıtı değildir.
+
+Ölçülen profiller15/30/60/120dk; rapor günleri7/14/30/60/90/180'dir. Tek Tesisatçılık, tek İşletmecilik ve iki alan; haftada üç gün katılım;14 gün ara; her beşinci denemede başarısızlık; yalnız pilot; düşük görev arzı ve başlangıç haftanın günü senaryoları vardır.180 sonrası kilometre taşları en çok1460 günlük aynı deneyin uzantısıdır. Kaynaklar tamamen sentetiktir.
+
+Faaliyet önceliği modül→proje→kitap→uygulamadır; bu sabit davranış varsayımı optimal oyuncu stratejisi değildir.15dk iki alan günleri dönüşümlü, diğerleri günlük bölünmüş bütçe kullanır. Biten alanın artan bütçesi aynı gün otomatik aktarılmaz. Uzun oturumun kursa daha erken girmesi, diğer öğrencilerle yarışını da değiştirir; sonuçları mutlak dakika avantajı veya oyuncuyu cezalandırma kuralı saymayın.
+
+- `no_work_active_days`: aktif olup **hiç öğrenme çalışması yapılamayan** gün. Gerçek bekleme riskine en yakın ölçüm.
+- `zero_xp_active_days`: XP olmayan aktif gün; kısmi ders/proje gibi anlamlı0XP çalışma da buna girebilir. Boş beklemeyle eşit değildir.
+- `unused_minutes`: ayrılmış ama kullanılmayan öğrenme bütçesi. Oyuncunun ekranda beklemesi gerekmez; sohbet/yönetim süresi değildir.
+- `calendar_closed`, `instructor_capacity`, günlük/haftalık hak, ön koşul, tekrar bütçesi, XP tavanı ve aşama tavanı ayrı izlenir. Bir gün birden fazla kısıt olabilir; gün sayıları **toplanmaz**.
+- `idle_minutes_*`, kullanılmayan bütçenin tek bir öncelikli açıklamasıdır: ileri yol yokluğu→eğitmen yokluğu→kontenjan→kapalı takvim→deneme bütçesi→haftalık→günlük hak→ön koşul→içerik→süre. Bu atıf nedensel ölçüm değildir; nedensel karşılaştırma tek değişken kaldırma deneyleridir. Sıfır kullanılmayan dakikada görülen kapasite reddi de “boş gün” değildir.
+
+### 13.5 Yeni süreler — aynı B XP eğrisinde
+
+**Tek Tesisatçılık: takvim günü / birikimli gerçek simülasyon çalışma dakikası.** Günlük ayrılmış bütçe bütünüyle harcanmak zorunda değildir. Aktif gün sayıları da `milestones.csv` içindedir.
+
+| Takvim | dk/gün | L3 | L5 | L7 | L10 |
+| --- | --- | --- | --- | --- | --- |
+| A | 15 | 8 /100 | 29 /380 | 60 /710 | 195 /2130 |
+| A | 30 | 4 /100 | 12 /300 | 29 /705 | 114 /2120 |
+| A | 60 | 3 /110 | 10 /320 | 29 /760 | 116 /2210 |
+| A | 120 | 3 /110 | 11 /345 | 29 /770 | 116 /2225 |
+| B | 15 | 8 /100 | 26 /305 | 66 /705 | 239 /2125 |
+| B | 30 | 5 /100 | 17 /305 | 51 /705 | 226 /2120 |
+| B | 60 | 3 /100 | 16 /305 | 50 /710 | 225 /2125 |
+| B | 120 | 3 /100 | 16 /305 | 50 /710 | 225 /2125 |
+| C | 15 | 8 /100 | 31 /300 | 87 /700 | 311 /2105 |
+| C | 30 | 5 /100 | 23 /295 | 85 /740 | 303 /2105 |
+| C | 60 | 3 /100 | 23 /295 | 85 /740 | 303 /2105 |
+| C | 120 | 3 /100 | 23 /295 | 85 /740 | 303 /2105 |
+
+B eğrisinin eski sınırsız erişimli30dk referansında L10 **67 gündü**. Yeni226 gün sonucu XP maliyetinin yükseltilmesinden kaynaklanmaz. Çalışma2000→2120dk iken takvim çok daha fazla uzar; erişim ve haftalık hakların etkisi görünür.
+
+![Aynı B eğrisinde üç sınırlı takvim](xp-balance-study/calendar/calendar-progression.png)
+
+**İşletmecilik5: tek alan / iki alana ayrılan süreyle takvim günü**
+
+| dk/gün | Takvim A | Takvim B | Takvim C |
+| --- | --- | --- | --- |
+| 15 | 24 /58 | 26 /56 | 31 /52 |
+| 30 | 11 /24 | 18 /26 | 25 /31 |
+| 60 | 10 /11 | 17 /18 | 23 /25 |
+| 120 | 11 /12 | 17 /18 | 23 /25 |
+
+Bu erişim işletmenin açıldığı veya sermayesinin bulunduğu anlamına gelmez; yalnız seviye koşuludur. Eğitimi henüz oyunda yoktur. Yeni denge, mevcut başlangıç OP/maaş/aidatını değiştirmez. Süreyi birden fazla alana bölmek işletme açma eşiğini geciktirebilir; C'nin15dk çift alanı B'den erken5 olması farklı dönem/sıra etkileşimidir, C'nin her durumda hızlı olduğuna işaret etmez.
+
+**İki alanlı30dk profili: 7/14/30/60/90/180 gün seviyeleri (Tesisat/İşletmecilik):** A:2/2,3/3,5/5,7/7,8/8,9/9; B:2/2,3/3,5/5,6/6,7/7,9/9; C:2/2,3/3,4/4,6/6,7/7,8/8. Bütün diğer süreler ve tek alan sonuçları CSV/tabloda yer alır.
+
+### 13.6 Bekleme nedenleri ve kaçırılan eğitim
+
+B30dk tek alanda ilk180 gün:44 aktif gün öğrenme çalışması yapılamaz;1800dk çalışılır,3600dk ayrılmış öğrenme bütçesi kullanılmaz. Aynı dönemde125 gün bir kurs kontenjanı reddi,133 gün günlük,47 gün haftalık hak kısıtı görülür; bunlar birbirinden bağımsız boş günler değildir. Öncelikli dakika atfı:2755 kontenjan,590 günlük hak,255 haftalık hak. Katılım pencereleri örtüştüğü için aynı profilde **kapalı takvim günü0**; kısıtın adını yanlışlıkla “ders günü kapalı” koymuyoruz.
+
+|30dk, ilk180 gün|Takvim A|Takvim B|Takvim C|
+| --- | --- | --- | --- |
+| Hiç çalışma olmayan aktif gün |20|44|70|
+| Kullanılmayan öğrenme bütçesi (dk) |1290|3600|4050|
+| Kontenjan kısıtı görülen gün |46|125|54|
+| Kapalı takvim görülen gün |0|0|114|
+
+**Kısıtları tek tek kaldırma, B30dk:**
+
+| Deney | L5 günü | L7 günü | L10 günü |
+| --- | --- | --- | --- |
+| Tam sınırlı model |17|51|226|
+| Açılma zamanı kısıtı kalkarsa |15|45|221|
+| Kontenjan kısıtı kalkarsa |15|39|220|
+| Kurs/uygulama günlük-haftalık hakları kalkarsa |13|36|162|
+| Ek yeterlilik koşulları kalkarsa |17|51|226|
+| Günlük XP tavanı kalkarsa |17|51|226|
+
+Sonuç: bu adayda XP tavanı çoğu zaman bağlayıcı değildir; günlük/haftalık faaliyet hakkı ve erişim daha önemlidir. Ek yeterlilikler ana30dk patikada XP birikirken zaten tamamlandığından L10 gününü değiştirmez, yalnız gerçek çalışma gerektirir. Dolayısıyla bu başarı sayılarını “uzmanlık hızını tek başına yavaşlatıyor” diye sunamayız. Etkiler doğrusal değildir ve toplanamaz. Hak kaldırma deneyinde başlangıç modülünün ve kitabın günde bir sınırı sabit kalır; arka plan öğrencileri tam kurallarla devam eder.
+
+![Tek değişkenli kısıt karşılaştırması](xp-balance-study/calendar/calendar-ablation.png)
+
+Ders kaçınca aynı modül sonraki sunumda, önceki çalışma korunarak alınabilir. Yeni sunumlar arasındaki en uzun öneri aralığı A/B/C orta kursta1/3/11, ileri içerikte4/7/28 gündür. Örtüşen geniş pencereler nedeniyle yer varsa orta kurs için A/B'de takvim bütünüyle kapanmaz; C'de en çok4 kapalı gün vardır. Yerleşik dönemde ileri içerikte A/B tamamen kapalı gün0, C'de21 gündür; ilk pazartesi başlayan oyuncunun ilk ileri sunuma kadar ayrıca A'da1, B'de4 gün başlangıç boşluğu vardır. **Bunlar kontenjan garantisi değildir**; dolu sınıfta sonraki haftaya kalınabilir. `availability.csv` başlangıç ve dönem içi kapanmayı ayırır.
+
+C'nin21 günlük ileri kapanması, günlük geri dönüş hedefi için ciddi risktir. Bir günlük dar pencerelerle B'yi sınayan, yalnız pazartesi/çarşamba/cumartesi gelen profil cuma ileri içeriğine hiç giremez ve L10'a ulaşamaz. Varsayılan7 günlük pencere bu kalıcı dışlanma nedenini kaldırır. Gerçekte önceden kayıt/alternatif değerlendirme, görünür sıra ve esnek tekrar sunumu tasarlanmalı; simülasyondaki dönüşümlü öncelik gerçek rezervasyon sistemi sayılmaz.
+
+Diğer B30dk sonuçları: tek alanda sınıf12 kişi olursa L5=22 gün, iki kat kurum kontenjanıyla15 gün (temel17). Görev arzı haftada yalnız2 olursa L5=30, L10=547 gün; sürekli yeni gerçek ihtiyaç varsayımı önemlidir. İki alanda haftada üç gün gelen oyuncu İşletmecilik5'e66, iki alanda L10'a454 günde ulaşır;14 gün ara verenin İşletmecilik5'i38 gün olur. Seviye/XP kaybı yoktur; ücret veya çevrimdışı telafi XP'si varsayılmaz. Kesin bekleme garantisi veya gerçek oyuncu tutma oranı üretilmedi.
+
+### 13.7 İlk14 gün ve hızlı başlangıç alternatifi
+
+Temel takvim B'de15dk oyuncunun L3'e8 günde gelmesi hızlı başlangıç hedefi için zayıf kalabilir. XP eğrisini değiştirmeden **yalnız üç adet tek kullanımlık başlangıç modülünü** değiştiren küçük deney:
+
+| Başlangıç modülü adayı |15dk profilde L3 günü / gerçek çalışma dk|
+| --- | --- |
+|15dk /24XP (referans)|8 /100|
+|5dk /24XP (yalnız süre değişir)|6 /70|
+|15dk /32XP (yalnız ödül değişir)|6 /80|
+|5dk /32XP (ikisi birlikte)|4 /50|
+
+Bu son aday yalnız0–3'e, üç farklı başarıyla tamamlanmış kısa uygulamaya ve140XP aşama tavanına aittir. Sürekli tekrar yapılabilecek yüksek verimli kurs değildir. Kullanıcı onayı ve anlamlı görev tasarımı olmadan seçilmiş sayılmaz; beş dakikalık gerçek doğrulanabilir emek varsayımıdır. Dar zaman penceresi veya NPC eğitmen sırası başlangıcı engellemez. İlk üç modülden sonra hız artırımı sona erer.
+
+**Önerilen kısa başlangıç + takvim B,15dk tek Tesisat, altı sentetik öğrencili grupta ilk14 gün:**
+
+| Gün | Çalışma dk | Toplam XP | Seviye | Deneyimin yorumu |
+| --- | --- | --- | --- | --- |
+|1|15|44|1|Yönlendirilmiş uygulama, ilk kısa modül ve kısmi okuma|
+|2|10|84|2|İkinci farklı modül ve önceki okumanın bitişi|
+|3|15|124|2|Üçüncü farklı modül, son temel bölüm|
+|4|15|140|3|Temel uygulama başarıyla tamamlanır; orta eğitime ilk çalışma|
+|5|15|164|3|İlk orta modülün tamamlanması|
+|6|15|188|3|İkinci orta modül|
+|7|15|214|3|Okuma ve ilk orta uygulama|
+|8|10|222|3|Farklı orta okuma bölümü|
+|9|10|230|3|Bir sonraki farklı okuma bölümü|
+|10|15|254|3|Yeni orta modül|
+|11|10|262|3|Yeni okuma; XP260'ı geçse de yeterli uygulama yok|
+|12|10|280|3|İkinci başarılı orta uygulama|
+|13|15|304|3|Bir sonraki modül|
+|14|10|322|4|Üçüncü orta uygulama, L4 koşulu gerçekten tamamlanır|
+
+Kaynak: `starter_first14.csv`. Bu örnekte XP eşiği11. gün geçilirken seviye4 ancak14. gün kanıtla açılır; XP tek başına yetmez. Standart15dk ve30dk oyuncuların orijinal ilk14 günlük ayrıntıları `first14.csv` ve değişmez içerik/deneme kimlikleriyle `first14_events.csv` içindedir. Standart B30dk oyuncusu14. gün hiç öğrenme işi yapamaz; yeni eğitim önizlemesi ve sosyal içerik olmadan bu boşluk sorun yaratabilir. Tablo bir UI teslimi veya gerçek oyuncu kabul testi değildir.
+
+### 13.8 Apartman temalı günlük ve haftalık döngü
+
+**Günlük öneri:** önce dünkü çalışma sonucunu ve bir sonraki fırsatı gör → bugün uygun **gerçek farklı** ihtiyacı/öğrenme adımını seç → karar/uygulama/başarı kanıtını tamamla → sonuç ve meslek ilerlemesini gör → isterse komşu sohbeti ve mevcut apartman yönetimine katıl. Sadece giriş, zamanlayıcı veya düğmeye basma XP üretmez. Başarı değerlendirmesini gecikmeli sunma yalnız tasarım alternatifidir; mevcut deneyler başarıyı tamamlanma anında değerlendirir, gecikmeli sonuç mekanizması geliştirilmedi.
+
+**Haftalık öneri:** pazartesi esnek öğrenme planı; çarşamba/cumartesi yeni kurs sunumları; hafta boyunca kişisel eksik modül/uygulama takibi; hafta sonu kısa “ne öğrendim, hangi apartman ihtiyacında kullanabilirim?” özeti. Haftalık hedef gönüllü yol göstericidir; bitirmeyene ceza, kaçırılan seri veya otomatik ekstra XP yoktur. Oyuncu “sonraki planlı sunum”, “yer henüz garanti değil”, “eksik ön koşul”, “tamamlanan modül” ayrımını görebilmeli. Bu göstergeler bu PR'da frontend'e eklenmez.
+
+Apartmanla ilişkili farklı içerik adayları: vana yönünü güvenle seçme, sızıntı teşhisi, doğru malzeme planı, ortak bakım işi için fiyat karşılaştırması, iş sırası/teslim planı, bakım sonrası kontrol raporu. Her birinin ayrı gerçek görev/sonuç kimliği gerekir. Aynı somut tamiri birden fazla kişiye veya tarihe kopyalamak, eski maaş/ek işi yeniden adlandırmak yeni XP kaynağı değildir. Ortak ihtiyaçlardan ücretli hizmete geçiş daha sonraki onaylı aşamadır; burada OP, sipariş veya ekonomik hareket yoktur.
+
+Günlük fırsat tükenince sistem oyuncuyu boş ekrana hapsetmemeli: sıradaki oturumu göstermeli, mevcut komşuluk/oylama/pano faaliyetlerine yön verebilmeli ve isterse oyundan çıkabilmesini doğal karşılamalı.15dk oyuncunun4 günlük başlangıç alternatifi kısa oturuma karşılık verir.120dk oyuncu aynı alanda sınırsız XP yerine sınırlı ikinci alan, farklı ihtiyaca katkı ve sosyal/yönetim etkinliği seçebilir. Bunlara mevcut olmayan otomatik XP, para veya başarımlar vaat edilmez. Ana takvim B'de30 ve120dk profillerinin L10=226/225 gün olması fazla sürenin tek alanda çok az karşılık bulduğunu gösterir; **bu bir tasarım riski**, tutma başarısı değildir.
+
+Aynı şablonları her gün yeniden okumak kısa sürede yorabilir. Konu/başarı kanıtı çeşitlenmeli, bitmiş içerik XP üretmeden tekrar gözden geçirilebilmeli, haftalık planın tamamı zorunlu yapılacaklar listesine dönüşmemeli. Kaç gün sonra sıkılındığı veya günlük geri dönüşün artacağı simülasyondan çıkarılamaz;15dk ve uzun oturum gönüllü katılımcılarla daha sonra test edilmesi gereken davranış hipotezidir. Birkaç gün ara vermek seviye kaybettirmez; üst sınır ve tekrar sunumları geri dönüşe izin verir, herkesin aynı takvim gününde yetişeceği garanti edilmez.
+
+### 13.9 Revize öneri, sınırlar ve onay
+
+**Nihai inceleme önerim: B XP eğrisi + takvim B'yi başlangıç adayı tutmak;0–3 için üç kısa/tekil modüllü alternatifi ayrıca değerlendirmek.** Bu aday A'ya göre orta/üst aşamayı anlamlı takvime yayar, C'nin21 günlük ileri kapanmasını önler ve iki pilot eğitmenin sınırlı arzını görünür kılar. Buna rağmen44/180 boş öğrenme günü,30dk ile120dk arasındaki zayıf fark ve dönemsel kontenjan baskısı kabul riski taşır. B'yi olduğu gibi canlıya geçirmeyi önermiyorum; önce kontenjan/alternatif fırsat ve anlamlı görev içerikleri kullanıcıyla gözden geçirilmelidir.
+
+Sayısal takip için başlangıç hedefi15dk profilde L3≈4–6 gün; orta aralıkta birkaç haftalık gelişim; uzmanlıkta aylar adayı tartışılabilir. Bunlar **hedef önerisi**, seçilmiş oyun kuralı değildir. A daha az bekleme isteyen pilot için, C gönüllü uzun dönem uzmanlık programı için ayrı seçenek olarak korunur. Sadece takvim/XP maliyetini sertleştirerek içerik eksikliği çözülemez.
+
+Onay gerekenler: başlangıç modüllerinin süre/ödül/başarı içeriği; haftalık kurs günleri ve geniş pencereler; iki eğitmenin kabul bütçesi; bekleme sırası/yeniden fırsat garantisi; günlük/haftalık haklar ve başarısızlık politikası; gerçekten farklı uygulama arzı; aşama XP tavanı ve kanıt eşikleri; ileri içerik/doğrulama yetkisi ve erişimi. Öğretmen yeterliliği, verim ve öğrenci kapasitesi aynı karar değildir. Bu sayılar onaylansa bile kurs, NPC, kaynak rezervasyonu, canlı veri veya üretim geliştirmesi kendiliğinden yetkilendirilmiş olmaz.
+
+**Doğrulama:** önceki18 test değiştirilmedi;25 takvim/erişim testi eklendi (toplam43). Gerçek tarih/pencere/hafta sınırları, dört sıfır başlangıç yolu, kapasite/hak/ön koşul ayrımı, sabit içerik kimliğiyle yeniden sunum, başarısızlık ve hafta devri, parçalı proje, XP/aşama tavanı, pilotta L6 sınırı, yoklukta kayıp olmaması ve deterministik bekleme ölçüleri sınanır. Yeni simülasyonun arka plan öğrencisi bitince ölçülen oyuncudan önce durmaması da regresyon testiyle korunur. CSV/JSON/Markdown `calendar_study.py --check` ile byte bazında tekrar üretilir. Grafikler gerçek çevrimdışı Matplotlib çıktılarıdır; oyun ekran görüntüsü değildir.
+
+Yerel regresyon: `npm test`81/81, statik React `npm run test:ui`, `npm run build`, eski ve yeni çıktıların `--check` tekrar üretimi başarılıdır. Yeni25 test mevcut CI workflow'una eklenmedi; bağımsız araştırma komutuyla çalıştırıldı. PR CI'ı mevcut disposable PostgreSQL paketlerini ayrıca kontrol eder; canlı bağlantı testi değildir.
+
+Bu bölümde yeni bir sunucu ödül işlevi, kurs sistemi, RPC, migration, tablo, frontend veya canlı bağlantı yoktur. Gerçek Auth/MFA/Realtime ve insan katılım/tutma kabul testi yapılmadı. Geri alma yalnız araştırma dosyalarını geri almakla sınırlıdır. PR#24 taslak kalır; merge, yayın ve uygulama için kullanıcı onayı beklenir.
