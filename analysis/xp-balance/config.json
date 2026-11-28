@@ -1,0 +1,58 @@
+{
+  "notice": "YALNIZ ONERİ / SİMÜLASYON VARSAYIMI. Üretim kuralı veya uygulama yapılandırması değildir.",
+  "base_commit": "4c2521d574b7d095a4a6c526d4fa7575078d9bd7",
+  "reference_date": "2027-01-04",
+  "report_days": [7, 14, 30, 60, 90, 180],
+  "milestone_horizon": 1460,
+  "profiles_minutes": [15, 30, 60, 120, 180],
+  "skills": ["plumbing", "business", "basic_teaching", "advanced_teaching"],
+  "activities": {
+    "intro": {"minutes": 5, "daily_max": 1, "once_per_skill": true},
+    "course": {"minutes": 15, "daily_max": 3},
+    "book": {"minutes": 10, "daily_max": 2},
+    "practice": {"minutes": 10, "daily_max": 3},
+    "paid": {"minutes": 15, "daily_max": 2},
+    "management": {"minutes": 10, "daily_max": 2}
+  },
+  "paid_access_assumption": {"plumbing": 3, "business": 5},
+  "normalized_curve_total": 3600,
+  "models": {
+    "A": {
+      "label": "Hızlı gelişim",
+      "curve": "linear",
+      "curve_parameters": {"step": 80},
+      "xp": {"intro": 20, "course": 32, "book": 14, "practice": 24, "paid": 40, "management": 24},
+      "caps": {"general": 100, "skill": null},
+      "gate_policy": "xp_only",
+      "multi_policy": "main_only"
+    },
+    "B": {
+      "label": "Dengeli gelişim",
+      "curve": "hybrid",
+      "curve_parameters": {"steps": [20, 40, 80, 120, 180, 260, 380, 560, 800, 1100]},
+      "xp": {"intro": 12, "course": 24, "book": 8, "practice": 18, "paid": 30, "management": 18},
+      "caps": {"general": 110, "skill": 70},
+      "gate_policy": "hybrid",
+      "multi_policy": "separate_management"
+    },
+    "C": {
+      "label": "Uzun vadeli gelişim",
+      "curve": "increasing",
+      "curve_parameters": {"factor": 30, "power": 2},
+      "xp": {"intro": 8, "course": 18, "book": 6, "practice": 12, "paid": 24, "management": 12},
+      "caps": {"general": null, "skill": 55},
+      "gate_policy": "extended",
+      "multi_policy": "conserved_split"
+    }
+  },
+  "gates": {
+    "xp_only": {},
+    "practice_only": {"7": {"practice": 2}, "8": {"practice": 4}, "9": {"practice": 6}, "10": {"practice": 8}},
+    "qualification_only": {"7": {"minutes": 10}, "8": {"minutes": 15}, "9": {"minutes": 20}, "10": {"minutes": 30}},
+    "hybrid": {"7": {"practice": 2}, "9": {"minutes": 20}, "10": {"minutes": 10}},
+    "extended": {"7": {"practice": 4}, "8": {"minutes": 30}, "9": {"minutes": 15}, "10": {"minutes": 60}}
+  },
+  "rested_sensitivity": {"extra_percent": 25, "active_days": 7},
+  "split_policy": {"main_percent": 80, "side_percent": 20},
+  "op_economy": "MODELLENMİYOR / DEĞİŞTİRİLMİYOR. Mevcut başlangıç300, maaş100, ek iş25, haftalık aidat150 referansı korunur."
+}
