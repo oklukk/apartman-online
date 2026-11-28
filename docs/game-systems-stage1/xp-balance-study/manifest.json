@@ -1,0 +1,324 @@
+{
+  "notice": "YALNIZ ONERİ / SİMÜLASYON VARSAYIMI. Üretim kuralı veya uygulama yapılandırması değildir.",
+  "base_commit": "4c2521d574b7d095a4a6c526d4fa7575078d9bd7",
+  "config_sha256": "b97821f871036eb99b1df492d9aec8e4b48f96c99ab11f69291821acd168262e",
+  "scenario_definitions": [
+    {
+      "name": "single_plumbing",
+      "targets": [
+        "plumbing"
+      ],
+      "goals": {},
+      "allocation": "adaptive",
+      "attendance": "daily",
+      "start_day": 1,
+      "paid": false,
+      "multi": null,
+      "gates": null,
+      "caps": null,
+      "inaccessible": [],
+      "no_qualifications": false,
+      "failure_every": 0,
+      "rested_bonus": false,
+      "free_intro": true
+    },
+    {
+      "name": "single_business",
+      "targets": [
+        "business"
+      ],
+      "goals": {},
+      "allocation": "adaptive",
+      "attendance": "daily",
+      "start_day": 1,
+      "paid": false,
+      "multi": null,
+      "gates": null,
+      "caps": null,
+      "inaccessible": [],
+      "no_qualifications": false,
+      "failure_every": 0,
+      "rested_bonus": false,
+      "free_intro": true
+    },
+    {
+      "name": "dual",
+      "targets": [
+        "plumbing",
+        "business"
+      ],
+      "goals": {},
+      "allocation": "adaptive",
+      "attendance": "daily",
+      "start_day": 1,
+      "paid": false,
+      "multi": null,
+      "gates": null,
+      "caps": null,
+      "inaccessible": [],
+      "no_qualifications": false,
+      "failure_every": 0,
+      "rested_bonus": false,
+      "free_intro": true
+    },
+    {
+      "name": "dual_alternate",
+      "targets": [
+        "plumbing",
+        "business"
+      ],
+      "goals": {},
+      "allocation": "alternate",
+      "attendance": "daily",
+      "start_day": 1,
+      "paid": false,
+      "multi": null,
+      "gates": null,
+      "caps": null,
+      "inaccessible": [],
+      "no_qualifications": false,
+      "failure_every": 0,
+      "rested_bonus": false,
+      "free_intro": true
+    },
+    {
+      "name": "business_first",
+      "targets": [
+        "business",
+        "plumbing"
+      ],
+      "goals": {
+        "business": 5,
+        "plumbing": 3
+      },
+      "allocation": "serial",
+      "attendance": "daily",
+      "start_day": 1,
+      "paid": false,
+      "multi": null,
+      "gates": null,
+      "caps": null,
+      "inaccessible": [],
+      "no_qualifications": false,
+      "failure_every": 0,
+      "rested_bonus": false,
+      "free_intro": true
+    },
+    {
+      "name": "irregular",
+      "targets": [
+        "plumbing",
+        "business"
+      ],
+      "goals": {},
+      "allocation": "adaptive",
+      "attendance": "irregular",
+      "start_day": 1,
+      "paid": false,
+      "multi": null,
+      "gates": null,
+      "caps": null,
+      "inaccessible": [],
+      "no_qualifications": false,
+      "failure_every": 0,
+      "rested_bonus": false,
+      "free_intro": true
+    },
+    {
+      "name": "break14",
+      "targets": [
+        "plumbing",
+        "business"
+      ],
+      "goals": {},
+      "allocation": "adaptive",
+      "attendance": "break",
+      "start_day": 1,
+      "paid": false,
+      "multi": null,
+      "gates": null,
+      "caps": null,
+      "inaccessible": [],
+      "no_qualifications": false,
+      "failure_every": 0,
+      "rested_bonus": false,
+      "free_intro": true
+    },
+    {
+      "name": "return_bonus",
+      "targets": [
+        "plumbing",
+        "business"
+      ],
+      "goals": {},
+      "allocation": "adaptive",
+      "attendance": "break",
+      "start_day": 1,
+      "paid": false,
+      "multi": null,
+      "gates": null,
+      "caps": null,
+      "inaccessible": [],
+      "no_qualifications": false,
+      "failure_every": 0,
+      "rested_bonus": true,
+      "free_intro": true
+    },
+    {
+      "name": "break60",
+      "targets": [
+        "plumbing",
+        "business"
+      ],
+      "goals": {},
+      "allocation": "adaptive",
+      "attendance": "long_break",
+      "start_day": 1,
+      "paid": false,
+      "multi": null,
+      "gates": null,
+      "caps": null,
+      "inaccessible": [],
+      "no_qualifications": false,
+      "failure_every": 0,
+      "rested_bonus": false,
+      "free_intro": true
+    },
+    {
+      "name": "newcomer30",
+      "targets": [
+        "plumbing",
+        "business"
+      ],
+      "goals": {},
+      "allocation": "adaptive",
+      "attendance": "daily",
+      "start_day": 31,
+      "paid": false,
+      "multi": null,
+      "gates": null,
+      "caps": null,
+      "inaccessible": [],
+      "no_qualifications": false,
+      "failure_every": 0,
+      "rested_bonus": false,
+      "free_intro": true
+    },
+    {
+      "name": "paid_access",
+      "targets": [
+        "plumbing",
+        "business"
+      ],
+      "goals": {},
+      "allocation": "adaptive",
+      "attendance": "daily",
+      "start_day": 1,
+      "paid": true,
+      "multi": null,
+      "gates": null,
+      "caps": null,
+      "inaccessible": [],
+      "no_qualifications": false,
+      "failure_every": 0,
+      "rested_bonus": false,
+      "free_intro": true
+    },
+    {
+      "name": "professor_path",
+      "targets": [
+        "basic_teaching",
+        "advanced_teaching",
+        "plumbing"
+      ],
+      "goals": {
+        "basic_teaching": 10,
+        "advanced_teaching": 5,
+        "plumbing": 6
+      },
+      "allocation": "adaptive",
+      "attendance": "daily",
+      "start_day": 1,
+      "paid": false,
+      "multi": null,
+      "gates": null,
+      "caps": null,
+      "inaccessible": [],
+      "no_qualifications": false,
+      "failure_every": 0,
+      "rested_bonus": false,
+      "free_intro": true
+    },
+    {
+      "name": "business_unavailable",
+      "targets": [
+        "plumbing",
+        "business"
+      ],
+      "goals": {},
+      "allocation": "adaptive",
+      "attendance": "daily",
+      "start_day": 1,
+      "paid": false,
+      "multi": null,
+      "gates": null,
+      "caps": null,
+      "inaccessible": [
+        "business"
+      ],
+      "no_qualifications": false,
+      "failure_every": 0,
+      "rested_bonus": false,
+      "free_intro": true
+    },
+    {
+      "name": "qualifications_unavailable",
+      "targets": [
+        "plumbing"
+      ],
+      "goals": {},
+      "allocation": "adaptive",
+      "attendance": "daily",
+      "start_day": 1,
+      "paid": false,
+      "multi": null,
+      "gates": null,
+      "caps": null,
+      "inaccessible": [],
+      "no_qualifications": true,
+      "failure_every": 0,
+      "rested_bonus": false,
+      "free_intro": true
+    },
+    {
+      "name": "failure20",
+      "targets": [
+        "plumbing",
+        "business"
+      ],
+      "goals": {},
+      "allocation": "adaptive",
+      "attendance": "daily",
+      "start_day": 1,
+      "paid": false,
+      "multi": null,
+      "gates": null,
+      "caps": null,
+      "inaccessible": [],
+      "no_qualifications": false,
+      "failure_every": 5,
+      "rested_bonus": false,
+      "free_intro": true
+    }
+  ],
+  "csv_rows": {
+    "curves": 33,
+    "snapshots": 1350,
+    "milestones": 2100,
+    "daily": 9000,
+    "sensitivity": 45,
+    "cap_comparison": 6,
+    "tuning": 27,
+    "long_sessions": 18
+  }
+}

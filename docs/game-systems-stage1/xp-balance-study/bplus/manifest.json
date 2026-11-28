@@ -1,0 +1,17 @@
+{
+  "notice": "ÖNERİ / BAĞIMSIZ ÇEVRİMDIŞI SİMÜLASYON. Gerçek ihtiyaç, ders, kurs, aktör, XP veya para üretmez.",
+  "base": "cfb922beacfd4f8f98925eda0524324a89c74720",
+  "parameters_sha256": "8a0f22eb5a95585b0418082f667a830bc728dbed5577d12db199af7232355465",
+  "row_counts": {
+    "comparison": 220,
+    "milestones": 1248,
+    "snapshots": 1320,
+    "daily": 4320,
+    "community": 440,
+    "sources": 152,
+    "capacity": 608,
+    "marginal": 32
+  },
+  "nonxp_events": "finite explicit hypothetical community fixtures, not real activity or retention",
+  "measurement": "full180 includes post-mastery days; old pre-mastery metric preserved"
+}

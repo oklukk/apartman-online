@@ -1,0 +1,278 @@
+{
+  "notice": "ÖNERİ / ÇEVRİMDIŞI SİMÜLASYON. Hiçbir faaliyet, kapasite veya XP kuralı canlı oyunda uygulanmaz.",
+  "base_xp_model": "B; unchanged config.json",
+  "base_sha256": "b8180b9de5bfc128ad4203c8ef71a1e78ccad4c246554a249713fe30cb5a245b",
+  "calendar_config_sha256": "f08d6bf9f01d36e700f8423cabfa0b29313ecbc525ce4137100a9893c02d273a",
+  "cases": [
+    {
+      "name": "single_plumbing",
+      "targets": [
+        "plumbing"
+      ],
+      "attendance": "daily",
+      "failure_every": 0,
+      "always_open": false,
+      "unlimited_capacity": false,
+      "no_rights": false,
+      "no_gates": false,
+      "no_xp_caps": false,
+      "no_makeup": false,
+      "expert_available": true,
+      "cohort": null,
+      "start_offset": 0,
+      "capacity_multiplier": 1,
+      "needs_per_week": null,
+      "starter_minutes": null,
+      "starter_xp": null
+    },
+    {
+      "name": "single_business",
+      "targets": [
+        "business"
+      ],
+      "attendance": "daily",
+      "failure_every": 0,
+      "always_open": false,
+      "unlimited_capacity": false,
+      "no_rights": false,
+      "no_gates": false,
+      "no_xp_caps": false,
+      "no_makeup": false,
+      "expert_available": true,
+      "cohort": null,
+      "start_offset": 0,
+      "capacity_multiplier": 1,
+      "needs_per_week": null,
+      "starter_minutes": null,
+      "starter_xp": null
+    },
+    {
+      "name": "dual",
+      "targets": [
+        "plumbing",
+        "business"
+      ],
+      "attendance": "daily",
+      "failure_every": 0,
+      "always_open": false,
+      "unlimited_capacity": false,
+      "no_rights": false,
+      "no_gates": false,
+      "no_xp_caps": false,
+      "no_makeup": false,
+      "expert_available": true,
+      "cohort": null,
+      "start_offset": 0,
+      "capacity_multiplier": 1,
+      "needs_per_week": null,
+      "starter_minutes": null,
+      "starter_xp": null
+    },
+    {
+      "name": "irregular",
+      "targets": [
+        "plumbing",
+        "business"
+      ],
+      "attendance": "irregular",
+      "failure_every": 0,
+      "always_open": false,
+      "unlimited_capacity": false,
+      "no_rights": false,
+      "no_gates": false,
+      "no_xp_caps": false,
+      "no_makeup": false,
+      "expert_available": true,
+      "cohort": null,
+      "start_offset": 0,
+      "capacity_multiplier": 1,
+      "needs_per_week": null,
+      "starter_minutes": null,
+      "starter_xp": null
+    },
+    {
+      "name": "break14",
+      "targets": [
+        "plumbing",
+        "business"
+      ],
+      "attendance": "break14",
+      "failure_every": 0,
+      "always_open": false,
+      "unlimited_capacity": false,
+      "no_rights": false,
+      "no_gates": false,
+      "no_xp_caps": false,
+      "no_makeup": false,
+      "expert_available": true,
+      "cohort": null,
+      "start_offset": 0,
+      "capacity_multiplier": 1,
+      "needs_per_week": null,
+      "starter_minutes": null,
+      "starter_xp": null
+    },
+    {
+      "name": "failure20",
+      "targets": [
+        "plumbing",
+        "business"
+      ],
+      "attendance": "daily",
+      "failure_every": 5,
+      "always_open": false,
+      "unlimited_capacity": false,
+      "no_rights": false,
+      "no_gates": false,
+      "no_xp_caps": false,
+      "no_makeup": false,
+      "expert_available": true,
+      "cohort": null,
+      "start_offset": 0,
+      "capacity_multiplier": 1,
+      "needs_per_week": null,
+      "starter_minutes": null,
+      "starter_xp": null
+    },
+    {
+      "name": "pilot_only",
+      "targets": [
+        "plumbing"
+      ],
+      "attendance": "daily",
+      "failure_every": 0,
+      "always_open": false,
+      "unlimited_capacity": false,
+      "no_rights": false,
+      "no_gates": false,
+      "no_xp_caps": false,
+      "no_makeup": false,
+      "expert_available": false,
+      "cohort": null,
+      "start_offset": 0,
+      "capacity_multiplier": 1,
+      "needs_per_week": null,
+      "starter_minutes": null,
+      "starter_xp": null
+    },
+    {
+      "name": "crowded12",
+      "targets": [
+        "plumbing"
+      ],
+      "attendance": "daily",
+      "failure_every": 0,
+      "always_open": false,
+      "unlimited_capacity": false,
+      "no_rights": false,
+      "no_gates": false,
+      "no_xp_caps": false,
+      "no_makeup": false,
+      "expert_available": true,
+      "cohort": 12,
+      "start_offset": 0,
+      "capacity_multiplier": 1,
+      "needs_per_week": null,
+      "starter_minutes": null,
+      "starter_xp": null
+    },
+    {
+      "name": "capacity_double",
+      "targets": [
+        "plumbing"
+      ],
+      "attendance": "daily",
+      "failure_every": 0,
+      "always_open": false,
+      "unlimited_capacity": false,
+      "no_rights": false,
+      "no_gates": false,
+      "no_xp_caps": false,
+      "no_makeup": false,
+      "expert_available": true,
+      "cohort": null,
+      "start_offset": 0,
+      "capacity_multiplier": 2,
+      "needs_per_week": null,
+      "starter_minutes": null,
+      "starter_xp": null
+    },
+    {
+      "name": "solo",
+      "targets": [
+        "plumbing"
+      ],
+      "attendance": "daily",
+      "failure_every": 0,
+      "always_open": false,
+      "unlimited_capacity": false,
+      "no_rights": false,
+      "no_gates": false,
+      "no_xp_caps": false,
+      "no_makeup": false,
+      "expert_available": true,
+      "cohort": 1,
+      "start_offset": 0,
+      "capacity_multiplier": 1,
+      "needs_per_week": null,
+      "starter_minutes": null,
+      "starter_xp": null
+    },
+    {
+      "name": "missed_no_makeup",
+      "targets": [
+        "plumbing"
+      ],
+      "attendance": "irregular",
+      "failure_every": 0,
+      "always_open": false,
+      "unlimited_capacity": false,
+      "no_rights": false,
+      "no_gates": false,
+      "no_xp_caps": false,
+      "no_makeup": true,
+      "expert_available": true,
+      "cohort": null,
+      "start_offset": 0,
+      "capacity_multiplier": 1,
+      "needs_per_week": null,
+      "starter_minutes": null,
+      "starter_xp": null
+    },
+    {
+      "name": "low_demand",
+      "targets": [
+        "plumbing"
+      ],
+      "attendance": "daily",
+      "failure_every": 0,
+      "always_open": false,
+      "unlimited_capacity": false,
+      "no_rights": false,
+      "no_gates": false,
+      "no_xp_caps": false,
+      "no_makeup": false,
+      "expert_available": true,
+      "cohort": null,
+      "start_offset": 0,
+      "capacity_multiplier": 1,
+      "needs_per_week": 2,
+      "starter_minutes": null,
+      "starter_xp": null
+    }
+  ],
+  "row_counts": {
+    "snapshots": 864,
+    "milestones": 768,
+    "waiting": 144,
+    "first14": 168,
+    "first14_events": 258,
+    "daily": 6480,
+    "ablations": 63,
+    "start_weekday": 21,
+    "starter_sensitivity": 48,
+    "availability": 9,
+    "start_paths": 4,
+    "starter_first14": 14
+  }
+}

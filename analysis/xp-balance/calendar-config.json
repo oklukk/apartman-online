@@ -1,0 +1,27 @@
+{
+  "notice": "ÖNERİ / ÇEVRİMDIŞI SİMÜLASYON. Hiçbir faaliyet, kapasite veya XP kuralı canlı oyunda uygulanmaz.",
+  "reference_date": "2027-01-04",
+  "horizon": 1460,
+  "snapshots": [7, 14, 30, 60, 90, 180],
+  "minutes": [15, 30, 60, 120],
+  "cohort_size": 6,
+  "background_minutes": 30,
+  "pilot_instructors": {"plumbing": {"field_level": 6, "basic_teaching": 5, "advanced_teaching": 3}, "business": {"field_level": 6, "basic_teaching": 5, "advanced_teaching": 3}},
+  "content": {"starter_modules": 3, "middle_modules": 12, "expert_modules": 12, "books_by_stage": [2, 4, 6], "module_minutes": 15, "book_minutes": 10, "practice_minutes": 10, "intro_minutes": 5},
+  "stage_ceiling_levels": [3, 6, 10],
+  "gates": {
+    "3": {"starter": 3},
+    "4": {"middle": 1, "middle_practice": 3},
+    "5": {"middle": 2, "middle_practice": 6},
+    "6": {"middle": 3, "middle_practice": 10},
+    "7": {"expert": 1, "expert_practice": 4},
+    "8": {"expert": 2, "expert_practice": 10},
+    "9": {"expert": 3, "expert_practice": 18, "project_minutes": 20},
+    "10": {"expert": 4, "expert_practice": 28, "project_minutes": 10}
+  },
+  "calendars": {
+    "A": {"label": "Esnek", "practice_daily": 2, "practice_weekly": 10, "practice_pool_weekly": 12, "practice_window_days": 3, "course_daily": 2, "course_weekly": 4, "course_weekdays": [0, 1, 2, 3, 4, 5, 6], "course_period_weeks": 1, "course_window_days": 3, "seats_per_session": 2, "instructor_weekly_starts": 12, "expert_weekdays": [1, 4], "expert_period_weeks": 1, "expert_window_days": 4, "expert_seats": 2, "expert_weekly_starts": 4, "project_weekdays": [0, 1, 2, 3, 4, 5, 6], "project_period_weeks": 1, "project_window_days": 7, "retry_weekly": 3},
+    "B": {"label": "Dengeli", "practice_daily": 1, "practice_weekly": 5, "practice_pool_weekly": 7, "practice_window_days": 3, "course_daily": 1, "course_weekly": 3, "course_weekdays": [0, 2, 5], "course_period_weeks": 1, "course_window_days": 3, "seats_per_session": 2, "instructor_weekly_starts": 6, "expert_weekdays": [4], "expert_period_weeks": 1, "expert_window_days": 7, "expert_seats": 2, "expert_weekly_starts": 2, "project_weekdays": [0, 5], "project_period_weeks": 1, "project_window_days": 7, "retry_weekly": 2},
+    "C": {"label": "Planlı", "practice_daily": 1, "practice_weekly": 4, "practice_pool_weekly": 5, "practice_window_days": 4, "course_daily": 1, "course_weekly": 2, "course_weekdays": [0, 3], "course_period_weeks": 2, "course_window_days": 7, "seats_per_session": 2, "instructor_weekly_starts": 4, "expert_weekdays": [0], "expert_period_weeks": 4, "expert_window_days": 7, "expert_seats": 2, "expert_weekly_starts": 2, "project_weekdays": [0], "project_period_weeks": 2, "project_window_days": 7, "retry_weekly": 2}
+  }
+}

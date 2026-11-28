@@ -1,0 +1,10 @@
+calendar,kind,max_days_between_releases,max_closed_days_including_startup,steady_max_closed_days,capacity_guarantee
+A,middle,1,0,0,False
+A,expert,4,1,0,False
+A,project,1,0,0,False
+B,middle,3,0,0,False
+B,expert,7,4,0,False
+B,project,5,0,0,False
+C,middle,11,4,4,False
+C,expert,28,21,21,False
+C,project,14,7,7,False

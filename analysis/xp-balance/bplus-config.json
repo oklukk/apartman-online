@@ -1,0 +1,148 @@
+{
+  "notice": "ÖNERİ / BAĞIMSIZ ÇEVRİMDIŞI SİMÜLASYON. Gerçek ihtiyaç, ders, kurs, aktör, XP veya para üretmez.",
+  "design_basis": "cfb922beacfd4f8f98925eda0524324a89c74720; önce sonuç hedefi değil mekanizma karşılaştırması",
+  "horizon": 1460,
+  "report_days": [
+    7,
+    14,
+    30,
+    60,
+    90,
+    180
+  ],
+  "minutes": [
+    15,
+    30,
+    60,
+    120
+  ],
+  "case_library_per_field": 192,
+  "shared_need_total_per_field": 52,
+  "shared_need_weekly": 2,
+  "prebook_days": 7,
+  "selfstudy_minutes": 25,
+  "selfstudy_weekly": 2,
+  "selfstudy_max_per_stage": 4,
+  "starter_minutes": 5,
+  "starter_xp": 32,
+  "variants": {
+    "source_control": {
+      "practice_daily": 1,
+      "practice_weekly": 5,
+      "pool_weekly": 7,
+      "balanced": false,
+      "selfstudy": false,
+      "queue": false,
+      "building_needs": false
+    },
+    "rights_only": {
+      "practice_daily": 2,
+      "practice_weekly": 7,
+      "pool_weekly": 7,
+      "balanced": false,
+      "selfstudy": false,
+      "queue": false,
+      "building_needs": false
+    },
+    "study_only": {
+      "practice_daily": 1,
+      "practice_weekly": 5,
+      "pool_weekly": 7,
+      "balanced": false,
+      "selfstudy": true,
+      "queue": false,
+      "building_needs": false
+    },
+    "queue_only": {
+      "practice_daily": 1,
+      "practice_weekly": 5,
+      "pool_weekly": 7,
+      "balanced": false,
+      "selfstudy": false,
+      "queue": true,
+      "building_needs": false
+    },
+    "distribution_only": {
+      "practice_daily": 1,
+      "practice_weekly": 5,
+      "pool_weekly": 7,
+      "balanced": true,
+      "selfstudy": false,
+      "queue": false,
+      "building_needs": false
+    },
+    "needs_only": {
+      "practice_daily": 1,
+      "practice_weekly": 5,
+      "pool_weekly": 7,
+      "balanced": false,
+      "selfstudy": false,
+      "queue": false,
+      "building_needs": true
+    },
+    "Bplus": {
+      "practice_daily": 2,
+      "practice_weekly": 7,
+      "pool_weekly": 9,
+      "balanced": true,
+      "selfstudy": true,
+      "queue": true,
+      "building_needs": true,
+      "case_backlog": true
+    },
+    "Bplus_expiring": {
+      "practice_daily": 2,
+      "practice_weekly": 7,
+      "pool_weekly": 9,
+      "balanced": true,
+      "selfstudy": true,
+      "queue": true,
+      "building_needs": true
+    },
+    "backlog_only": {
+      "practice_daily": 1,
+      "practice_weekly": 5,
+      "pool_weekly": 7,
+      "balanced": false,
+      "selfstudy": false,
+      "queue": false,
+      "building_needs": false,
+      "case_backlog": true
+    },
+    "Bplus_paced": {
+      "practice_daily": 2,
+      "practice_weekly": 7,
+      "pool_weekly": 9,
+      "balanced": true,
+      "selfstudy": true,
+      "queue": true,
+      "building_needs": true,
+      "case_backlog": true,
+      "paced": true
+    },
+    "paced_no_selfstudy": {
+      "practice_daily": 2,
+      "practice_weekly": 7,
+      "pool_weekly": 9,
+      "balanced": true,
+      "selfstudy": false,
+      "queue": true,
+      "building_needs": true,
+      "case_backlog": true,
+      "paced": true
+    },
+    "paced_no_queue": {
+      "practice_daily": 2,
+      "practice_weekly": 7,
+      "pool_weekly": 9,
+      "balanced": true,
+      "selfstudy": true,
+      "queue": false,
+      "building_needs": true,
+      "case_backlog": true,
+      "paced": true
+    }
+  },
+  "iteration_note": "İlk Bplus_expiring deneyinde192 olgu9/hafta açılınca haklar7/hafta olduğu için kaynaklar kullanılmadan eskidi ve L10 erişimi tıkandı. Bplus yalnız kişisel sonlu çalışma olgularının bekleyen havuzda kalmasını karşılaştırır; içerik, XP ve kontenjan artmaz. Gerçek apartman ihtiyaçları yine3günde kapanır.",
+  "pacing_note": "Aynı7 haftalık hak2/gün ile haftanın başında tüketilince boş günler artabilir. Bplus_paced birikimli o-hafta tavanını Türkiye haftasında geçen gün sayısıyla sınırlar; önceki boş günün hakkını anlamlı faaliyetle2/güne kadar telafi edebilir, gelecek günleri önden tüketmez. Haftalık hak, katalog ve XP artmaz."
+}

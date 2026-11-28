@@ -1,0 +1,32 @@
+name: Çevrimdışı XP araştırması
+
+on:
+  pull_request:
+    paths:
+      - 'analysis/xp-balance/**'
+      - 'docs/game-systems-stage1/A2_2_BALANCE_STUDY.md'
+      - 'docs/game-systems-stage1/xp-balance-study/**'
+      - '.github/workflows/xp-research.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  offline-analysis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Bağımsız araştırma testleri
+        run: python -m unittest discover -s analysis/xp-balance -p 'test_*.py' -v
+      - name: İlk XP paketi sonuçlarını tekrar üret
+        run: python analysis/xp-balance/study.py --check
+      - name: Sınırlı takvim sonuçlarını tekrar üret
+        run: python analysis/xp-balance/calendar_study.py --check
+      - name: B+ sonuçlarını tekrar üret
+        run: python analysis/xp-balance/bplus_study.py --check
