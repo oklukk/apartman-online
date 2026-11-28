@@ -70,3 +70,10 @@ PR #20 `main/22286a3` üzerinde birleşti. [NPC dünya/onay/oluşturma teknik no
 tek pilot, dünya bazlı toplam nüfus bütçesi, değişmez onay snapshot'ı, kalıcı anahtarlar ve
 eğitmen kapsaması için kapalı PostgreSQL altyapısını açıklar. Migration boş tanımdır; gerçek
 NPC/konut veya canlı manifest üretilmez. Onay, seed, entegrasyon ve yayın ayrı adımlardır.
+
+## A2-1 katalog ve XP kaynak temeli
+
+PR #21 `main/27ad7f9` üzerinde birleşti. [A2-1 teknik notu](A2_1_SKILL_CATALOG_XP.md), kanonik
+skill anahtarının TEXT/katalog FK dönüşümünü, korunan NPC ENUM köprüsünü, açık enrollment
+sınırını ve XP vermeyen kaynak rezervasyonlarını açıklar. Denge alternatifleri onay bekler;
+eğitim, kaynak tamamlanması, XP/seviye dağıtımı, gerçek backfill ve canlı uygulama açılmaz.

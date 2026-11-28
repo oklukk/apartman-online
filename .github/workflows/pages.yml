@@ -40,6 +40,7 @@ jobs:
       - run: npm run test:a1
       - run: npm run test:a1-player
       - run: npm run test:a1-npc
+      - run: npm run test:a2
   build:
     runs-on: ubuntu-latest
     steps:

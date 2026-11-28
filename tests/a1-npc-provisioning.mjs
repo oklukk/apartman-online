@@ -72,7 +72,7 @@ try{
  -- Registration stub only, NOT a pg_cron worker.
  create schema cron;create table cron.job(id bigint generated always as identity,jobname text unique,schedule text,command text);
  create function cron.schedule(n text,s text,c text) returns bigint language sql as $$insert into cron.job(jobname,schedule,command) values(n,s,c) returning id$$;`);
- const files=(await readdir('supabase/migrations')).filter(f=>f.endsWith('.sql')).sort();assert.equal(files.length,10);assert.match(files[9],/_a1_controlled_npc_provisioning\.sql$/);
+ const files=(await readdir('supabase/migrations')).filter(f=>f.endsWith('.sql')).sort();assert.ok(files.length>=10);assert.match(files[9],/_a1_controlled_npc_provisioning\.sql$/); // historical first10 migrations
  for(const f of files.slice(0,9)){await db.query('begin');await db.query((await readFile('supabase/migrations/'+f,'utf8')).replace(/create extension if not exists pg_cron with schema pg_catalog;/g,''));await db.query('commit');}
  const [a,b,staff]=[uuid(),uuid(),uuid()];
  for(const [i,u]of[a,b,staff].entries())await db.query('insert into auth.users values($1,$2,now())',[u,{username:'npc_fixture_'+i}]);
